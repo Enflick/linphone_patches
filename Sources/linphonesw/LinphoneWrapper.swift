@@ -19918,20 +19918,6 @@ public class Core : LinphoneObject
 		}
 	}
 
-    // TN hack
-    public var skipOutgoingEarlyMedia: Bool
-    {
-        get
-        {
-            return linphone_core_get_skip_outgoing_early_media(cPtr) != 0
-        }
-        set
-        {
-            linphone_core_set_skip_outgoing_early_media(cPtr, newValue==true ? 1:0)
-        }
-    }
-    // TN hack
-
 	/// Sets the path to a wav file used for ringing back. 
 	/// Ringback means the ring that is heard when it's ringing at the remote party.
 	/// The file must be a wav 16bit linear. 
