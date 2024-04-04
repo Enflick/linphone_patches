@@ -1,0 +1,91 @@
+diff --git a/liblinphone/include/linphone/api/c-call.h b/liblinphone/include/linphone/api/c-call.h
+index 215dc074c..4a7f6badd 100644
+--- a/liblinphone/include/linphone/api/c-call.h
++++ b/liblinphone/include/linphone/api/c-call.h
+@@ -506,6 +506,10 @@ LINPHONE_PUBLIC LinphoneStatus linphone_call_accept_early_media_with_params (Lin
+ **/
+ LINPHONE_PUBLIC LinphoneStatus linphone_call_update (LinphoneCall *call, const LinphoneCallParams *params);
+ 
++// TN patch
++LINPHONE_PUBLIC void linphone_call_reconnect (LinphoneCall *call);
++// TN patch
++
+ /**
+  * When receiving a #LinphoneCallUpdatedByRemote state notification, prevent #LinphoneCore from performing an automatic answer.
+  *
+diff --git a/liblinphone/src/c-wrapper/api/c-call.cpp b/liblinphone/src/c-wrapper/api/c-call.cpp
+index e8cf9b17a..aa227d2cd 100644
+--- a/liblinphone/src/c-wrapper/api/c-call.cpp
++++ b/liblinphone/src/c-wrapper/api/c-call.cpp
+@@ -425,6 +425,12 @@ LinphoneStatus linphone_call_update (LinphoneCall *call, const LinphoneCallParam
+ 	return Call::toCpp(call)->update(params ? L_GET_CPP_PTR_FROM_C_OBJECT(params) : nullptr);
+ }
+ 
++// TN patch
++void linphone_call_reconnect (LinphoneCall *call) {
++	Call::toCpp(call)->reconnect();
++}
++// TN patch
++
+ LinphoneStatus linphone_call_defer_update (LinphoneCall *call) {
+ 	return Call::toCpp(call)->deferUpdate();
+ }
+diff --git a/liblinphone/src/call/call.cpp b/liblinphone/src/call/call.cpp
+index dfc84c1af..7c985254e 100644
+--- a/liblinphone/src/call/call.cpp
++++ b/liblinphone/src/call/call.cpp
+@@ -979,6 +979,12 @@ LinphoneStatus Call::update (const MediaSessionParams *msp) {
+ 	return static_pointer_cast<MediaSession>(getActiveSession())->update(msp);
+ }
+ 
++// TN patch
++void Call::reconnect() {
++	static_pointer_cast<MediaSession>(getActiveSession())->reconnect();
++}
++// TN patch
++
+ void Call::zoomVideo (float zoomFactor, float *cx, float *cy) {
+ 	zoomVideo(zoomFactor, *cx, *cy);
+ }
+diff --git a/liblinphone/src/call/call.h b/liblinphone/src/call/call.h
+index 84741401f..8afc19555 100644
+--- a/liblinphone/src/call/call.h
++++ b/liblinphone/src/call/call.h
+@@ -148,6 +148,7 @@ public:
+ 	LinphoneStatus transfer (const std::string &dest);
+ 	LinphoneStatus update (const MediaSessionParams *msp = nullptr);
+ 	LinphoneStatus updateFromConference (const MediaSessionParams *msp = nullptr);
++	void reconnect();
+ 	void zoomVideo (float zoomFactor, float *cx, float *cy);
+ 	void zoomVideo (float zoomFactor, float cx, float cy);
+ 
+diff --git a/liblinphone/src/conference/session/call-session.cpp b/liblinphone/src/conference/session/call-session.cpp
+index 0173aadae..88506cb34 100644
+--- a/liblinphone/src/conference/session/call-session.cpp
++++ b/liblinphone/src/conference/session/call-session.cpp
+@@ -1627,6 +1627,13 @@ LinphoneStatus CallSession::update (const CallSessionParams *csp, const UpdateMe
+ 	return result;
+ }
+ 
++// TN patch
++void CallSession::reconnect() {
++	L_D();
++	d->reinviteToRecoverFromConnectionLoss();
++}
++// TN patch
++
+ // -----------------------------------------------------------------------------
+ 
+ LinphoneCallDir CallSession::getDirection () const {
+diff --git a/liblinphone/src/conference/session/call-session.h b/liblinphone/src/conference/session/call-session.h
+index 1b6fbccf1..0e778538d 100644
+--- a/liblinphone/src/conference/session/call-session.h
++++ b/liblinphone/src/conference/session/call-session.h
+@@ -137,6 +137,7 @@ public:
+ 	LinphoneStatus transfer (const Address &dest);
+ 	LinphoneStatus transfer (const std::string &dest);
+ 	LinphoneStatus update (const CallSessionParams *csp, const UpdateMethod method = UpdateMethod::Default, const std::string &subject = "", const Content *content = nullptr);
++	void reconnect();
+ 
+ 	CallSessionParams *getCurrentParams () const;
+ 	LinphoneCallDir getDirection () const;

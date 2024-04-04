@@ -1,8 +1,8 @@
 diff --git a/liblinphone/src/sal/offeranswer.cpp b/liblinphone/src/sal/offeranswer.cpp
-index 57759524f..71b38c895 100644
+index 57759524f..6413c525b 100644
 --- a/liblinphone/src/sal/offeranswer.cpp
 +++ b/liblinphone/src/sal/offeranswer.cpp
-@@ -173,15 +173,24 @@ bool OfferAnswerEngine::onlyTelephoneEvent(const std::list<OrtpPayloadType*> & l
+@@ -173,15 +173,26 @@ bool OfferAnswerEngine::onlyTelephoneEvent(const std::list<OrtpPayloadType*> & l
  	return true;
  }
  
@@ -17,19 +17,21 @@ index 57759524f..71b38c895 100644
  			&& pt->channels==refpt->channels)
  			return payload_type_clone(pt);
  	}
-+    // TN hack - check remote payloads as well
-+    for (const auto & pt : remote_payloads) {
-+        // ms_message("remote_payload (%s/%i/%i) vs ref (%s/%i/%i)", pt->mime_type, pt->clock_rate, pt->channels, refpt->mime_type, refpt->clock_rate, refpt->channels);
-+        if ( pt->mime_type && refpt->mime_type
-+            && strcasecmp(pt->mime_type, refpt->mime_type)==0
-+            && pt->clock_rate==refpt->clock_rate
-+            && pt->channels==refpt->channels)
-+            return payload_type_clone(pt);
-+    }
++	// TN patch
++	// We need to check and match from the remote payloads as well
++	for (const auto & pt : remote_payloads) {
++		// ms_message("remote_payload (%s/%i/%i) vs ref (%s/%i/%i)", pt->mime_type, pt->clock_rate, pt->channels, refpt->mime_type, refpt->clock_rate, refpt->channels);
++		if ( pt->mime_type && refpt->mime_type
++			&& strcasecmp(pt->mime_type, refpt->mime_type)==0
++			&& pt->clock_rate==refpt->clock_rate
++			&& pt->channels==refpt->channels)
++			return payload_type_clone(pt);
++	}
++	// TN patch
  	return NULL;
  }
  
-@@ -190,20 +199,9 @@ PayloadType * OfferAnswerEngine::genericMatch(const std::list<OrtpPayloadType*>
+@@ -190,20 +201,11 @@ PayloadType * OfferAnswerEngine::genericMatch(const std::list<OrtpPayloadType*>
  */
  PayloadType * OfferAnswerEngine::findPayloadTypeBestMatch(MSFactory *factory, const std::list<OrtpPayloadType*> & local_payloads, const PayloadType *refpt,
  						  const std::list<OrtpPayloadType*> & remote_payloads, bool reading_response){
@@ -47,9 +49,11 @@ index 57759524f..71b38c895 100644
 -		ms_offer_answer_context_destroy(ctx);
 -		return ret;
 -	}
-+    // TN hack - just use genericMatch
-+    (void)factory;
-+    (void)reading_response;
++	// TN patch
++	// Just use genericMatch to keep the logic simple, the original logic was picking the wrong payload type
++	(void)factory;
++	(void)reading_response;
++	// TN patch
  	return OfferAnswerEngine::genericMatch(local_payloads, refpt, remote_payloads);
  }
  

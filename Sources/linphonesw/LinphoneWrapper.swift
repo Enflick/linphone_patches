@@ -10262,9 +10262,16 @@ public class Call : LinphoneObject
 			throw LinphoneError.exception(result: "update returned value \(exception_result)")
 		}
 	}
-	
-	
-	
+
+
+	// TN patch
+	public func reconnect()
+	{
+		linphone_call_reconnect(cPtr)
+	}
+	// TN patch
+
+
 	/// Perform a zoom of the video displayed during a call. 
 	/// The zoom ensures that all the screen is fullfilled with the video. 
 	/// - Parameter zoomFactor: a floating point number describing the zoom factor. A
@@ -19917,7 +19924,7 @@ public class Core : LinphoneObject
 			linphone_core_set_ring_during_incoming_early_media(cPtr, newValue==true ? 1:0)
 		}
 	}
-
+		
 	/// Sets the path to a wav file used for ringing back. 
 	/// Ringback means the ring that is heard when it's ringing at the remote party.
 	/// The file must be a wav 16bit linear. 

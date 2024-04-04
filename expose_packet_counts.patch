@@ -1,63 +1,65 @@
 diff --git a/liblinphone/coreapi/private_functions.h b/liblinphone/coreapi/private_functions.h
-index 7dc2b0f15..cd0591852 100644
+index 7dc2b0f15..ee6e64d9f 100644
 --- a/liblinphone/coreapi/private_functions.h
 +++ b/liblinphone/coreapi/private_functions.h
 @@ -295,6 +295,10 @@ void _linphone_call_stats_set_upload_bandwidth (LinphoneCallStats *stats, float
  void _linphone_call_stats_set_rtcp_download_bandwidth (LinphoneCallStats *stats, float bandwidth);
  void _linphone_call_stats_set_rtcp_upload_bandwidth (LinphoneCallStats *stats, float bandwidth);
  void _linphone_call_stats_set_ip_family_of_remote (LinphoneCallStats *stats, LinphoneAddressFamily family);
-+// TN hack
++// TN patch
 +void _linphone_call_stats_set_sent_packets (LinphoneCallStats *stats, unsigned int packets);
 +void _linphone_call_stats_set_recv_packets (LinphoneCallStats *stats, unsigned int packets);
-+// TN hack
++// TN patch
  
  // FIXME: Remove this declaration, use LINPHONE_PUBLIC as ugly workaround, already defined in tester_utils.h
  LINPHONE_PUBLIC bool_t _linphone_call_stats_rtcp_received_via_mux (const LinphoneCallStats *stats);
 diff --git a/liblinphone/include/linphone/api/c-call-stats.h b/liblinphone/include/linphone/api/c-call-stats.h
-index dc2266012..c664f1249 100644
+index dc2266012..0dc4aead2 100644
 --- a/liblinphone/include/linphone/api/c-call-stats.h
 +++ b/liblinphone/include/linphone/api/c-call-stats.h
 @@ -148,6 +148,11 @@ LINPHONE_PUBLIC float linphone_call_stats_get_download_bandwidth (const Linphone
   */
  LINPHONE_PUBLIC float linphone_call_stats_get_upload_bandwidth (const LinphoneCallStats *stats);
  
-+// TN hack
++// TN patch
 +LINPHONE_PUBLIC unsigned int linphone_call_stats_get_sent_packets (const LinphoneCallStats *stats);
 +LINPHONE_PUBLIC unsigned int linphone_call_stats_get_recv_packets (const LinphoneCallStats *stats);
-+// TN hack
++// TN patch
 +
  /**
   * Get the bandwidth measurement of the received RTCP, expressed in kbit/s, including IP/UDP/RTP headers.
   * @param stats #LinphoneCallStats object @notnil
 diff --git a/liblinphone/src/c-wrapper/api/c-call-stats.cpp b/liblinphone/src/c-wrapper/api/c-call-stats.cpp
-index 45f045b8c..2ba779649 100644
+index 45f045b8c..97e29dfe1 100644
 --- a/liblinphone/src/c-wrapper/api/c-call-stats.cpp
 +++ b/liblinphone/src/c-wrapper/api/c-call-stats.cpp
 @@ -60,6 +60,10 @@ struct _LinphoneCallStats {
  	float estimated_download_bandwidth; /**<Estimated download bandwidth measurement of received stream, expressed in kbit/s, including IP/UDP/RTP headers*/
  	bool_t rtcp_received_via_mux; /*private flag, for non-regression test only*/
  	ZrtpAlgo zrtp_algo;
-+    // TN hack
-+    unsigned int rtp_sent_packets;
-+    unsigned int rtp_recv_packets;
-+    // TN hack
++	// TN patch
++	unsigned int rtp_sent_packets;
++	unsigned int rtp_recv_packets;
++	// TN patch
  };
  
  BELLE_SIP_DECLARE_VPTR_NO_EXPORT(LinphoneCallStats);
-@@ -118,6 +122,8 @@ static void _linphone_call_stats_clone (LinphoneCallStats *dst, const LinphoneCa
+@@ -118,6 +122,10 @@ static void _linphone_call_stats_clone (LinphoneCallStats *dst, const LinphoneCa
  	dst->zrtp_algo.hash_algo = src->zrtp_algo.hash_algo;
  	dst->zrtp_algo.auth_tag_algo = src->zrtp_algo.auth_tag_algo;
  	dst->zrtp_algo.sas_algo = src->zrtp_algo.sas_algo;
++	// TN patch
 +	dst->rtp_sent_packets = src->rtp_sent_packets;
 +	dst->rtp_recv_packets = src->rtp_recv_packets;
++	// TN patch
  }
  
  void _linphone_call_stats_set_ice_state (LinphoneCallStats *stats, LinphoneIceState state) {
-@@ -168,6 +174,16 @@ void _linphone_call_stats_set_rtcp_download_bandwidth (LinphoneCallStats *stats,
+@@ -168,6 +176,16 @@ void _linphone_call_stats_set_rtcp_download_bandwidth (LinphoneCallStats *stats,
  	stats->rtcp_download_bandwidth = bandwidth;
  }
  
-+// TN hack
++// TN patch
 +void _linphone_call_stats_set_sent_packets (LinphoneCallStats *stats, unsigned int packets) {
 +    stats->rtp_sent_packets = packets;
 +}
@@ -65,54 +67,56 @@ index 45f045b8c..2ba779649 100644
 +void _linphone_call_stats_set_recv_packets (LinphoneCallStats *stats, unsigned int packets) {
 +    stats->rtp_recv_packets = packets;
 +}
-+// TN hack
++// TN patch
 +
  void _linphone_call_stats_set_rtcp_upload_bandwidth (LinphoneCallStats *stats, float bandwidth) {
  	stats->rtcp_upload_bandwidth = bandwidth;
  }
-@@ -372,6 +388,14 @@ float linphone_call_stats_get_upload_bandwidth (const LinphoneCallStats *stats)
+@@ -372,6 +390,16 @@ float linphone_call_stats_get_upload_bandwidth (const LinphoneCallStats *stats)
  	return stats->upload_bandwidth;
  }
  
++// TN patch
 +unsigned int linphone_call_stats_get_sent_packets (const LinphoneCallStats *stats) {
-+    return stats->rtp_sent_packets;
++	return stats->rtp_sent_packets;
 +}
 +
 +unsigned int linphone_call_stats_get_recv_packets (const LinphoneCallStats *stats) {
-+    return stats->rtp_recv_packets;
++	return stats->rtp_recv_packets;
 +}
++// TN patch
 +
  float linphone_call_stats_get_rtcp_download_bandwidth (const LinphoneCallStats *stats) {
  	return stats->rtcp_download_bandwidth;
  }
 diff --git a/liblinphone/src/conference/session/ms2-stream.cpp b/liblinphone/src/conference/session/ms2-stream.cpp
-index 97973d30f..81473bbd2 100644
+index 97973d30f..5a109cc43 100644
 --- a/liblinphone/src/conference/session/ms2-stream.cpp
 +++ b/liblinphone/src/conference/session/ms2-stream.cpp
 @@ -1462,6 +1462,11 @@ void MS2Stream::updateBandwidthReports(){
  	_linphone_call_stats_set_ip_family_of_remote(mStats,
  		active ? (ortp_stream_is_ipv6(&mSessions.rtp_session->rtp.gs) ? LinphoneAddressFamilyInet6 : LinphoneAddressFamilyInet) : LinphoneAddressFamilyUnspec);
  
-+    // TN hack
-+    _linphone_call_stats_set_sent_packets(mStats, active ? rtp_session_get_rtp_sent_packets(ms->sessions.rtp_session) : 0);
-+    _linphone_call_stats_set_recv_packets(mStats, active ? rtp_session_get_rtp_recv_packets(ms->sessions.rtp_session) : 0);
-+    // TN hack
++	// TN patch
++	_linphone_call_stats_set_sent_packets(mStats, active ? rtp_session_get_rtp_sent_packets(ms->sessions.rtp_session) : 0);
++	_linphone_call_stats_set_recv_packets(mStats, active ? rtp_session_get_rtp_recv_packets(ms->sessions.rtp_session) : 0);
++	// TN patch
 +
  	if (getCCore()->send_call_stats_periodical_updates) {
  		CallSessionListener *listener = getMediaSessionPrivate().getCallSessionListener();
  		if (active)
 diff --git a/ortp/include/ortp/rtpsession.h b/ortp/include/ortp/rtpsession.h
-index 5b0a99bc..0dee7dac 100644
+index 5b0a99bc..0fcf5e1c 100644
 --- a/ortp/include/ortp/rtpsession.h
 +++ b/ortp/include/ortp/rtpsession.h
 @@ -324,6 +324,10 @@ typedef struct _OrtpStream {
  	bctbx_list_t *aux_destinations; /*list of OrtpAddress */
  	queue_t bundleq; /* For bundle mode */
  	ortp_mutex_t bundleq_lock;
-+    // TN hack
-+    unsigned int sent_packets;
-+    unsigned int recv_packets;
-+    // TN hack
++	// TN patch
++	unsigned int sent_packets;
++	unsigned int recv_packets;
++	// TN patch
  } OrtpStream;
  
  typedef struct _RtpStream
@@ -120,46 +124,46 @@ index 5b0a99bc..0dee7dac 100644
  ORTP_PUBLIC float rtp_session_get_rtcp_send_bandwidth(RtpSession *session);
  ORTP_PUBLIC float rtp_session_get_rtcp_recv_bandwidth(RtpSession *session);
  
-+// TN hack
++// TN patch
 +ORTP_PUBLIC unsigned int rtp_session_get_rtp_sent_packets(RtpSession *session);
 +ORTP_PUBLIC unsigned int rtp_session_get_rtp_recv_packets(RtpSession *session);
-+// TN hack
++// TN patch
 +
  ORTP_PUBLIC float rtp_session_get_send_bandwidth_smooth(RtpSession *session);
  ORTP_PUBLIC float rtp_session_get_recv_bandwidth_smooth(RtpSession *session);
  
 diff --git a/ortp/src/rtpsession.c b/ortp/src/rtpsession.c
-index 8964b052..60418241 100644
+index 8964b052..e5142267 100644
 --- a/ortp/src/rtpsession.c
 +++ b/ortp/src/rtpsession.c
 @@ -2134,6 +2134,16 @@ float rtp_session_get_rtcp_recv_bandwidth(RtpSession *session) {
  	return ortp_bw_estimator_get_value(&session->rtcp.gs.recv_bw_estimator);
  }
  
-+// TN hack
++// TN patch
 +unsigned int rtp_session_get_rtp_sent_packets(RtpSession *session) {
-+    return session->rtp.gs.sent_packets;
++	return session->rtp.gs.sent_packets;
 +}
 +
 +unsigned int rtp_session_get_rtp_recv_packets(RtpSession *session) {
-+    return session->rtp.gs.recv_packets;
++	return session->rtp.gs.recv_packets;
 +}
-+// TN hack
++// TN patch
 +
  float rtp_session_get_rtcp_send_bandwidth(RtpSession *session) {
  	return session->rtcp.gs.upload_bw;
  }
 diff --git a/ortp/src/rtpsession_inet.c b/ortp/src/rtpsession_inet.c
-index bdb42ac4..72936fe8 100644
+index bdb42ac4..d139266a 100644
 --- a/ortp/src/rtpsession_inet.c
 +++ b/ortp/src/rtpsession_inet.c
 @@ -1401,6 +1401,9 @@ void update_sent_bytes(OrtpStream *os, int nbytes) {
  		bctbx_gettimeofday(&os->send_bw_start, NULL);
  	}
  	os->sent_bytes += nbytes + overhead;
-+    // TN hack
-+    os->sent_packets += 1;
-+    // TN hack
++	// TN patch
++	os->sent_packets += 1;
++	// TN patch
  }
  
  static void update_recv_bytes(OrtpStream *os, size_t nbytes, const struct timeval *recv_time) {
@@ -167,9 +171,9 @@ index bdb42ac4..72936fe8 100644
  		bctbx_gettimeofday(&os->recv_bw_start, NULL);
  	}
  	os->recv_bytes += (unsigned int)(nbytes + overhead);
-+    // TN hack
-+    os->recv_packets += 1;
-+    // TN hack
++	// TN patch
++	os->recv_packets += 1;
++	// TN patch
  	ortp_bw_estimator_packet_received(&os->recv_bw_estimator, nbytes + overhead, recv_time);
  }
  

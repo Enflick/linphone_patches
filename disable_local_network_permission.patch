@@ -7,7 +7,7 @@ index 6e02de334..fdb0b51c2 100644
  	}
  
 -#if defined(__APPLE__) && TARGET_OS_IPHONE
-+// TN hack - disable local network permission check, looks like we don't need it for TCP TURN
++// TN patch - disable local network permission check, looks like we don't need it for TCP TURN
 +#if 0
  	if (getPlatformHelpers(getCCore())->getNetworkType() == PlatformHelpers::NetworkType::Wifi 
  		&& !hasLocalNetworkPermission(localAddrs)) return -1;
