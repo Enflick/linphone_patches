@@ -29192,9 +29192,23 @@ public class NatPolicy : LinphoneObject
 			linphone_nat_policy_set_user_data(cPtr, newValue)
 		}
 	}
-		
-	
-	
+
+
+	// TN patch
+	public var delayIceForExternalCallback: Bool
+	{
+		get
+		{
+			return linphone_delay_ice_for_external_callback_enabled(cPtr) != 0
+		}
+		set
+		{
+			linphone_enable_delay_ice_for_external_callback(cPtr, newValue==true ? 1:0)
+		}
+	}
+	// TN hack
+
+
 	/// Clear a NAT policy (deactivate all protocols and unset the STUN server). 
 	public func clear() 
 	{
