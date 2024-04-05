@@ -3328,10 +3328,6 @@ LINPHONE_PUBLIC void linphone_core_set_ring_during_incoming_early_media(Linphone
  */
 LINPHONE_PUBLIC bool_t linphone_core_get_ring_during_incoming_early_media(const LinphoneCore *core);
 
-// TN hack to skip outgoing early media state
-LINPHONE_PUBLIC void linphone_core_set_skip_outgoing_early_media(LinphoneCore *core, bool_t enable);
-LINPHONE_PUBLIC bool_t linphone_core_get_skip_outgoing_early_media(const LinphoneCore *core);
-
 LINPHONE_PUBLIC LinphoneStatus linphone_core_preview_ring(LinphoneCore *core, const char *ring, LinphoneCoreCbFunc func,
 														  void *userdata);
 

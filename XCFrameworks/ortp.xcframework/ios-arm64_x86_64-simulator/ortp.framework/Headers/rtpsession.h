@@ -324,10 +324,10 @@ typedef struct _OrtpStream {
 	bctbx_list_t *aux_destinations; /*list of OrtpAddress */
 	queue_t bundleq; /* For bundle mode */
 	ortp_mutex_t bundleq_lock;
-    // TN hack
-    unsigned int sent_packets;
-    unsigned int recv_packets;
-    // TN hack
+	// TN patch
+	unsigned int sent_packets;
+	unsigned int recv_packets;
+	// TN patch
 } OrtpStream;
 
 typedef struct _RtpStream
@@ -660,10 +660,10 @@ ORTP_PUBLIC float rtp_session_get_rtp_recv_bandwidth(RtpSession *session);
 ORTP_PUBLIC float rtp_session_get_rtcp_send_bandwidth(RtpSession *session);
 ORTP_PUBLIC float rtp_session_get_rtcp_recv_bandwidth(RtpSession *session);
 
-// TN hack
+// TN patch
 ORTP_PUBLIC unsigned int rtp_session_get_rtp_sent_packets(RtpSession *session);
 ORTP_PUBLIC unsigned int rtp_session_get_rtp_recv_packets(RtpSession *session);
-// TN hack
+// TN patch
 
 ORTP_PUBLIC float rtp_session_get_send_bandwidth_smooth(RtpSession *session);
 ORTP_PUBLIC float rtp_session_get_recv_bandwidth_smooth(RtpSession *session);

@@ -506,6 +506,10 @@ LINPHONE_PUBLIC LinphoneStatus linphone_call_accept_early_media_with_params (Lin
 **/
 LINPHONE_PUBLIC LinphoneStatus linphone_call_update (LinphoneCall *call, const LinphoneCallParams *params);
 
+// TN patch
+LINPHONE_PUBLIC void linphone_call_reconnect (LinphoneCall *call);
+// TN patch
+
 /**
  * When receiving a #LinphoneCallUpdatedByRemote state notification, prevent #LinphoneCore from performing an automatic answer.
  *

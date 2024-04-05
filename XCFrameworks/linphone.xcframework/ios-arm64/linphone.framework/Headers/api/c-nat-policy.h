@@ -289,6 +289,17 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tls_turn_transport_enabled(const Linp
  */
 LINPHONE_PUBLIC LinphoneCore *linphone_nat_policy_get_core(const LinphoneNatPolicy *policy);
 
+// TN patch
+bool_t linphone_delay_ice_for_external_callback_enabled(const LinphoneNatPolicy *policy);
+void linphone_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable);
+
+typedef void (*BasicFunc)();
+typedef void (*FuncTakingFunc)(BasicFunc);
+
+FuncTakingFunc linphone_get_delay_ice_external_callback();
+void linphone_set_delay_ice_external_callback(FuncTakingFunc func);
+// TN patch
+
 /**
  * @}
  */
