@@ -39,7 +39,7 @@ mkdir -p build/ && cd build/
 ### Standard cmake build steps, with an additional copy step at the end, this is a one-liner that can be re-run to re-build and copy
 
 ```
-cmake .. -G Ninja -DLINPHONESDK_PLATFORM=IOS -DCMAKE_BUILD_TYPE=Release -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_VIDEO=NO -DENABLE_MKV=NO \
+cmake .. -G Ninja -DLINPHONESDK_PLATFORM=IOS -DCMAKE_BUILD_TYPE=Release -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO \
 && cmake --build . --parallel 4 \
 && rm -rf linphone-sdk-ios-${LINPHONE_VERSION} \
 && unzip -d linphone-sdk-ios-${LINPHONE_VERSION} linphone-sdk-ios-${LINPHONE_VERSION}.zip \

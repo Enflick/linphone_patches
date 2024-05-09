@@ -23,10 +23,8 @@ let package = Package(
                 "linphone",
                 "bctoolbox-ios",
                 "bctoolbox",
-                "belcard",
                 "belr",
                 "belle-sip",
-                "lime",
                 "mediastreamer2",
                 "msamr",
                 "mscodec2",
@@ -34,7 +32,6 @@ let package = Package(
                 "mssilk",
                 "mswebrtc",
                 "ortp",
-                "ZXing"
             ]
         ),
         .binaryTarget(
@@ -50,20 +47,12 @@ let package = Package(
             path: "XCFrameworks/bctoolbox.xcframework"
         ),
         .binaryTarget(
-            name: "belcard",
-            path: "XCFrameworks/belcard.xcframework"
-        ),
-        .binaryTarget(
             name: "belr",
             path: "XCFrameworks/belr.xcframework"
         ),
         .binaryTarget(
             name: "belle-sip",
             path: "XCFrameworks/belle-sip.xcframework"
-        ),
-        .binaryTarget(
-            name: "lime",
-            path: "XCFrameworks/lime.xcframework"
         ),
         .binaryTarget(
             name: "mediastreamer2",
@@ -92,10 +81,6 @@ let package = Package(
         .binaryTarget(
             name: "ortp",
             path: "XCFrameworks/ortp.xcframework"
-        ),
-        .binaryTarget(
-            name: "ZXing",
-            path: "XCFrameworks/ZXing.xcframework"
         )
     ]
 )
