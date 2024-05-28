@@ -1,0 +1,141 @@
+diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
+index 1d3ea5d1f..51611dbdf 100644
+--- a/liblinphone/coreapi/linphonecore.c
++++ b/liblinphone/coreapi/linphonecore.c
+@@ -7889,6 +7889,10 @@ int linphone_core_get_calls_nb(const LinphoneCore *lc) {
+ 	return (int)L_GET_CPP_PTR_FROM_C_OBJECT(lc)->getCallCount();
+ }
+ 
++bool_t linphone_core_is_audio_session_active (LinphoneCore* lc) {
++	return L_GET_CPP_PTR_FROM_C_OBJECT(lc)->soundcardIsAudioSessionActive();
++}
++
+ void linphone_core_activate_audio_session (LinphoneCore* lc, bool_t actived) {
+ 	L_GET_CPP_PTR_FROM_C_OBJECT(lc)->soundcardActivateAudioSession(actived);
+ }
+diff --git a/liblinphone/include/linphone/core_utils.h b/liblinphone/include/linphone/core_utils.h
+index 4138c317d..31b9e41fc 100644
+--- a/liblinphone/include/linphone/core_utils.h
++++ b/liblinphone/include/linphone/core_utils.h
+@@ -131,6 +131,14 @@ LINPHONE_PUBLIC void linphone_core_start_dtmf_stream(LinphoneCore* core);
+  */
+ LINPHONE_PUBLIC void linphone_core_stop_dtmf_stream(LinphoneCore* core);
+ 
++/**
++ * Indicates if the audio session is activated.
++ * @param core The #LinphoneCore object. @notnil
++ * @return TRUE to if activated, FALSE otherwise.
++ * @ingroup IOS
++ */
++LINPHONE_PUBLIC bool_t linphone_core_is_audio_session_active(LinphoneCore* core);
++
+ /**
+  * Special function to indicate if the audio session is activated. Must be called when ProviderDelegate of the callkit notifies that the audio session is activated or deactivated.
+  * @param core The #LinphoneCore object. @notnil
+diff --git a/liblinphone/src/core/core-call.cpp b/liblinphone/src/core/core-call.cpp
+index 157cff566..47378c181 100644
+--- a/liblinphone/src/core/core-call.cpp
++++ b/liblinphone/src/core/core-call.cpp
+@@ -290,6 +290,14 @@ LinphoneStatus Core::pauseAllCalls () {
+ 	return 0;
+ }
+ 
++bool Core::soundcardIsAudioSessionActive () {
++	MSSndCard *card = getCCore()->sound_conf.play_sndcard;
++	if (card) {
++		return ms_snd_card_is_audio_session_active(card);
++	}
++	return false;
++}
++
+ void Core::soundcardActivateAudioSession (bool actived) {
+ 	MSSndCard *card = getCCore()->sound_conf.play_sndcard;
+ 	if (card) {
+diff --git a/liblinphone/src/core/core.h b/liblinphone/src/core/core.h
+index 85dbe4f3a..ca3d3b944 100644
+--- a/liblinphone/src/core/core.h
++++ b/liblinphone/src/core/core.h
+@@ -145,6 +145,7 @@ public:
+ 	unsigned int getCallCount () const;
+ 	std::shared_ptr<Call> getCurrentCall () const;
+ 	LinphoneStatus pauseAllCalls ();
++	bool soundcardIsAudioSessionActive ();
+ 	void soundcardActivateAudioSession (bool active);
+ 	void soundcardConfigureAudioSession ();
+ 	void soundcardEnableCallkit (bool enabled);
+diff --git a/mediastreamer2/include/mediastreamer2/mssndcard.h b/mediastreamer2/include/mediastreamer2/mssndcard.h
+index 26177809..42186f6d 100644
+--- a/mediastreamer2/include/mediastreamer2/mssndcard.h
++++ b/mediastreamer2/include/mediastreamer2/mssndcard.h
+@@ -101,6 +101,7 @@ typedef struct _MSFilter * (*MSSndCardCreateWriterFunc)(struct _MSSndCard *obj);
+ typedef struct _MSSndCard * (*MSSndCardDuplicateFunc)(struct _MSSndCard *obj);
+ typedef void (*MSSndCardSetUsageHintFunc)(struct _MSSndCard *obj, bool_t is_going_to_be_used);
+ typedef void (*MSSndCardUnloadFunc)(MSSndCardManager *obj);
++typedef bool_t (*MSSndCardIsAudioSessionActiveFunc)(struct _MSSndCard *obj);
+ typedef void (*MSSndCardAudioSessionFunc)(struct _MSSndCard *obj, bool_t actived);
+ typedef void (*MSSndCardCallKitFunc)(struct _MSSndCard *obj, bool_t enabled);
+ typedef void (*MSSndCardAudioRouteFunc)(struct _MSSndCard *obj);
+@@ -122,6 +123,7 @@ struct _MSSndCardDesc{
+ 	MSSndCardDuplicateFunc duplicate;
+ 	MSSndCardUnloadFunc unload;
+ 	MSSndCardSetUsageHintFunc usage_hint;
++	MSSndCardIsAudioSessionActiveFunc audio_session_is_active;
+ 	MSSndCardAudioSessionFunc audio_session_activated;
+ 	MSSndCardCallKitFunc callkit_enabled;
+ 	MSSndCardAudioRouteFunc audio_route_changed;
+@@ -724,6 +726,14 @@ MS2_PUBLIC int ms_snd_card_set_preferred_sample_rate(MSSndCard *obj,int rate);
+ **/
+ MS2_PUBLIC void ms_snd_card_set_usage_hint(MSSndCard *obj, bool_t is_going_to_be_used);
+ 
++/**
++ * Indicates if the audio session is activated. See ms_snd_card_notify_audio_session_activated()
++ *
++ * @param obj      A sound card object.
++ * @return         TRUE if audio session is activated, FALSE otherwise.
++ */
++MS2_PUBLIC bool_t ms_snd_card_is_audio_session_active(MSSndCard *obj);
++
+ /**
+  * Used by application to notify whether audio access is allowed for the process.
+  * On most platform this function is useless, but in an iOS application using Callkit, the system decides when audio (through the AVAudioSession singleton) is open or closed.
+diff --git a/mediastreamer2/src/audiofilters/msiounit.mm b/mediastreamer2/src/audiofilters/msiounit.mm
+index 9c0ded73..bd98346a 100644
+--- a/mediastreamer2/src/audiofilters/msiounit.mm
++++ b/mediastreamer2/src/audiofilters/msiounit.mm
+@@ -887,6 +887,11 @@ static void au_audio_route_changed(MSSndCard *obj) {
+ 	handle_sample_rate_change(FALSE);
+ }
+ 
++static bool_t au_audio_session_is_active(MSSndCard *obj) {
++	AudioUnitHolder *au_holder = [AudioUnitHolder sharedInstance];
++	return au_holder.audio_session_activated;
++}
++
+ static void au_audio_session_activated(MSSndCard *obj, bool_t activated) {
+ 	AudioUnitHolder *au_holder = [AudioUnitHolder sharedInstance];
+ 	bool_t need_audio_session_reconfiguration = FALSE;
+@@ -976,6 +981,7 @@ static void au_configure(MSSndCard *obj) {
+ .uninit=au_uninit,
+ .duplicate=au_duplicate,
+ .usage_hint=au_usage_hint,
++.audio_session_is_active=au_audio_session_is_active,
+ .audio_session_activated=au_audio_session_activated,
+ .callkit_enabled=au_callkit_enabled,
+ .audio_route_changed=au_audio_route_changed,
+diff --git a/mediastreamer2/src/base/mssndcard.c b/mediastreamer2/src/base/mssndcard.c
+index 5b203d1f..4bdda839 100644
+--- a/mediastreamer2/src/base/mssndcard.c
++++ b/mediastreamer2/src/base/mssndcard.c
+@@ -504,6 +504,12 @@ void ms_snd_card_set_usage_hint(MSSndCard *obj, bool_t is_going_to_be_used){
+ 		obj->desc->usage_hint(obj, is_going_to_be_used);
+ }
+ 
++bool_t ms_snd_card_is_audio_session_active(MSSndCard *obj) {
++	if (obj->desc->audio_session_is_active != NULL)
++		return obj->desc->audio_session_is_active(obj);
++	return FALSE;
++}
++
+ void ms_snd_card_notify_audio_session_activated(MSSndCard *obj, bool_t activated) {
+ 	if (obj->desc->audio_session_activated != NULL)
+ 		obj->desc->audio_session_activated(obj,activated);

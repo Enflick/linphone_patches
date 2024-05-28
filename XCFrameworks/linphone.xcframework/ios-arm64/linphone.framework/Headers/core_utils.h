@@ -132,6 +132,14 @@ LINPHONE_PUBLIC void linphone_core_start_dtmf_stream(LinphoneCore* core);
 LINPHONE_PUBLIC void linphone_core_stop_dtmf_stream(LinphoneCore* core);
 
 /**
+ * Indicates if the audio session is activated.
+ * @param core The #LinphoneCore object. @notnil
+ * @return TRUE to if activated, FALSE otherwise.
+ * @ingroup IOS
+ */
+LINPHONE_PUBLIC bool_t linphone_core_is_audio_session_active(LinphoneCore* core);
+
+/**
  * Special function to indicate if the audio session is activated. Must be called when ProviderDelegate of the callkit notifies that the audio session is activated or deactivated.
  * @param core The #LinphoneCore object. @notnil
  * @param activated TRUE to activate the audio session, FALSE to disable it.

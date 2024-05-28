@@ -101,6 +101,7 @@ typedef struct _MSFilter * (*MSSndCardCreateWriterFunc)(struct _MSSndCard *obj);
 typedef struct _MSSndCard * (*MSSndCardDuplicateFunc)(struct _MSSndCard *obj);
 typedef void (*MSSndCardSetUsageHintFunc)(struct _MSSndCard *obj, bool_t is_going_to_be_used);
 typedef void (*MSSndCardUnloadFunc)(MSSndCardManager *obj);
+typedef bool_t (*MSSndCardIsAudioSessionActiveFunc)(struct _MSSndCard *obj);
 typedef void (*MSSndCardAudioSessionFunc)(struct _MSSndCard *obj, bool_t actived);
 typedef void (*MSSndCardCallKitFunc)(struct _MSSndCard *obj, bool_t enabled);
 typedef void (*MSSndCardAudioRouteFunc)(struct _MSSndCard *obj);
@@ -122,6 +123,7 @@ struct _MSSndCardDesc{
 	MSSndCardDuplicateFunc duplicate;
 	MSSndCardUnloadFunc unload;
 	MSSndCardSetUsageHintFunc usage_hint;
+	MSSndCardIsAudioSessionActiveFunc audio_session_is_active;
 	MSSndCardAudioSessionFunc audio_session_activated;
 	MSSndCardCallKitFunc callkit_enabled;
 	MSSndCardAudioRouteFunc audio_route_changed;
@@ -723,6 +725,14 @@ MS2_PUBLIC int ms_snd_card_set_preferred_sample_rate(MSSndCard *obj,int rate);
  * This is recommended for cards which are known to be slow (see flag MS_SND_CARD_CAP_IS_SLOW ).
 **/
 MS2_PUBLIC void ms_snd_card_set_usage_hint(MSSndCard *obj, bool_t is_going_to_be_used);
+
+/**
+ * Indicates if the audio session is activated. See ms_snd_card_notify_audio_session_activated()
+ *
+ * @param obj      A sound card object.
+ * @return         TRUE if audio session is activated, FALSE otherwise.
+ */
+MS2_PUBLIC bool_t ms_snd_card_is_audio_session_active(MSSndCard *obj);
 
 /**
  * Used by application to notify whether audio access is allowed for the process.

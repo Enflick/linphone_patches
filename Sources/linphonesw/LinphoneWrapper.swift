@@ -21313,8 +21313,18 @@ public class Core : LinphoneObject
 		}
 	}
 		
-	
-	
+
+
+	/// Indicates if the audio session is activated.
+	public var isAudioSessionActive: Bool
+	{
+		get
+		{
+			return linphone_core_is_audio_session_active(cPtr) != 0
+		}
+	}
+
+
 	/// Special function to indicate if the audio session is activated. 
 	/// Must be called when ProviderDelegate of the callkit notifies that the audio
 	/// session is activated or deactivated. 
