@@ -1,27 +1,40 @@
 diff --git a/liblinphone/include/linphone/api/c-nat-policy.h b/liblinphone/include/linphone/api/c-nat-policy.h
-index f72acba9d..9c3590e2e 100644
+index f72acba9d..137abe242 100644
 --- a/liblinphone/include/linphone/api/c-nat-policy.h
 +++ b/liblinphone/include/linphone/api/c-nat-policy.h
-@@ -289,6 +289,17 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tls_turn_transport_enabled(const Linp
+@@ -289,6 +289,30 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tls_turn_transport_enabled(const Linp
   */
  LINPHONE_PUBLIC LinphoneCore *linphone_nat_policy_get_core(const LinphoneNatPolicy *policy);
  
 +// TN patch
-+bool_t linphone_delay_ice_for_external_callback_enabled(const LinphoneNatPolicy *policy);
-+void linphone_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable);
++
++/**
++ * Tells whether the delay ICE feature is enabled.
++ * @param policy #LinphoneNatPolicy object @notnil
++ * @return Boolean value telling whether the delay ICE feature is enabled.
++ */
++bool_t linphone_nat_policy_delay_ice_for_external_callback_enabled(const LinphoneNatPolicy *policy);
++
++/**
++ * Tells whether the delay ICE feature is enabled.
++ * @param policy #LinphoneNatPolicy object @notnil
++ * @param enable Boolean value telling whether the delay ICE feature is enabled.
++ */
++void linphone_nat_policy_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable);
 +
 +typedef void (*BasicFunc)();
 +typedef void (*FuncTakingFunc)(BasicFunc);
 +
 +FuncTakingFunc linphone_get_delay_ice_external_callback();
 +void linphone_set_delay_ice_external_callback(FuncTakingFunc func);
++
 +// TN patch
 +
  /**
   * @}
   */
 diff --git a/liblinphone/src/c-wrapper/api/c-nat-policy.cpp b/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
-index 10b1b48dd..c70beef61 100644
+index 10b1b48dd..161c3e6ed 100644
 --- a/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
 +++ b/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
 @@ -167,3 +167,23 @@ const char * linphone_nat_policy_get_nat_v6_address(const LinphoneNatPolicy *pol
@@ -30,11 +43,11 @@ index 10b1b48dd..c70beef61 100644
  }
 +
 +// TN patch
-+bool_t linphone_delay_ice_for_external_callback_enabled(const LinphoneNatPolicy *policy) {
++bool_t linphone_nat_policy_delay_ice_for_external_callback_enabled(const LinphoneNatPolicy *policy) {
 +	return NatPolicy::toCpp(policy)->delayIceEnabled() ? TRUE : FALSE;
 +}
 +
-+void linphone_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable){
++void linphone_nat_policy_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable){
 +	NatPolicy::toCpp(policy)->enableDelayIce(!!enable);
 +}
 +
@@ -130,9 +143,9 @@ index fce30a5bc..f45667299 100644
 +	return 0;
 +	};
 +
-+	lInfo() << "MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() -> linphone_delay_ice_for_external_callback_enabled=" << (int)linphone_delay_ice_for_external_callback_enabled(natPolicy);
++	lInfo() << "MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() -> linphone_nat_policy_delay_ice_for_external_callback_enabled=" << (int)linphone_nat_policy_delay_ice_for_external_callback_enabled(natPolicy);
 +
-+	if (linphone_delay_ice_for_external_callback_enabled(natPolicy)) {
++	if (linphone_nat_policy_delay_ice_for_external_callback_enabled(natPolicy)) {
 +		MediaSessionPrivate::iceDeferedPrepareTasks.push(deferredTask);
 +		const auto callback = linphone_get_delay_ice_external_callback();
 +		callback(&MediaSessionPrivate::runIcePrepareTasks);

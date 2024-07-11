@@ -1,13 +1,19 @@
 diff --git a/liblinphone/include/linphone/api/c-call.h b/liblinphone/include/linphone/api/c-call.h
-index 215dc074c..4a7f6badd 100644
+index 215dc074c..a8365bee0 100644
 --- a/liblinphone/include/linphone/api/c-call.h
 +++ b/liblinphone/include/linphone/api/c-call.h
-@@ -506,6 +506,10 @@ LINPHONE_PUBLIC LinphoneStatus linphone_call_accept_early_media_with_params (Lin
+@@ -506,6 +506,16 @@ LINPHONE_PUBLIC LinphoneStatus linphone_call_accept_early_media_with_params (Lin
  **/
  LINPHONE_PUBLIC LinphoneStatus linphone_call_update (LinphoneCall *call, const LinphoneCallParams *params);
  
 +// TN patch
++
++/**
++ * Causes a running call to reconnect, the same way as a network reconnect.
++ * @param call A #LinphoneCall object @notnil
++**/
 +LINPHONE_PUBLIC void linphone_call_reconnect (LinphoneCall *call);
++
 +// TN patch
 +
  /**
