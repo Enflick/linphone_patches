@@ -326,7 +326,7 @@ typedef struct _OrtpStream {
 	ortp_mutex_t bundleq_lock;
 	// TN patch
 	unsigned int sent_packets;
-	unsigned int recv_packets;
+	unsigned int received_packets;
 	// TN patch
 } OrtpStream;
 
@@ -662,7 +662,7 @@ ORTP_PUBLIC float rtp_session_get_rtcp_recv_bandwidth(RtpSession *session);
 
 // TN patch
 ORTP_PUBLIC unsigned int rtp_session_get_rtp_sent_packets(RtpSession *session);
-ORTP_PUBLIC unsigned int rtp_session_get_rtp_recv_packets(RtpSession *session);
+ORTP_PUBLIC unsigned int rtp_session_get_rtp_recieved_packets(RtpSession *session);
 // TN patch
 
 ORTP_PUBLIC float rtp_session_get_send_bandwidth_smooth(RtpSession *session);

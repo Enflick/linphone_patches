@@ -132,7 +132,7 @@ LINPHONE_PUBLIC void linphone_core_start_dtmf_stream(LinphoneCore* core);
 LINPHONE_PUBLIC void linphone_core_stop_dtmf_stream(LinphoneCore* core);
 
 /**
- * Indicates if the audio session is activated.
+ * Special function to indicate if the audio session is activated.
  * @param core The #LinphoneCore object. @notnil
  * @return TRUE to if activated, FALSE otherwise.
  * @ingroup IOS

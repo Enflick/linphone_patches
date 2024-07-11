@@ -9994,6 +9994,14 @@ public class Call : LinphoneObject
 	
 	
 	
+	/// Causes a running call to reconnect, the same way as a network reconnect. 
+	public func reconnect() 
+	{
+		linphone_call_reconnect(cPtr)
+	}
+	
+	
+	
 	/// Redirect the specified call to the given redirect URI. 
 	/// - Parameter redirectUri: The URI to redirect the call to    
 	/// - Returns: 0 if successful, -1 on error. 
@@ -10262,16 +10270,9 @@ public class Call : LinphoneObject
 			throw LinphoneError.exception(result: "update returned value \(exception_result)")
 		}
 	}
-
-
-	// TN patch
-	public func reconnect()
-	{
-		linphone_call_reconnect(cPtr)
-	}
-	// TN patch
-
-
+	
+	
+	
 	/// Perform a zoom of the video displayed during a call. 
 	/// The zoom ensures that all the screen is fullfilled with the video. 
 	/// - Parameter zoomFactor: a floating point number describing the zoom factor. A
@@ -11649,6 +11650,16 @@ public class CallStats : LinphoneObject
 	}
 		
 	
+	/// Get the received packet count. 
+	/// - Returns: The received packet count. 
+	public var receivedPackets: UInt
+	{
+	
+						return UInt(linphone_call_stats_get_received_packets(cPtr))
+
+	}
+		
+	
 	/// Gets the remote reported interarrival jitter. 
 	/// - Returns: The interarrival jitter at last received receiver report 
 	public var receiverInterarrivalJitter: Float
@@ -11717,6 +11728,16 @@ public class CallStats : LinphoneObject
 	{
 	
 						return linphone_call_stats_get_sender_loss_rate(cPtr)
+
+	}
+		
+	
+	/// Get the sent packet count. 
+	/// - Returns: The sent packet count. 
+	public var sentPackets: UInt
+	{
+	
+						return UInt(linphone_call_stats_get_sent_packets(cPtr))
 
 	}
 		
@@ -11833,19 +11854,6 @@ public class CallStats : LinphoneObject
 			return result
 
 	}
-
-// TN hack
-    public var sentPackets: UInt
-    {
-        return UInt(linphone_call_stats_get_sent_packets(cPtr))
-    }
-
-    public var receivedPackets: UInt
-    {
-        return UInt(linphone_call_stats_get_recv_packets(cPtr))
-    }
-// TN hack
-
 	}
 
 /// An chat message is the object that is sent or received through a `ChatRoom`. 
@@ -18616,6 +18624,16 @@ public class Core : LinphoneObject
 	}
 		
 	
+	/// Special function to indicate if the audio session is activated. 
+	/// - Returns: true to if activated, false otherwise. 
+	public var isAudioSessionActive: Bool
+	{
+	
+						return linphone_core_is_audio_session_active(cPtr) != 0
+
+	}
+		
+	
 	/// Gets if the auto download for incoming icalendars is enabled or not. 
 	/// - Returns: true if icalendars will be automatically downloaded, false otherwise.
 	/// - deprecated: 16/12/2021 Use autoDownloadIcalendarsEnabled() instead. 
@@ -21313,18 +21331,8 @@ public class Core : LinphoneObject
 		}
 	}
 		
-
-
-	/// Indicates if the audio session is activated.
-	public var isAudioSessionActive: Bool
-	{
-		get
-		{
-			return linphone_core_is_audio_session_active(cPtr) != 0
-		}
-	}
-
-
+	
+	
 	/// Special function to indicate if the audio session is activated. 
 	/// Must be called when ProviderDelegate of the callkit notifies that the audio
 	/// session is activated or deactivated. 
@@ -28940,6 +28948,25 @@ public class NatPolicy : LinphoneObject
 
 	}
 		
+	/// Tells whether the delay ICE feature is enabled. 
+	/// - Parameter enable: Boolean value telling whether the delay ICE feature is
+	/// enabled. 
+	
+	/// Tells whether the delay ICE feature is enabled. 
+	/// - Returns: Boolean value telling whether the delay ICE feature is enabled. 
+	public var delayIceForExternalCallbackEnabled: Bool
+	{
+	
+		get
+		{ 
+						return linphone_nat_policy_delay_ice_for_external_callback_enabled(cPtr) != 0
+		}
+		set
+		{
+			linphone_nat_policy_enable_delay_ice_for_external_callback(cPtr, newValue==true ? 1:0)
+		}
+	}
+		
 	/// Enable ICE. 
 	/// ICE can be enabled without STUN/TURN, in which case only the local candidates
 	/// will be used. 
@@ -29202,23 +29229,9 @@ public class NatPolicy : LinphoneObject
 			linphone_nat_policy_set_user_data(cPtr, newValue)
 		}
 	}
-
-
-	// TN patch
-	public var delayIceForExternalCallback: Bool
-	{
-		get
-		{
-			return linphone_delay_ice_for_external_callback_enabled(cPtr) != 0
-		}
-		set
-		{
-			linphone_enable_delay_ice_for_external_callback(cPtr, newValue==true ? 1:0)
-		}
-	}
-	// TN hack
-
-
+		
+	
+	
 	/// Clear a NAT policy (deactivate all protocols and unset the STUN server). 
 	public func clear() 
 	{

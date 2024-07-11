@@ -46,9 +46,6 @@ cmake .. -G Ninja -DLINPHONESDK_PLATFORM=IOS -DCMAKE_BUILD_TYPE=Release -DENABLE
 && rm -rf ${PATH_TO_SPM_DIR}/XCFrameworks/ \
 && cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/XCFrameworks/ ${PATH_TO_SPM_DIR}/XCFrameworks/ \
 && cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/share/linphonesw/* ${PATH_TO_SPM_DIR}/Sources/linphonesw/ \
-&& pushd ${PATH_TO_SPM_DIR} \
-&& git checkout Sources/linphonesw/LinphoneWrapper.swift \
-&& popd \
 && echo 'Success!'
 ```
 

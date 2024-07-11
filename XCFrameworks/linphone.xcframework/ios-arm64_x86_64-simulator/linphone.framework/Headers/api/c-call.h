@@ -507,7 +507,13 @@ LINPHONE_PUBLIC LinphoneStatus linphone_call_accept_early_media_with_params (Lin
 LINPHONE_PUBLIC LinphoneStatus linphone_call_update (LinphoneCall *call, const LinphoneCallParams *params);
 
 // TN patch
+
+/**
+ * Causes a running call to reconnect, the same way as a network reconnect.
+ * @param call A #LinphoneCall object @notnil
+**/
 LINPHONE_PUBLIC void linphone_call_reconnect (LinphoneCall *call);
+
 // TN patch
 
 /**
