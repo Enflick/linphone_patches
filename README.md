@@ -36,7 +36,7 @@ for p in ${PATH_TO_SPM_DIR}/*.patch; do patch --strip=1 --forward --input $p; do
 mkdir -p build/ && cd build/
 ```
 
-### Standard cmake build steps, with an additional copy step at the end, this is a one-liner that can be re-run to re-build and copy
+### iOS cmake build steps, with an additional copy step at the end, this is a one-liner that can be re-run to re-build and copy
 
 ```
 cmake .. -G Ninja -DLINPHONESDK_PLATFORM=IOS -DCMAKE_BUILD_TYPE=Release -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO \
@@ -47,6 +47,13 @@ cmake .. -G Ninja -DLINPHONESDK_PLATFORM=IOS -DCMAKE_BUILD_TYPE=Release -DENABLE
 && cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/XCFrameworks/ ${PATH_TO_SPM_DIR}/XCFrameworks/ \
 && cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/share/linphonesw/* ${PATH_TO_SPM_DIR}/Sources/linphonesw/ \
 && echo 'Success!'
+```
+
+### Android cmake build steps, the artifacts then need to be manually uploaded to Nexus
+
+```
+cmake .. -G Ninja -DLINPHONESDK_PLATFORM=Android -DLINPHONESDK_ANDROID_ARCHS=arm64 -DCMAKE_BUILD_TYPE=Release -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO \
+&& cmake --build . --parallel 4
 ```
 
 ### Finally commit changes in the SPM repo and update Package.swift references as needed
