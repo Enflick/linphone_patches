@@ -3998,6 +3998,10 @@ public protocol CoreDelegate : AnyObject {
 	/// - Parameter state: The new state for this account. 
 	/// - Parameter message: a non nil informational message about the state    
 	func onAccountRegistrationStateChanged(core: Core, account: Account, state: RegistrationState, message: String)
+	
+	/// Delay ICE callback. 
+	/// - Parameter core: the LinphoneCore    
+	func onDelayIceCallback(core: Core)
 }
 
 public extension CoreDelegate {
@@ -4113,6 +4117,8 @@ public extension CoreDelegate {
 	func onEcCalibrationAudioUninit(core: Core) {}
 	
 	func onAccountRegistrationStateChanged(core: Core, account: Account, state: RegistrationState, message: String) {}
+	
+	func onDelayIceCallback(core: Core) {}
 }
 
 public final class CoreDelegateStub : CoreDelegate
@@ -4173,6 +4179,7 @@ public final class CoreDelegateStub : CoreDelegate
 	var _onEcCalibrationAudioInit: ((Core) -> Void)?
 	var _onEcCalibrationAudioUninit: ((Core) -> Void)?
 	var _onAccountRegistrationStateChanged: ((Core, Account, RegistrationState, String) -> Void)?
+	var _onDelayIceCallback: ((Core) -> Void)?
 
 	
 	public func onGlobalStateChanged(core: Core, state: GlobalState, message: String){_onGlobalStateChanged.map{$0(core, state, message)}}
@@ -4286,6 +4293,8 @@ public final class CoreDelegateStub : CoreDelegate
 	public func onEcCalibrationAudioUninit(core: Core){_onEcCalibrationAudioUninit.map{$0(core)}}
 	
 	public func onAccountRegistrationStateChanged(core: Core, account: Account, state: RegistrationState, message: String){_onAccountRegistrationStateChanged.map{$0(core, account, state, message)}}
+	
+	public func onDelayIceCallback(core: Core){_onDelayIceCallback.map{$0(core)}}
 
 	public init (
 		onGlobalStateChanged: ((Core, GlobalState, String) -> Void)? = nil,
@@ -4343,7 +4352,8 @@ public final class CoreDelegateStub : CoreDelegate
 		onEcCalibrationResult: ((Core, EcCalibratorStatus, Int) -> Void)? = nil,
 		onEcCalibrationAudioInit: ((Core) -> Void)? = nil,
 		onEcCalibrationAudioUninit: ((Core) -> Void)? = nil,
-		onAccountRegistrationStateChanged: ((Core, Account, RegistrationState, String) -> Void)? = nil
+		onAccountRegistrationStateChanged: ((Core, Account, RegistrationState, String) -> Void)? = nil,
+		onDelayIceCallback: ((Core) -> Void)? = nil
 	) {
 		self._onGlobalStateChanged = onGlobalStateChanged
 		self._onRegistrationStateChanged = onRegistrationStateChanged
@@ -4401,6 +4411,7 @@ public final class CoreDelegateStub : CoreDelegate
 		self._onEcCalibrationAudioInit = onEcCalibrationAudioInit
 		self._onEcCalibrationAudioUninit = onEcCalibrationAudioUninit
 		self._onAccountRegistrationStateChanged = onAccountRegistrationStateChanged
+		self._onDelayIceCallback = onDelayIceCallback
 	}
 }
 
@@ -4871,6 +4882,14 @@ class CoreDelegateManager
 				let sObject = Core.getSwiftObject(cObject: core!)
 				let delegate = sObject.currentDelegate
 				delegate?.onAccountRegistrationStateChanged(core: sObject, account: Account.getSwiftObject(cObject: account!), state: RegistrationState(rawValue: Int(state.rawValue))!, message: charArrayToString(charPointer: message))
+			}
+		})
+
+		linphone_core_cbs_set_delay_ice_callback(cPtr, { (core) -> Void in
+			if (core != nil) {
+				let sObject = Core.getSwiftObject(cObject: core!)
+				let delegate = sObject.currentDelegate
+				delegate?.onDelayIceCallback(core: sObject)
 			}
 		})
 	}
@@ -23298,6 +23317,14 @@ public class Core : LinphoneObject
 	public func loadConfigFromXml(xmlUri:String) 
 	{
 		linphone_core_load_config_from_xml(cPtr, xmlUri)
+	}
+	
+	
+	
+	/// Marks delay ICE as completed. 
+	public func markDelayIceAsCompleted() 
+	{
+		linphone_core_mark_delay_ice_as_completed(cPtr)
 	}
 	
 	
