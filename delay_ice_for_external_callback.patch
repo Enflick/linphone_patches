@@ -1,8 +1,43 @@
+diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
+index 51611dbdf..878750453 100644
+--- a/liblinphone/coreapi/linphonecore.c
++++ b/liblinphone/coreapi/linphonecore.c
+@@ -685,6 +685,30 @@ void linphone_core_cbs_set_account_registration_state_changed(LinphoneCoreCbs *c
+ 	cbs->vtable->account_registration_state_changed = cb;
+ }
+ 
++// TN patch
++LinphoneCoreCbsDelayIceCallbackCb linphone_core_cbs_get_delay_ice_callback(LinphoneCoreCbs *cbs) {
++	return cbs->vtable->delay_ice_callback;
++}
++
++void linphone_core_cbs_set_delay_ice_callback(LinphoneCoreCbs *cbs, LinphoneCoreCbsDelayIceCallbackCb cb) {
++	cbs->vtable->delay_ice_callback = cb;
++}
++
++std::queue<std::function<LinphoneStatus()>> MediaSessionPrivate_iceDeferedPrepareTasks;
++
++void MediaSessionPrivate_runIcePrepareTasks() {
++	while (!MediaSessionPrivate_iceDeferedPrepareTasks.empty()) {
++		const auto task = MediaSessionPrivate_iceDeferedPrepareTasks.front();
++		task(); // Ok to discard result?
++		MediaSessionPrivate_iceDeferedPrepareTasks.pop();
++	}
++}
++
++void linphone_core_mark_delay_ice_as_completed(LinphoneCore */*core*/) {
++	MediaSessionPrivate_runIcePrepareTasks();
++}
++// TN patch
++
+ void lc_callback_obj_init(LCCallbackObj *obj,LinphoneCoreCbFunc func,void* ud) {
+ 	obj->_func=func;
+ 	obj->_user_data=ud;
 diff --git a/liblinphone/include/linphone/api/c-nat-policy.h b/liblinphone/include/linphone/api/c-nat-policy.h
-index f72acba9d..137abe242 100644
+index f72acba9d..05d5c164f 100644
 --- a/liblinphone/include/linphone/api/c-nat-policy.h
 +++ b/liblinphone/include/linphone/api/c-nat-policy.h
-@@ -289,6 +289,30 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tls_turn_transport_enabled(const Linp
+@@ -289,6 +289,24 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tls_turn_transport_enabled(const Linp
   */
  LINPHONE_PUBLIC LinphoneCore *linphone_nat_policy_get_core(const LinphoneNatPolicy *policy);
  
@@ -22,22 +57,81 @@ index f72acba9d..137abe242 100644
 + */
 +void linphone_nat_policy_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable);
 +
-+typedef void (*BasicFunc)();
-+typedef void (*FuncTakingFunc)(BasicFunc);
-+
-+FuncTakingFunc linphone_get_delay_ice_external_callback();
-+void linphone_set_delay_ice_external_callback(FuncTakingFunc func);
-+
 +// TN patch
 +
  /**
   * @}
   */
+diff --git a/liblinphone/include/linphone/callbacks.h b/liblinphone/include/linphone/callbacks.h
+index 4b17952f8..a98f364c5 100644
+--- a/liblinphone/include/linphone/callbacks.h
++++ b/liblinphone/include/linphone/callbacks.h
+@@ -127,6 +127,15 @@ typedef void (*LinphoneCoreCbsRegistrationStateChangedCb)(LinphoneCore *core, Li
+  */
+ typedef LinphoneCoreCbsRegistrationStateChangedCb LinphoneCoreRegistrationStateChangedCb;
+ 
++// TN patch
++/**
++ * Delay ICE callback
++ * @param core the #LinphoneCore @notnil
++ * @ingroup Proxies
++ */
++typedef void (*LinphoneCoreCbsDelayIceCallbackCb)(LinphoneCore *core);
++// TN patch
++
+ /**
+  * Report status change for a friend previously added to the #LinphoneCore with linphone_core_add_friend().
+  * @param core #LinphoneCore object @notnil
+diff --git a/liblinphone/include/linphone/core.h b/include/liblinphone/linphone/core.h
+index 76892c5cb..596859c44 100644
+--- a/liblinphone/include/linphone/core.h
++++ b/liblinphone/include/linphone/core.h
+@@ -295,6 +295,9 @@ typedef struct _LinphoneCoreVTable {
+ 	LinphoneCoreCbsImeeUserRegistrationCb imee_user_registration;
+ 	LinphoneCoreCbsChatRoomExhumedCb chat_room_exhumed;
+ 	LinphoneCoreCbsAccountRegistrationStateChangedCb account_registration_state_changed;
++	// TN patch
++	LinphoneCoreCbsDelayIceCallbackCb delay_ice_callback;
++	// TN patch
+ 	LinphoneCoreCbsConferenceInfoReceivedCb conference_info_received;
+ 	LinphoneCoreCbsPushNotificationReceivedCb push_notification_received;
+ 	LinphoneCoreCbsPreviewDisplayErrorOccurredCb preview_display_error_occurred;
+@@ -1251,6 +1254,30 @@ linphone_core_cbs_set_account_registration_state_changed(LinphoneCoreCbs *cbs,
+ LINPHONE_PUBLIC LinphoneCoreCbsAccountRegistrationStateChangedCb
+ linphone_core_cbs_get_account_registration_state_changed(LinphoneCoreCbs *cbs);
+ 
++// TN patch
++/*
++ * Set the delay ICE callback.
++ * @param cbs #LinphoneCoreCbs object. @notnil
++ * @param cb The delay ICE callback to be used.
++ */
++LINPHONE_PUBLIC void
++linphone_core_cbs_set_delay_ice_callback(LinphoneCoreCbs *cbs, LinphoneCoreCbsDelayIceCallbackCb cb);
++
++/**
++ * Get the delay ICE callback.
++ * @param cbs #LinphoneCoreCbs object. @notnil
++ * @return The current delay ICE callback.
++ */
++LINPHONE_PUBLIC LinphoneCoreCbsDelayIceCallbackCb linphone_core_cbs_get_delay_ice_callback(LinphoneCoreCbs *cbs);
++
++/**
++ * Marks delay ICE as completed.
++ * @param cbs #LinphoneCore object. @notnil
++ * @ingroup misc
++ */
++LINPHONE_PUBLIC void linphone_core_mark_delay_ice_as_completed(LinphoneCore *core);
++// TN patch
++
+ /**
+  * @}
+  **/
 diff --git a/liblinphone/src/c-wrapper/api/c-nat-policy.cpp b/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
-index 10b1b48dd..161c3e6ed 100644
+index 10b1b48dd..0805bdc8c 100644
 --- a/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
 +++ b/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
-@@ -167,3 +167,23 @@ const char * linphone_nat_policy_get_nat_v6_address(const LinphoneNatPolicy *pol
+@@ -167,3 +167,13 @@ const char * linphone_nat_policy_get_nat_v6_address(const LinphoneNatPolicy *pol
  void linphone_nat_policy_set_nat_v6_address(LinphoneNatPolicy *policy, const char *v6_address){
  	NatPolicy::toCpp(policy)->setNatV6Address(L_C_TO_STRING(v6_address));
  }
@@ -50,73 +144,23 @@ index 10b1b48dd..161c3e6ed 100644
 +void linphone_nat_policy_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable){
 +	NatPolicy::toCpp(policy)->enableDelayIce(!!enable);
 +}
-+
-+static FuncTakingFunc delay_ice_external_callback = NULL;
-+
-+FuncTakingFunc linphone_get_delay_ice_external_callback() {
-+    return delay_ice_external_callback;
-+}
-+
-+void linphone_set_delay_ice_external_callback(FuncTakingFunc func){
-+    delay_ice_external_callback = func;
-+}
 +// TN patch
-diff --git a/liblinphone/src/conference/session/media-session-p.h b/liblinphone/src/conference/session/media-session-p.h
-index c9a82b889..0fff069b8 100644
---- a/liblinphone/src/conference/session/media-session-p.h
-+++ b/liblinphone/src/conference/session/media-session-p.h
-@@ -271,6 +271,11 @@ private:
- 	LinphoneNatPolicy *natPolicy = nullptr;
- 	std::unique_ptr<StunClient> stunClient;
- 
-+	// TN patch
-+	static std::queue<std::function<LinphoneStatus()>> iceDeferedPrepareTasks;
-+	static void runIcePrepareTasks();
-+	// TN patch
-+
- 	std::queue<std::function<LinphoneStatus()>> iceDeferedGatheringTasks;
- 	std::queue<std::function<LinphoneStatus()>> iceDeferedCompletionTasks;
- 
 diff --git a/liblinphone/src/conference/session/media-session.cpp b/liblinphone/src/conference/session/media-session.cpp
-index fce30a5bc..f45667299 100644
+index fce30a5bc..8e61ae7cc 100644
 --- a/liblinphone/src/conference/session/media-session.cpp
 +++ b/liblinphone/src/conference/session/media-session.cpp
-@@ -241,6 +241,7 @@ void MediaSessionPrivate::accepted() {
- 				makeLocalMediaDescription(op->getRemoteMediaDescription() ? localIsOfferer : true,
- 										  q->isCapabilityNegotiationEnabled(), false);
- 			}
-+
- 			/*
- 			 * If ICE is enabled, we'll have to do the prepare() step, however since defering the sending of the ACK is
- 			 * complicated and confusing from a signaling standpoint, ICE we will skip the STUN gathering by not giving
-@@ -2784,6 +2785,18 @@ void MediaSessionPrivate::freeResources() {
- 	getStreamsGroup().finish();
- }
+@@ -57,6 +57,10 @@
+ #include "conference_private.h"
+ #include "private.h"
  
 +// TN patch
-+std::queue<std::function<LinphoneStatus()>> MediaSessionPrivate::iceDeferedPrepareTasks;
-+
-+void MediaSessionPrivate::runIcePrepareTasks() {
-+	while (!iceDeferedPrepareTasks.empty()) {
-+		const auto task = iceDeferedPrepareTasks.front();
-+		task(); // Ok to discard result?
-+		iceDeferedPrepareTasks.pop();
-+	}
-+}
++extern std::queue<std::function<LinphoneStatus()>> MediaSessionPrivate_iceDeferedPrepareTasks;
 +// TN patch
 +
- void MediaSessionPrivate::queueIceCompletionTask(const std::function<LinphoneStatus()> &lambda) {
- 	iceDeferedCompletionTasks.push(lambda);
- }
-@@ -3651,6 +3664,7 @@ LinphoneStatus MediaSessionPrivate::accept(const MediaSessionParams *msp, BCTBX_
- 		updateLocalMediaDescriptionFromIce(op->getRemoteMediaDescription() == nullptr);
- 		return startAccept();
- 	};
-+
- 	if (linphone_nat_policy_ice_enabled(natPolicy) && getStreamsGroup().prepare()) {
- 		queueIceGatheringTask(acceptCompletionTask);
- 		return 0; /* Deferred until completion of ICE gathering */
-@@ -3723,10 +3737,39 @@ void MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() {
+ using namespace std;
+ 
+ LINPHONE_BEGIN_NAMESPACE
+@@ -3723,10 +3727,41 @@ void MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() {
  	L_Q();
  	lInfo() << "MediaSession [" << q
  			<< "] is going to be updated (reINVITE) in order to recover from lost connectivity";
@@ -146,9 +190,11 @@ index fce30a5bc..f45667299 100644
 +	lInfo() << "MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() -> linphone_nat_policy_delay_ice_for_external_callback_enabled=" << (int)linphone_nat_policy_delay_ice_for_external_callback_enabled(natPolicy);
 +
 +	if (linphone_nat_policy_delay_ice_for_external_callback_enabled(natPolicy)) {
-+		MediaSessionPrivate::iceDeferedPrepareTasks.push(deferredTask);
-+		const auto callback = linphone_get_delay_ice_external_callback();
-+		callback(&MediaSessionPrivate::runIcePrepareTasks);
++		::MediaSessionPrivate_iceDeferedPrepareTasks.push(deferredTask);
++		LinphoneCore *core = q->getCore()->getCCore();
++		LinphoneCoreCbs *cbs = linphone_core_get_current_callbacks(core);
++		const auto callback = linphone_core_cbs_get_delay_ice_callback(cbs);
++		callback(core);
 +	} else {
 +		deferredTask();
 +	}
@@ -156,15 +202,7 @@ index fce30a5bc..f45667299 100644
  }
  
  void MediaSessionPrivate::repairByInviteWithReplaces() {
-@@ -4453,6 +4496,7 @@ int MediaSession::startInvite(const Address *destination, const string &subject,
- 		if (d->localDesc && (d->localDesc->streams.size() > 0) && (d->localDesc->streams[0].getMaxRate() > 0))
- 			ms_snd_card_set_preferred_sample_rate(getCore()->getCCore()->sound_conf.play_sndcard,
- 												  d->localDesc->streams[0].getMaxRate());
-+
- 		d->getStreamsGroup().prepare();
- 	}
- 
-@@ -4629,6 +4673,8 @@ LinphoneStatus MediaSession::update(const MediaSessionParams *msp, const UpdateM
+@@ -4629,6 +4664,8 @@ LinphoneStatus MediaSession::update(const MediaSessionParams *msp, const UpdateM
  			return res;
  		};
  
@@ -174,7 +212,7 @@ index fce30a5bc..f45667299 100644
  		// reINVITE sent after full state must be sent after ICE negotiations are completed if ICE is enabled
  		if (linphone_nat_policy_ice_enabled(d->natPolicy) && preparingStreams) {
 diff --git a/liblinphone/src/nat/ice-service.cpp b/liblinphone/src/nat/ice-service.cpp
-index 6e02de334..027cf4c07 100644
+index 9cae3ff04..3f8c9c384 100644
 --- a/liblinphone/src/nat/ice-service.cpp
 +++ b/liblinphone/src/nat/ice-service.cpp
 @@ -251,6 +251,8 @@ LinphoneCore *IceService::getCCore()const{
@@ -186,12 +224,7 @@ index 6e02de334..027cf4c07 100644
  	list<string> localAddrs = IfAddrs::fetchLocalAddresses();
  	bool ipv6Allowed = linphone_core_ipv6_enabled(getCCore());
  	const auto & mediaLocalIp = getMediaSessionPrivate().getMediaLocalIp();
-@@ -327,10 +329,14 @@ void IceService::addPredefinedSflrxCandidates(const NatPolicy *natPolicy){
-  * -1: no gathering started and something went wrong with local candidates. There is no way to start the ICE session.
-  */
- int IceService::gatherIceCandidates () {
-+
- 	const struct addrinfo *ai = nullptr;
+@@ -332,6 +334,9 @@ int IceService::gatherIceCandidates () {
  	int err = 0;
  	
  	LinphoneNatPolicy *cNatPolicy = getMediaSessionPrivate().getNatPolicy();

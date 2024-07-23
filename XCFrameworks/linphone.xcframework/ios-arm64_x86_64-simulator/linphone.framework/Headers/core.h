@@ -295,6 +295,9 @@ typedef struct _LinphoneCoreVTable {
 	LinphoneCoreCbsImeeUserRegistrationCb imee_user_registration;
 	LinphoneCoreCbsChatRoomExhumedCb chat_room_exhumed;
 	LinphoneCoreCbsAccountRegistrationStateChangedCb account_registration_state_changed;
+	// TN patch
+	LinphoneCoreCbsDelayIceCallbackCb delay_ice_callback;
+	// TN patch
 	LinphoneCoreCbsConferenceInfoReceivedCb conference_info_received;
 	LinphoneCoreCbsPushNotificationReceivedCb push_notification_received;
 	LinphoneCoreCbsPreviewDisplayErrorOccurredCb preview_display_error_occurred;
@@ -1250,6 +1253,30 @@ linphone_core_cbs_set_account_registration_state_changed(LinphoneCoreCbs *cbs,
  */
 LINPHONE_PUBLIC LinphoneCoreCbsAccountRegistrationStateChangedCb
 linphone_core_cbs_get_account_registration_state_changed(LinphoneCoreCbs *cbs);
+
+// TN patch
+/*
+ * Set the delay ICE callback.
+ * @param cbs #LinphoneCoreCbs object. @notnil
+ * @param cb The delay ICE callback to be used.
+ */
+LINPHONE_PUBLIC void
+linphone_core_cbs_set_delay_ice_callback(LinphoneCoreCbs *cbs, LinphoneCoreCbsDelayIceCallbackCb cb);
+
+/**
+ * Get the delay ICE callback.
+ * @param cbs #LinphoneCoreCbs object. @notnil
+ * @return The current delay ICE callback.
+ */
+LINPHONE_PUBLIC LinphoneCoreCbsDelayIceCallbackCb linphone_core_cbs_get_delay_ice_callback(LinphoneCoreCbs *cbs);
+
+/**
+ * Marks delay ICE as completed.
+ * @param cbs #LinphoneCore object. @notnil
+ * @ingroup misc
+ */
+LINPHONE_PUBLIC void linphone_core_mark_delay_ice_as_completed(LinphoneCore *core);
+// TN patch
 
 /**
  * @}

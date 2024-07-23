@@ -305,12 +305,6 @@ bool_t linphone_nat_policy_delay_ice_for_external_callback_enabled(const Linphon
  */
 void linphone_nat_policy_enable_delay_ice_for_external_callback(LinphoneNatPolicy *policy, bool_t enable);
 
-typedef void (*BasicFunc)();
-typedef void (*FuncTakingFunc)(BasicFunc);
-
-FuncTakingFunc linphone_get_delay_ice_external_callback();
-void linphone_set_delay_ice_external_callback(FuncTakingFunc func);
-
 // TN patch
 
 /**
