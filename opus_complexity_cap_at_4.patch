@@ -1,14 +1,13 @@
 diff --git a/mediastreamer2/src/audiofilters/msopus.c b/mediastreamer2/src/audiofilters/msopus.c
-index dc4467b1..8c80ee80 100644
+index dc4467b1..36c380bd 100644
 --- a/mediastreamer2/src/audiofilters/msopus.c
 +++ b/mediastreamer2/src/audiofilters/msopus.c
-@@ -141,6 +141,9 @@ static void ms_opus_enc_preprocess(MSFilter *f) {
+@@ -141,6 +141,8 @@ static void ms_opus_enc_preprocess(MSFilter *f) {
  		}
  #endif
  	}
 +	/* TN patch - capping complexity at 4 */
-+	if (opusComplexity > 4 || opusComplexity == -1)
-+		opusComplexity = 4;
++	opusComplexity = 4;
  	if (opusComplexity != -1){
  		ms_message("Set Opus complexity to %d", opusComplexity);
  		opus_encoder_ctl(d->state, OPUS_SET_COMPLEXITY(opusComplexity));
