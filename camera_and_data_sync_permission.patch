@@ -1,0 +1,25 @@
+diff --git a/cmake/Android/gradle/LinphoneSdkManifest.xml.cmake b/cmake/Android/gradle/LinphoneSdkManifest.xml.cmake
+index 47fd6b7e..591bdc07 100644
+--- a/cmake/Android/gradle/LinphoneSdkManifest.xml.cmake
++++ b/cmake/Android/gradle/LinphoneSdkManifest.xml.cmake
+@@ -10,9 +10,6 @@
+     <uses-permission android:name="android.permission.WAKE_LOCK" />
+     <!-- Needed to be able to use WifiManager.MulticastLock -->
+     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+-    <uses-permission android:name="android.permission.CAMERA" />
+-    <!-- Needed to allow Linphone to install on tablets, since android.permission.CAMERA implies android.hardware.camera and android.hardware.camera.autofocus are required -->
+-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+     <!-- Needed for bluetooth -->
+     <uses-permission android:name="android.permission.BLUETOOTH" />
+     <!-- Needed for bluetooth headset -->
+@@ -25,10 +22,8 @@
+     <!-- Needed for Android 14
+     https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types -->
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+     <!-- End of SDK required permissions -->
+ 	
+ </manifest>
