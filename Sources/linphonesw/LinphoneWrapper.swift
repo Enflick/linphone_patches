@@ -20416,6 +20416,23 @@ public class Core : LinphoneObject
 
 	}
 		
+	/// Tells whether we should terminate an established call on a SIP cancel. 
+	/// - Parameter enable: Boolean value telling whether the feature is enabled. 
+	
+	/// Tells whether we should terminate an established call on a SIP cancel. 
+	public var terminateOnCancelEnabled: Bool
+	{
+	
+		get
+		{ 
+						return linphone_core_get_terminate_on_cancel_enabled(cPtr) != 0
+		}
+		set
+		{
+			linphone_core_set_terminate_on_cancel_enabled(cPtr, newValue==true ? 1:0)
+		}
+	}
+		
 	/// Redefine the list of the available payload types. 
 	/// - Parameter payloadTypes: The new list of payload types. The core does not take
 	/// ownership on it.      

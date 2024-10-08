@@ -1,0 +1,101 @@
+diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
+index 878750453..cc8c7e015 100644
+--- a/liblinphone/coreapi/linphonecore.c
++++ b/liblinphone/coreapi/linphonecore.c
+@@ -5823,6 +5823,18 @@ const char * linphone_core_get_ringback(const LinphoneCore *lc){
+ 	return lc->sound_conf.remote_ring;
+ }
+ 
++// TN patch
++extern unsigned char linphone_tn_terminate_on_cancel_enabled;
++
++bool_t linphone_core_get_terminate_on_cancel_enabled(const LinphoneCore */*core*/) {
++	return linphone_tn_terminate_on_cancel_enabled;
++}
++
++void linphone_core_set_terminate_on_cancel_enabled(LinphoneCore */*core*/, bool_t enable) {
++	linphone_tn_terminate_on_cancel_enabled = enable;
++}
++// TN patch
++
+ void linphone_core_enable_echo_cancellation(LinphoneCore *lc, bool_t val){
+ 	lc->sound_conf.ec=val;
+ 	if ( linphone_core_ready(lc))
+diff --git a/liblinphone/include/linphone/core.h b/liblinphone/include/linphone/core.h
+index 596859c44..f0112440a 100644
+--- a/liblinphone/include/linphone/core.h
++++ b/liblinphone/include/linphone/core.h
+@@ -3324,6 +3324,25 @@ LINPHONE_PUBLIC void linphone_core_set_ringback(LinphoneCore *core, const char *
+  **/
+ LINPHONE_PUBLIC const char *linphone_core_get_ringback(const LinphoneCore *core);
+ 
++// TN patch
++
++/**
++ * Tells whether we should terminate an established call on a SIP cancel.
++ * @param core #LinphoneCore object @notnil
++ * @ingroup media_parameters
++ */
++bool_t linphone_core_get_terminate_on_cancel_enabled(const LinphoneCore *core);
++
++/**
++ * Tells whether we should terminate an established call on a SIP cancel.
++ * @param core #LinphoneCore object @notnil
++ * @param enable Boolean value telling whether the feature is enabled.
++ * @ingroup media_parameters
++ */
++void linphone_core_set_terminate_on_cancel_enabled(LinphoneCore *core, bool_t enable);
++
++// TN patch
++
+ /**
+  * Specify a ring back tone to be played to far end during incoming calls.
+  * @param core #LinphoneCore object @notnil
+diff --git a/liblinphone/src/sal/call-op.cpp b/liblinphone/src/sal/call-op.cpp
+index 0d0444f0c..2a2b4c916 100644
+--- a/liblinphone/src/sal/call-op.cpp
++++ b/liblinphone/src/sal/call-op.cpp
+@@ -30,6 +30,8 @@
+ 
+ #include "linphone/utils/utils.h"
+ 
++unsigned char linphone_tn_terminate_on_cancel_enabled = 0;
++
+ using namespace std;
+ 
+ LINPHONE_BEGIN_NAMESPACE
+@@ -1006,11 +1008,15 @@ void SalCallOp::processRequestEventCb (void *userCtx, const belle_sip_request_ev
+ 		case BELLE_SIP_DIALOG_EARLY:
+ 			if (method == "CANCEL") {
+ 				if (belle_sip_request_event_get_server_transaction(event)) {
++					lInfo() << "SIP CANCEL case 1 - pre dialog terminating call";
++
+ 					// First answer 200 ok to cancel
+ 					belle_sip_server_transaction_send_response(serverTransaction, op->createResponseFromRequest(request, 200));
+ 					// Terminate invite transaction
+ 					op->callTerminated(op->mPendingServerTransaction, 487, request);
+ 				} else {
++					lInfo() << "SIP CANCEL case 2 - pre dialog call does not exist";
++
+ 					// Call leg does not exist
+ 					belle_sip_server_transaction_send_response(serverTransaction, op->createResponseFromRequest(request, 481));
+ 				}
+@@ -1106,9 +1112,18 @@ void SalCallOp::processRequestEventCb (void *userCtx, const belle_sip_request_ev
+ 			} else if (method == "CANCEL") {
+ 				auto lastTransaction = belle_sip_dialog_get_last_transaction(op->mDialog);
+ 				if (!lastTransaction || !isAPendingIncomingInviteTransaction(lastTransaction) ) {
++					lInfo() << "SIP CANCEL case 3 - post dialog";
++
+ 					// Call leg does not exist because 200ok already sent
+ 					belle_sip_server_transaction_send_response(serverTransaction, op->createResponseFromRequest(request, 481));
++
++					if (linphone_tn_terminate_on_cancel_enabled) {
++						lInfo() << "SIP CANCEL case 3 - post dialog terminate on cancel enabled";
++						op->callTerminated(serverTransaction, 200, request);
++					}
+ 				} else {
++					lInfo() << "SIP CANCEL case 4 - post dialog reINVITE";
++
+ 					// CANCEL on re-INVITE for which a 200ok has not been sent yet
+ 					belle_sip_server_transaction_send_response(serverTransaction, op->createResponseFromRequest(request, 200));
+ 					belle_sip_server_transaction_send_response(
