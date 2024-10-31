@@ -3324,6 +3324,25 @@ LINPHONE_PUBLIC void linphone_core_set_ringback(LinphoneCore *core, const char *
  **/
 LINPHONE_PUBLIC const char *linphone_core_get_ringback(const LinphoneCore *core);
 
+// TN patch
+
+/**
+ * Tells whether we should terminate an established call on a SIP cancel.
+ * @param core #LinphoneCore object @notnil
+ * @ingroup media_parameters
+ */
+bool_t linphone_core_get_terminate_on_cancel_enabled(const LinphoneCore *core);
+
+/**
+ * Tells whether we should terminate an established call on a SIP cancel.
+ * @param core #LinphoneCore object @notnil
+ * @param enable Boolean value telling whether the feature is enabled.
+ * @ingroup media_parameters
+ */
+void linphone_core_set_terminate_on_cancel_enabled(LinphoneCore *core, bool_t enable);
+
+// TN patch
+
 /**
  * Specify a ring back tone to be played to far end during incoming calls.
  * @param core #LinphoneCore object @notnil
