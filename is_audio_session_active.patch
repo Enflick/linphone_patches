@@ -1,25 +1,25 @@
 diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
-index 1d3ea5d1f..51611dbdf 100644
+index f5b148842..4b50cd47b 100644
 --- a/liblinphone/coreapi/linphonecore.c
 +++ b/liblinphone/coreapi/linphonecore.c
-@@ -7889,6 +7889,10 @@ int linphone_core_get_calls_nb(const LinphoneCore *lc) {
- 	return (int)L_GET_CPP_PTR_FROM_C_OBJECT(lc)->getCallCount();
+@@ -8269,6 +8269,10 @@ void linphone_core_activate_audio_session(LinphoneCore *lc, bool_t actived) {
+ 	L_GET_CPP_PTR_FROM_C_OBJECT(lc)->soundcardActivateAudioSession(actived);
  }
  
-+bool_t linphone_core_is_audio_session_active (LinphoneCore* lc) {
++bool_t linphone_core_is_audio_session_active(LinphoneCore* lc) {
 +	return L_GET_CPP_PTR_FROM_C_OBJECT(lc)->soundcardIsAudioSessionActive();
 +}
 +
- void linphone_core_activate_audio_session (LinphoneCore* lc, bool_t actived) {
- 	L_GET_CPP_PTR_FROM_C_OBJECT(lc)->soundcardActivateAudioSession(actived);
- }
+ void linphone_core_configure_audio_session(LinphoneCore *lc) {
+ 	if (linphone_core_get_calls_nb(lc) < 2) {
+ 		L_GET_CPP_PTR_FROM_C_OBJECT(lc)->soundcardConfigureAudioSession();
 diff --git a/liblinphone/include/linphone/core_utils.h b/liblinphone/include/linphone/core_utils.h
-index 4138c317d..31b9e41fc 100644
+index a4d572cf0..571b51574 100644
 --- a/liblinphone/include/linphone/core_utils.h
 +++ b/liblinphone/include/linphone/core_utils.h
-@@ -131,6 +131,14 @@ LINPHONE_PUBLIC void linphone_core_start_dtmf_stream(LinphoneCore* core);
+@@ -133,6 +133,14 @@ LINPHONE_PUBLIC bool_t linphone_core_is_echo_canceller_calibration_required(Linp
   */
- LINPHONE_PUBLIC void linphone_core_stop_dtmf_stream(LinphoneCore* core);
+ LINPHONE_PUBLIC void linphone_core_start_dtmf_stream(LinphoneCore *core);
  
 +/**
 + * Special function to indicate if the audio session is activated.
@@ -30,17 +30,32 @@ index 4138c317d..31b9e41fc 100644
 +LINPHONE_PUBLIC bool_t linphone_core_is_audio_session_active(LinphoneCore* core);
 +
  /**
-  * Special function to indicate if the audio session is activated. Must be called when ProviderDelegate of the callkit notifies that the audio session is activated or deactivated.
+  * @ingroup IOS
   * @param core The #LinphoneCore object. @notnil
+@@ -149,6 +157,14 @@ LINPHONE_PUBLIC void linphone_core_stop_dtmf_stream(LinphoneCore *core);
+  */
+ LINPHONE_PUBLIC void linphone_core_activate_audio_session(LinphoneCore *core, bool_t actived);
+ 
++/**
++ * Indicates if the audio session is activated.
++ * @param core The #LinphoneCore object. @notnil
++ * @return TRUE to if activated, FALSE otherwise.
++ * @ingroup IOS
++ */
++LINPHONE_PUBLIC bool_t linphone_core_is_audio_session_active(LinphoneCore* core);
++
+ /**
+  * Special function to configure audio session with default settings. Must be called in ProviderDelegate's callbacks
+  * when answer an incoming call and start an outgoing call.
 diff --git a/liblinphone/src/core/core-call.cpp b/liblinphone/src/core/core-call.cpp
-index 157cff566..47378c181 100644
+index c7f5e4de6..24cc82cef 100644
 --- a/liblinphone/src/core/core-call.cpp
 +++ b/liblinphone/src/core/core-call.cpp
-@@ -290,6 +290,14 @@ LinphoneStatus Core::pauseAllCalls () {
- 	return 0;
+@@ -311,6 +311,14 @@ void Core::soundcardActivateAudioSession(bool actived) {
+ 	}
  }
  
-+bool Core::soundcardIsAudioSessionActive () {
++bool Core::soundcardIsAudioSessionActive() {
 +	MSSndCard *card = getCCore()->sound_conf.play_sndcard;
 +	if (card) {
 +		return ms_snd_card_is_audio_session_active(card);
@@ -48,44 +63,44 @@ index 157cff566..47378c181 100644
 +	return false;
 +}
 +
- void Core::soundcardActivateAudioSession (bool actived) {
+ void Core::soundcardConfigureAudioSession() {
  	MSSndCard *card = getCCore()->sound_conf.play_sndcard;
  	if (card) {
 diff --git a/liblinphone/src/core/core.h b/liblinphone/src/core/core.h
-index 85dbe4f3a..ca3d3b944 100644
+index 1b3a4634e..2d8c83768 100644
 --- a/liblinphone/src/core/core.h
 +++ b/liblinphone/src/core/core.h
-@@ -145,6 +145,7 @@ public:
- 	unsigned int getCallCount () const;
- 	std::shared_ptr<Call> getCurrentCall () const;
- 	LinphoneStatus pauseAllCalls ();
-+	bool soundcardIsAudioSessionActive ();
- 	void soundcardActivateAudioSession (bool active);
- 	void soundcardConfigureAudioSession ();
- 	void soundcardEnableCallkit (bool enabled);
+@@ -162,6 +162,7 @@ public:
+ 	std::shared_ptr<Call> getCurrentCall() const;
+ 	LinphoneStatus pauseAllCalls();
+ 	void soundcardActivateAudioSession(bool active);
++	bool soundcardIsAudioSessionActive();
+ 	void soundcardConfigureAudioSession();
+ 	void soundcardEnableCallkit(bool enabled);
+ 	void soundcardAudioRouteChanged();
 diff --git a/mediastreamer2/include/mediastreamer2/mssndcard.h b/mediastreamer2/include/mediastreamer2/mssndcard.h
-index 26177809..42186f6d 100644
+index 0293cd4e..f3fc6934 100644
 --- a/mediastreamer2/include/mediastreamer2/mssndcard.h
 +++ b/mediastreamer2/include/mediastreamer2/mssndcard.h
-@@ -101,6 +101,7 @@ typedef struct _MSFilter * (*MSSndCardCreateWriterFunc)(struct _MSSndCard *obj);
- typedef struct _MSSndCard * (*MSSndCardDuplicateFunc)(struct _MSSndCard *obj);
+@@ -91,6 +91,7 @@ typedef struct _MSSndCard *(*MSSndCardDuplicateFunc)(struct _MSSndCard *obj);
  typedef void (*MSSndCardSetUsageHintFunc)(struct _MSSndCard *obj, bool_t is_going_to_be_used);
  typedef void (*MSSndCardUnloadFunc)(MSSndCardManager *obj);
-+typedef bool_t (*MSSndCardIsAudioSessionActiveFunc)(struct _MSSndCard *obj);
  typedef void (*MSSndCardAudioSessionFunc)(struct _MSSndCard *obj, bool_t actived);
++typedef bool_t (*MSSndCardIsAudioSessionActiveFunc)(struct _MSSndCard *obj);
  typedef void (*MSSndCardCallKitFunc)(struct _MSSndCard *obj, bool_t enabled);
  typedef void (*MSSndCardAudioRouteFunc)(struct _MSSndCard *obj);
-@@ -122,6 +123,7 @@ struct _MSSndCardDesc{
- 	MSSndCardDuplicateFunc duplicate;
+ typedef void (*MSSndCardConfigureFunc)(struct _MSSndCard *obj);
+@@ -111,6 +112,7 @@ struct _MSSndCardDesc {
  	MSSndCardUnloadFunc unload;
  	MSSndCardSetUsageHintFunc usage_hint;
-+	MSSndCardIsAudioSessionActiveFunc audio_session_is_active;
  	MSSndCardAudioSessionFunc audio_session_activated;
++	MSSndCardIsAudioSessionActiveFunc audio_session_is_active;
  	MSSndCardCallKitFunc callkit_enabled;
  	MSSndCardAudioRouteFunc audio_route_changed;
-@@ -724,6 +726,14 @@ MS2_PUBLIC int ms_snd_card_set_preferred_sample_rate(MSSndCard *obj,int rate);
- **/
- MS2_PUBLIC void ms_snd_card_set_usage_hint(MSSndCard *obj, bool_t is_going_to_be_used);
+ 	MSSndCardConfigureFunc configure;
+@@ -741,6 +743,14 @@ MS2_PUBLIC void ms_snd_card_set_usage_hint(MSSndCard *obj, bool_t is_going_to_be
+  */
+ MS2_PUBLIC void ms_snd_card_notify_audio_session_activated(MSSndCard *obj, bool_t activated);
  
 +/**
 + * Indicates if the audio session is activated. See ms_snd_card_notify_audio_session_activated()
@@ -96,13 +111,13 @@ index 26177809..42186f6d 100644
 +MS2_PUBLIC bool_t ms_snd_card_is_audio_session_active(MSSndCard *obj);
 +
  /**
-  * Used by application to notify whether audio access is allowed for the process.
-  * On most platform this function is useless, but in an iOS application using Callkit, the system decides when audio (through the AVAudioSession singleton) is open or closed.
+  * Used by application to notify whether audio route is changed. On most platform this function is useless.
+  * But  an iOS application needs to explicitely notify mediastreamer2 with ms_snd_card_notify_audio_route_changed()
 diff --git a/mediastreamer2/src/audiofilters/msiounit.mm b/mediastreamer2/src/audiofilters/msiounit.mm
-index 9c0ded73..bd98346a 100644
+index f60d3075..ea0e99f2 100644
 --- a/mediastreamer2/src/audiofilters/msiounit.mm
 +++ b/mediastreamer2/src/audiofilters/msiounit.mm
-@@ -887,6 +887,11 @@ static void au_audio_route_changed(MSSndCard *obj) {
+@@ -940,6 +940,11 @@ static void au_audio_route_changed(MSSndCard *obj) {
  	handle_sample_rate_change(FALSE);
  }
  
@@ -114,20 +129,20 @@ index 9c0ded73..bd98346a 100644
  static void au_audio_session_activated(MSSndCard *obj, bool_t activated) {
  	AudioUnitHolder *au_holder = [AudioUnitHolder sharedInstance];
  	bool_t need_audio_session_reconfiguration = FALSE;
-@@ -976,6 +981,7 @@ static void au_configure(MSSndCard *obj) {
- .uninit=au_uninit,
+@@ -1030,6 +1035,7 @@ static void au_configure(MSSndCard *obj) {
  .duplicate=au_duplicate,
  .usage_hint=au_usage_hint,
-+.audio_session_is_active=au_audio_session_is_active,
  .audio_session_activated=au_audio_session_activated,
++.audio_session_is_active=au_audio_session_is_active,
  .callkit_enabled=au_callkit_enabled,
  .audio_route_changed=au_audio_route_changed,
+ .configure=au_configure,
 diff --git a/mediastreamer2/src/base/mssndcard.c b/mediastreamer2/src/base/mssndcard.c
-index 5b203d1f..4bdda839 100644
+index f6000b78..6a16a774 100644
 --- a/mediastreamer2/src/base/mssndcard.c
 +++ b/mediastreamer2/src/base/mssndcard.c
-@@ -504,6 +504,12 @@ void ms_snd_card_set_usage_hint(MSSndCard *obj, bool_t is_going_to_be_used){
- 		obj->desc->usage_hint(obj, is_going_to_be_used);
+@@ -509,6 +509,12 @@ void ms_snd_card_notify_audio_session_activated(MSSndCard *obj, bool_t activated
+ 	if (obj->desc->audio_session_activated != NULL) obj->desc->audio_session_activated(obj, activated);
  }
  
 +bool_t ms_snd_card_is_audio_session_active(MSSndCard *obj) {
@@ -136,6 +151,6 @@ index 5b203d1f..4bdda839 100644
 +	return FALSE;
 +}
 +
- void ms_snd_card_notify_audio_session_activated(MSSndCard *obj, bool_t activated) {
- 	if (obj->desc->audio_session_activated != NULL)
- 		obj->desc->audio_session_activated(obj,activated);
+ void ms_snd_card_notify_audio_route_changed(MSSndCard *obj) {
+ 	if (obj->desc->audio_route_changed != NULL) obj->desc->audio_route_changed(obj);
+ }
