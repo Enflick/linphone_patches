@@ -12,7 +12,7 @@ git submodule update --init --recursive
 ### Checkout the version you want
 
 ```
-git checkout 5.3.95
+git checkout 5.3.103
 ```
 
 ## Follow Linphone SDK README's build dependencies section as needed, then build and package using the following steps.
