@@ -1,7 +1,71 @@
 diff --git a/liblinphone/wrappers/java/classes/org/linphone/core/tools/service/CoreManager.java b/liblinphone/wrappers/java/classes/org/linphone/core/tools/service/CoreManager.java
-index ee0f21db3..5c91d5c66 100644
+index ee0f21db3..054c76a58 100644
 --- a/liblinphone/wrappers/java/classes/org/linphone/core/tools/service/CoreManager.java
 +++ b/liblinphone/wrappers/java/classes/org/linphone/core/tools/service/CoreManager.java
+@@ -159,25 +159,25 @@ public class CoreManager {
+         }
+         mBluetoothHelper = new BluetoothHelper(mContext);
+ 
+-        mDisplayListener = new DisplayManager.DisplayListener() {
+-            @Override
+-            public void onDisplayAdded(int displayId) {
+-                Log.d("[Core Manager] Display added: ", displayId);
+-            }
+-
+-            @Override
+-            public void onDisplayChanged(int displayId) {
+-                Log.i("[Core Manager] Display changed: ", displayId);
+-                updateOrientation(displayId);
+-            }
+-
+-            @Override
+-            public void onDisplayRemoved(int displayId) {
+-                Log.d("[Core Manager] Display removed: ", displayId);
+-            }
+-        };
+-        mDisplayManager = (DisplayManager) mContext.getSystemService(Context.DISPLAY_SERVICE);
+-        mDisplayManager.registerDisplayListener(mDisplayListener, mHandler);
++        // mDisplayListener = new DisplayManager.DisplayListener() {
++        //     @Override
++        //     public void onDisplayAdded(int displayId) {
++        //         Log.d("[Core Manager] Display added: ", displayId);
++        //     }
++
++        //     @Override
++        //     public void onDisplayChanged(int displayId) {
++        //         Log.i("[Core Manager] Display changed: ", displayId);
++        //         updateOrientation(displayId);
++        //     }
++
++        //     @Override
++        //     public void onDisplayRemoved(int displayId) {
++        //         Log.d("[Core Manager] Display removed: ", displayId);
++        //     }
++        // };
++        // mDisplayManager = (DisplayManager) mContext.getSystemService(Context.DISPLAY_SERVICE);
++        // mDisplayManager.registerDisplayListener(mDisplayListener, mHandler);
+ 
+         IntentFilter shutdownIntentFilter = new IntentFilter(Intent.ACTION_SHUTDOWN);
+         // Without that the broadcast timeout might be reached before we were called
+@@ -243,12 +243,12 @@ public class CoreManager {
+     }
+ 
+     public void processPushNotification(String callId, String payload, boolean isCoreStarting) {
+-        if (mCore.isAutoIterateEnabled() && mCore.isInBackground()) {
+-            // Force the core.iterate() scheduling to a low value to ensure the Core will process what triggered the push notification as quickly as possible
+-            Log.i("[Core Manager] Push notification received, scheduling core.iterate() every " + AUTO_ITERATE_TIMER_CORE_START_OR_PUSH_RECEIVED + "ms");
+-            startAutoIterate(AUTO_ITERATE_TIMER_CORE_START_OR_PUSH_RECEIVED);
+-            createTimerToResetAutoIterateSchedule();
+-        }
++        // if (mCore.isAutoIterateEnabled() && mCore.isInBackground()) {
++        //     // Force the core.iterate() scheduling to a low value to ensure the Core will process what triggered the push notification as quickly as possible
++        //     Log.i("[Core Manager] Push notification received, scheduling core.iterate() every " + AUTO_ITERATE_TIMER_CORE_START_OR_PUSH_RECEIVED + "ms");
++        //     startAutoIterate(AUTO_ITERATE_TIMER_CORE_START_OR_PUSH_RECEIVED);
++        //     createTimerToResetAutoIterateSchedule();
++        // }
+ 
+         Log.i("[Core Manager] Notifying Core a push with Call-ID [" + callId + "] has been received");
+         processPushNotification(mCore.getNativePointer(), callId, payload, isCoreStarting);
 @@ -268,14 +268,14 @@ public class CoreManager {
              mCore.setNativeRingingEnabled(false);
          }
@@ -24,6 +88,24 @@ index ee0f21db3..5c91d5c66 100644
  
          mListener = new CoreListenerStub() {
              @Override
+@@ -380,7 +380,7 @@ public class CoreManager {
+ 
+     public void stop() {
+         Log.i("[Core Manager] Stopping");
+-        stopCore(mCore.getNativePointer());
++        if (mCore != null) stopCore(mCore.getNativePointer());
+     }
+ 
+     public void onLinphoneCoreStop() {
+@@ -391,7 +391,7 @@ public class CoreManager {
+             mContext.stopService(new Intent().setClass(mContext, mServiceClass));
+         }
+ 
+-        mCore.removeListener(mListener);
++        if (mCore != null) mCore.removeListener(mListener);
+ 
+         stopAutoIterate();
+         stopTimerToResetAutoIterateSchedule();
 @@ -401,22 +401,22 @@ public class CoreManager {
      }
  
@@ -62,6 +144,15 @@ index ee0f21db3..5c91d5c66 100644
      }
  
      private void stopTimerToResetAutoIterateSchedule() {
+@@ -527,7 +527,7 @@ public class CoreManager {
+                     Log.i("[Core Manager] App has lost audio focus, pausing all calls");
+                     pauseAllCalls(mCore.getNativePointer());
+                 }
+-                mAudioHelper.releaseCallAudioFocus();
++                if (mAudioHelper != null) mAudioHelper.releaseCallAudioFocus();
+             } else {
+                 Log.w("[Core Manager] Audio focus lost but keeping calls running");
+             }
 @@ -591,11 +591,11 @@ public class CoreManager {
                  Log.i("[Core Manager] App has entered background mode");
                  if (mCore != null) {
@@ -79,9 +170,12 @@ index ee0f21db3..5c91d5c66 100644
                  }
              }
          };
-@@ -611,11 +611,11 @@ public class CoreManager {
+@@ -609,13 +609,13 @@ public class CoreManager {
+                 Log.i("[Core Manager] App has left background mode");
+                 if (mCore != null) {
                      enterForeground(mCore.getNativePointer());
-                     updateOrientation(Display.DEFAULT_DISPLAY);
+-                    updateOrientation(Display.DEFAULT_DISPLAY);
++                    // updateOrientation(Display.DEFAULT_DISPLAY);
  
 -                    if (mCore.isAutoIterateEnabled()) {
 -                        stopTimerToResetAutoIterateSchedule();
