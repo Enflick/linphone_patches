@@ -1,0 +1,40 @@
+diff --git a/belle-sip/src/belle_sip_loop.c b/belle-sip/src/belle_sip_loop.c
+index ae4dd7ff..7d26c76d 100644
+--- a/belle-sip/src/belle_sip_loop.c
++++ b/belle-sip/src/belle_sip_loop.c
+@@ -270,6 +270,7 @@ struct belle_sip_main_loop {
+ 	int control_fds[2];
+ 	unsigned long thread_id;
+ #endif
++	int destroyed; // TN patch - possible workaround for crash
+ };
+ 
+ static void belle_sip_main_loop_remove_source_internal(belle_sip_main_loop_t *ml,
+@@ -306,6 +307,9 @@ void belle_sip_main_loop_remove_source(belle_sip_main_loop_t *ml, belle_sip_sour
+ }
+ 
+ static void belle_sip_main_loop_destroy(belle_sip_main_loop_t *ml) {
++	belle_sip_message("belle_sip_main_loop_destroy()");
++	ml->destroyed = 1; // TN patch - possible workaround for crash
++
+ 	bctbx_iterator_t *it = bctbx_map_ullong_begin(ml->timer_sources);
+ 	bctbx_iterator_t *end = bctbx_map_ullong_end(ml->timer_sources);
+ 
+@@ -739,6 +742,8 @@ end:
+ }
+ 
+ void belle_sip_main_loop_run(belle_sip_main_loop_t *ml) {
++	if (ml->destroyed) return; // TN patch - possible workaround for crash
++
+ #ifndef _WIN32
+ 	ml->thread_id = bctbx_thread_self();
+ #endif
+@@ -760,6 +765,8 @@ int belle_sip_main_loop_quit(belle_sip_main_loop_t *ml) {
+ }
+ 
+ void belle_sip_main_loop_sleep(belle_sip_main_loop_t *ml, int milliseconds) {
++	if (ml->destroyed) return; // TN patch - possible workaround for crash
++
+ 	belle_sip_source_t *s = belle_sip_main_loop_create_timeout(ml, (belle_sip_source_func_t)belle_sip_main_loop_quit,
+ 	                                                           ml, milliseconds, "Main loop sleep timer");
+ 
