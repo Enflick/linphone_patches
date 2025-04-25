@@ -1,40 +1,110 @@
 diff --git a/belle-sip/src/belle_sip_loop.c b/belle-sip/src/belle_sip_loop.c
-index ae4dd7ff..7d26c76d 100644
+index 3b13bece..b00fe140 100644
 --- a/belle-sip/src/belle_sip_loop.c
 +++ b/belle-sip/src/belle_sip_loop.c
-@@ -270,6 +270,7 @@ struct belle_sip_main_loop {
- 	int control_fds[2];
- 	unsigned long thread_id;
- #endif
-+	int destroyed; // TN patch - possible workaround for crash
- };
- 
- static void belle_sip_main_loop_remove_source_internal(belle_sip_main_loop_t *ml,
+@@ -262,6 +262,7 @@ struct belle_sip_main_loop {
+ 	bctbx_map_t *timer_sources;
+ 	bctbx_mutex_t
+ 	    sources_mutex; // mutex to avoid concurency between source addition/removing/cancelling and main loop iteration.
++	_Atomic(uint16_t) destroyed; // TN patch - possible workaround for crash
+ 	belle_sip_object_pool_t *pool;
+ 	int nsources;
+ 	int run;
 @@ -306,6 +307,9 @@ void belle_sip_main_loop_remove_source(belle_sip_main_loop_t *ml, belle_sip_sour
  }
  
  static void belle_sip_main_loop_destroy(belle_sip_main_loop_t *ml) {
 +	belle_sip_message("belle_sip_main_loop_destroy()");
-+	ml->destroyed = 1; // TN patch - possible workaround for crash
++	ml->destroyed = 0xffff; // TN patch - possible workaround for crash
 +
  	bctbx_iterator_t *it = bctbx_map_ullong_begin(ml->timer_sources);
  	bctbx_iterator_t *end = bctbx_map_ullong_end(ml->timer_sources);
  
-@@ -739,6 +742,8 @@ end:
+@@ -736,7 +740,23 @@ end:
+ 	belle_sip_free(pfd);
  }
  
++// From https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/bionic/pthread_mutex.cpp
++// The mutex state field has 0xffff written to it when destroyed
++struct __pthread_mutex_internal_t {
++    _Atomic(uint16_t) state;
++    uint16_t __pad;
++} __attribute__((aligned(4)));
++
++unsigned char linphone_tn_run_loop_read_mutex_state_hack_enabled = 1;
++
++static inline is_mutex_destroyed(bctbx_mutex_t *mtx) {
++	return ((struct __pthread_mutex_internal_t *)mtx)->state == 0xffff;
++}
++
  void belle_sip_main_loop_run(belle_sip_main_loop_t *ml) {
 +	if (ml->destroyed) return; // TN patch - possible workaround for crash
++	if (linphone_tn_run_loop_read_mutex_state_hack_enabled && is_mutex_destroyed(&(ml->sources_mutex))) return; // TN patch - possible workaround for crash
 +
  #ifndef _WIN32
  	ml->thread_id = bctbx_thread_self();
  #endif
-@@ -760,6 +765,8 @@ int belle_sip_main_loop_quit(belle_sip_main_loop_t *ml) {
+@@ -758,6 +778,9 @@ int belle_sip_main_loop_quit(belle_sip_main_loop_t *ml) {
  }
  
  void belle_sip_main_loop_sleep(belle_sip_main_loop_t *ml, int milliseconds) {
 +	if (ml->destroyed) return; // TN patch - possible workaround for crash
++	if (linphone_tn_run_loop_read_mutex_state_hack_enabled && is_mutex_destroyed(&(ml->sources_mutex))) return; // TN patch - possible workaround for crash
 +
  	belle_sip_source_t *s = belle_sip_main_loop_create_timeout(ml, (belle_sip_source_func_t)belle_sip_main_loop_quit,
  	                                                           ml, milliseconds, "Main loop sleep timer");
  
+diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
+index 9a0153d2d..82deb7d0c 100644
+--- a/liblinphone/coreapi/linphonecore.c
++++ b/liblinphone/coreapi/linphonecore.c
+@@ -6204,6 +6204,19 @@ const char *linphone_core_get_ringback(const LinphoneCore *lc) {
+ 	return lc->sound_conf.remote_ring;
+ }
+ 
++
++// TN patch
++extern unsigned char linphone_tn_run_loop_read_mutex_state_hack_enabled;
++
++bool_t linphone_core_get_run_loop_read_mutex_state_hack_enabled(const LinphoneCore */*core*/) {
++	return linphone_tn_run_loop_read_mutex_state_hack_enabled;
++}
++
++void linphone_core_set_run_loop_read_mutex_state_hack_enabled(LinphoneCore */*core*/, bool_t enable) {
++	linphone_tn_run_loop_read_mutex_state_hack_enabled = enable;
++}
++// TN patch
++
+ void linphone_core_enable_echo_cancellation(LinphoneCore *lc, bool_t val) {
+ 	lc->sound_conf.ec = val;
+ 	if (linphone_core_ready(lc)) linphone_config_set_int(lc->config, "sound", "echocancellation", val);
+diff --git a/liblinphone/include/linphone/core.h b/liblinphone/include/linphone/core.h
+index e2371432e..aacabcc6b 100644
+--- a/liblinphone/include/linphone/core.h
++++ b/liblinphone/include/linphone/core.h
+@@ -3536,6 +3536,25 @@ LINPHONE_PUBLIC void linphone_core_set_ring_during_incoming_early_media(Linphone
+  */
+ LINPHONE_PUBLIC bool_t linphone_core_get_ring_during_incoming_early_media(const LinphoneCore *core);
+ 
++// TN patch
++
++/**
++ * Tells whether we should enable a hack to read the destroyed mutex state on the run loop.
++ * @param core #LinphoneCore object @notnil
++ * @ingroup media_parameters
++ */
++bool_t linphone_core_get_run_loop_read_mutex_state_hack_enabled(const LinphoneCore *core);
++
++/**
++ * Tells whether we should enable a hack to read the destroyed mutex state on the run loop.
++ * @param core #LinphoneCore object @notnil
++ * @param enable Boolean value telling whether the feature is enabled.
++ * @ingroup media_parameters
++ */
++void linphone_core_set_run_loop_read_mutex_state_hack_enabled(LinphoneCore *core, bool_t enable);
++
++// TN patch
++
+ LINPHONE_PUBLIC LinphoneStatus linphone_core_preview_ring(LinphoneCore *core,
+                                                           const char *ring,
+                                                           LinphoneCoreCbFunc func,
