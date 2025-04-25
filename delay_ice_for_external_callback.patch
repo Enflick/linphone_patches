@@ -1,8 +1,8 @@
-diff --git a/liblinphone/coreapi/private_functions.h b/liblinphone/coreapi.private_functions.h
-index b053dfd03..21ff0d6df 100644
+diff --git a/liblinphone/coreapi/private_functions.h b/liblinphone/coreapi/private_functions.h
+index 65bd71304..69dfc1713 100644
 --- a/liblinphone/coreapi/private_functions.h
 +++ b/liblinphone/coreapi/private_functions.h
-@@ -849,6 +849,7 @@ void linphone_core_notify_authentication_requested(LinphoneCore *lc,
+@@ -847,6 +847,7 @@ void linphone_core_notify_authentication_requested(LinphoneCore *lc,
                                                     LinphoneAuthMethod method);
  void linphone_core_notify_call_log_updated(LinphoneCore *lc, LinphoneCallLog *newcl);
  void linphone_core_notify_call_id_updated(LinphoneCore *lc, const char *previous, const char *current);
@@ -11,11 +11,11 @@ index b053dfd03..21ff0d6df 100644
                                                  LinphoneChatRoom *room,
                                                  const LinphoneAddress *from,
 diff --git a/liblinphone/coreapi/vtables.c b/liblinphone/coreapi/vtables.c
-index 1c75a886f..7a01095cc 100644
+index 308ade970..58a0b3f39 100644
 --- a/liblinphone/coreapi/vtables.c
 +++ b/liblinphone/coreapi/vtables.c
-@@ -211,6 +211,12 @@ void linphone_core_notify_call_id_updated(LinphoneCore *lc, const char *previous
- 	NOTIFY_IF_EXIST(call_id_updated, lc, previous, current);
+@@ -318,6 +318,12 @@ void linphone_core_notify_message_received_unable_decrypt(LinphoneCore *lc,
+ 	NOTIFY_IF_EXIST(message_received_unable_decrypt, lc, room, message);
  	cleanup_dead_vtable_refs(lc);
  }
 +
@@ -28,10 +28,10 @@ index 1c75a886f..7a01095cc 100644
  #pragma GCC diagnostic push
  #endif
 diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
-index 5fddb1765..898c26d78 100644
+index 75d1c51b5..b34d1c394 100644
 --- a/liblinphone/coreapi/linphonecore.c
 +++ b/liblinphone/coreapi/linphonecore.c
-@@ -249,6 +249,30 @@ void linphone_core_cbs_set_registration_state_changed(LinphoneCoreCbs *cbs,
+@@ -280,6 +280,30 @@ void linphone_core_cbs_set_registration_state_changed(LinphoneCoreCbs *cbs,
  	cbs->vtable->registration_state_changed = cb;
  }
  
@@ -63,7 +63,7 @@ index 5fddb1765..898c26d78 100644
  	cbs->vtable->conference_info_received = cb;
  }
 diff --git a/liblinphone/include/linphone/api/c-nat-policy.h b/liblinphone/include/linphone/api/c-nat-policy.h
-index 82884282b..6bdd28ad8 100644
+index 8a2fdde43..b39abc8a7 100644
 --- a/liblinphone/include/linphone/api/c-nat-policy.h
 +++ b/liblinphone/include/linphone/api/c-nat-policy.h
 @@ -274,6 +274,24 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tls_turn_transport_enabled(const Linp
@@ -89,10 +89,10 @@ index 82884282b..6bdd28ad8 100644
 +// TN patch
 +
  /**
-  * @}
-  */
+  * Get the TURN configuration endpoint.
+  * @param policy #LinphoneNatPolicy object @notnil
 diff --git a/liblinphone/include/linphone/callbacks.h b/liblinphone/include/linphone/callbacks.h
-index 3c8ed0ce0..c89eb1e70 100644
+index ce2c4e355..1fb597e9f 100644
 --- a/liblinphone/include/linphone/callbacks.h
 +++ b/liblinphone/include/linphone/callbacks.h
 @@ -138,6 +138,15 @@ typedef void (*LinphoneCoreCbsRegistrationStateChangedCb)(LinphoneCore *core,
@@ -112,10 +112,10 @@ index 3c8ed0ce0..c89eb1e70 100644
   * Report status change for a friend previously added to the #LinphoneCore with linphone_core_add_friend().
   * @param core #LinphoneCore object @notnil
 diff --git a/liblinphone/include/linphone/core.h b/liblinphone/include/linphone/core.h
-index 0f902f0e9..a2dd49ec3 100644
+index aa0be62b2..4314805ba 100644
 --- a/liblinphone/include/linphone/core.h
 +++ b/liblinphone/include/linphone/core.h
-@@ -217,6 +217,7 @@ typedef void (*LinphoneCoreCbFunc)(LinphoneCore *core, void *user_data);
+@@ -198,6 +198,7 @@ typedef void (*LinphoneCoreCbFunc)(LinphoneCore *core, void *user_data);
  typedef struct _LinphoneCoreVTable {
  	LinphoneCoreGlobalStateChangedCb global_state_changed;             /**< Notifies global state changes*/
  	LinphoneCoreRegistrationStateChangedCb registration_state_changed; /**< Notifies registration state changes*/
@@ -123,7 +123,7 @@ index 0f902f0e9..a2dd49ec3 100644
  	LinphoneCoreCallStateChangedCb call_state_changed;                 /**< Notifies call state changes*/
  	LinphoneCoreNotifyPresenceReceivedCb notify_presence_received;     /**< Notify received presence events*/
  	LinphoneCoreNotifyPresenceReceivedForUriOrTelCb
-@@ -312,6 +313,30 @@ typedef struct _LinphoneCoreVTable {
+@@ -297,6 +298,30 @@ typedef struct _LinphoneCoreVTable {
  	void *user_data; /**<User data associated with the above callbacks */
  } LinphoneCoreVTable;
  
@@ -155,14 +155,13 @@ index 0f902f0e9..a2dd49ec3 100644
   * @brief Instantiate a vtable with all arguments set to NULL.
   * @return newly allocated vtable.
 diff --git a/liblinphone/src/c-wrapper/api/c-nat-policy.cpp b/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
-index 0d44878d3..4b4074acf 100644
+index 949578390..f8e6df760 100644
 --- a/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
 +++ b/liblinphone/src/c-wrapper/api/c-nat-policy.cpp
-@@ -164,3 +164,13 @@ const char *linphone_nat_policy_get_nat_v6_address(const LinphoneNatPolicy *poli
- void linphone_nat_policy_set_nat_v6_address(LinphoneNatPolicy *policy, const char *v6_address) {
+@@ -166,10 +166,20 @@ void linphone_nat_policy_set_nat_v6_address(LinphoneNatPolicy *policy, const cha
  	NatPolicy::toCpp(policy)->setNatV6Address(L_C_TO_STRING(v6_address));
  }
-+
+ 
 +// TN patch
 +bool_t linphone_nat_policy_delay_ice_for_external_callback_enabled(const LinphoneNatPolicy *policy) {
 +	return NatPolicy::toCpp(policy)->delayIceEnabled() ? TRUE : FALSE;
@@ -172,13 +171,23 @@ index 0d44878d3..4b4074acf 100644
 +	NatPolicy::toCpp(policy)->enableDelayIce(!!enable);
 +}
 +// TN patch
++
+ const char *linphone_nat_policy_get_turn_configuration_endpoint(const LinphoneNatPolicy *policy) {
+ 	return L_STRING_TO_C(NatPolicy::toCpp(policy)->getTurnConfigurationEndpoint());
+ }
+ 
+ void linphone_nat_policy_set_turn_configuration_endpoint(LinphoneNatPolicy *policy, const char *endpoint) {
+ 	NatPolicy::toCpp(policy)->setTurnConfigurationEndpoint(L_C_TO_STRING(endpoint));
+-}
+\ No newline at end of file
++}
 diff --git a/liblinphone/src/conference/session/media-session.cpp b/liblinphone/src/conference/session/media-session.cpp
-index bfeda2e8a..516f85e44 100644
+index 27f437ae6..688b190ee 100644
 --- a/liblinphone/src/conference/session/media-session.cpp
 +++ b/liblinphone/src/conference/session/media-session.cpp
-@@ -58,6 +58,10 @@
- #include "conference.h"
- #include "private.h"
+@@ -50,6 +50,10 @@
+ #include "sal/sal_stream_bundle.h"
+ #include "utils/payload-type-handler.h"
  
 +// TN patch
 +extern std::queue<std::function<LinphoneStatus()>> MediaSessionPrivate_iceDeferedPrepareTasks;
@@ -187,7 +196,7 @@ index bfeda2e8a..516f85e44 100644
  using namespace std;
  
  LINPHONE_BEGIN_NAMESPACE
-@@ -3997,9 +4001,44 @@ void MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() {
+@@ -4266,6 +4270,22 @@ void MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() {
  	L_Q();
  	lInfo() << "MediaSession [" << q
  	        << "] is going to be updated (reINVITE) in order to recover from lost connectivity";
@@ -208,6 +217,10 @@ index bfeda2e8a..516f85e44 100644
 +
 +	// Original code start
  	getStreamsGroup().getIceService().resetSession();
+ 	if (op) {
+ 		// Reset retry function as we need to recover from a network loss
+@@ -4273,6 +4293,24 @@ void MediaSessionPrivate::reinviteToRecoverFromConnectionLoss() {
+ 	}
  	MediaSessionParams newParams(*getParams());
  	q->update(&newParams, CallSession::UpdateMethod::Invite, q->isCapabilityNegotiationEnabled());
 +	// Original code end
@@ -228,24 +241,23 @@ index bfeda2e8a..516f85e44 100644
 +		deferredTask();
 +	}
 +	// TN patch
-+
  }
  
  void MediaSessionPrivate::repairByNewInvite(bool withReplaces) {
-@@ -4878,6 +4917,8 @@ LinphoneStatus MediaSession::update(const MediaSessionParams *msp,
- 			return res;
+@@ -4796,6 +4834,8 @@ LinphoneStatus MediaSession::resume() {
+ 			return 0;
  		};
  
 +		lInfo() << "MediaSessionPrivate::update() -> ice=" << (int)d->natPolicy->iceEnabled() << ", turn=" << (int)d->natPolicy->turnEnabled() << ", tcp_turn=" << (int)d->natPolicy->turnTcpEnabled();
 +
  		const auto preparingStreams = d->getStreamsGroup().prepare();
- 		// reINVITE sent after full state must be sent after ICE negotiations are completed if ICE is enabled
  		if (d->natPolicy && d->natPolicy->iceEnabled() && preparingStreams) {
+ 			lInfo() << "Defer CallSession " << this << " (local address " << getLocalAddress()->toString()
 diff --git a/liblinphone/src/nat/ice-service.cpp b/liblinphone/src/nat/ice-service.cpp
-index 3e5f20297..b7cea5b23 100644
+index f21a682bd..0145c0e5b 100644
 --- a/liblinphone/src/nat/ice-service.cpp
 +++ b/liblinphone/src/nat/ice-service.cpp
-@@ -250,6 +250,8 @@ LinphoneCore *IceService::getCCore() const {
+@@ -264,6 +264,8 @@ LinphoneCore *IceService::getCCore() const {
  }
  
  int IceService::gatherLocalCandidates() {
@@ -254,23 +266,13 @@ index 3e5f20297..b7cea5b23 100644
  	list<string> localAddrs = IfAddrs::fetchLocalAddresses();
  	bool ipv6Allowed = linphone_core_ipv6_enabled(getCCore());
  	const auto &mediaLocalIp = getMediaSessionPrivate().getMediaLocalIp();
-@@ -339,6 +341,9 @@ int IceService::gatherIceCandidates() {
- 	int err = 0;
- 
- 	const auto &natPolicy = getMediaSessionPrivate().getNatPolicy();
-+
-+lInfo() << "IceService::gatherIceCandidates() -> ice=" << (int)natPolicy->iceEnabled() << ", turn=" << (int)natPolicy->turnEnabled() << ", tcp_turn=" << (int)natPolicy->turnTcpEnabled();
-+
- 	if (natPolicy && natPolicy->stunServerActivated()) {
- 		ai = natPolicy->getStunServerAddrinfo();
- 		if (ai) ai = getIcePreferredStunServerAddrinfo(ai);
 diff --git a/liblinphone/src/nat/nat-policy.cpp b/liblinphone/src/nat/nat-policy.cpp
-index 9d397c7bc..c209a4c53 100644
+index fcdfba2a9..bf0dfb42f 100644
 --- a/liblinphone/src/nat/nat-policy.cpp
 +++ b/liblinphone/src/nat/nat-policy.cpp
-@@ -72,8 +72,9 @@ NatPolicy::NatPolicy(const NatPolicy &other)
- 	mIceEnabled = other.mIceEnabled;
+@@ -78,8 +78,9 @@ NatPolicy::NatPolicy(const NatPolicy &other)
  	mUpnpEnabled = other.mUpnpEnabled;
+ 	mTurnConfigurationEndpoint = other.mTurnConfigurationEndpoint;
  	mTurnUdpEnabled = other.mTurnUdpEnabled;
 -	mTurnTcpEnabled = false;
 -	mTurnTlsEnabled = false;
@@ -280,7 +282,7 @@ index 9d397c7bc..c209a4c53 100644
  }
  
  NatPolicy::~NatPolicy() {
-@@ -155,6 +156,7 @@ void NatPolicy::clear() {
+@@ -161,6 +162,7 @@ void NatPolicy::clear() {
  	mTurnUdpEnabled = false;
  	mTurnTcpEnabled = false;
  	mTurnTlsEnabled = false;
@@ -289,10 +291,10 @@ index 9d397c7bc..c209a4c53 100644
  
  void NatPolicy::setStunServer(const std::string &stunServer) {
 diff --git a/liblinphone/src/nat/nat-policy.h b/liblinphone/src/nat/nat-policy.h
-index 0a3997973..a50d6279e 100644
+index 3e7f0d060..b3f4b75c8 100644
 --- a/liblinphone/src/nat/nat-policy.h
 +++ b/liblinphone/src/nat/nat-policy.h
-@@ -104,6 +104,9 @@ public:
+@@ -115,6 +115,9 @@ public:
  		return mUserData;
  	}
  
@@ -302,7 +304,7 @@ index 0a3997973..a50d6279e 100644
  	const std::string &getRef() const {
  		return mRef;
  	}
-@@ -137,6 +140,7 @@ private:
+@@ -164,6 +167,7 @@ private:
  	bool mTurnUdpEnabled = false;
  	bool mTurnTcpEnabled = false;
  	bool mTurnTlsEnabled = false;
@@ -311,7 +313,7 @@ index 0a3997973..a50d6279e 100644
  
  LINPHONE_END_NAMESPACE
 diff --git a/mediastreamer2/src/voip/ice.c b/mediastreamer2/src/voip/ice.c
-index 3c54b823..ebff13a2 100644
+index 8252d0e0..bdc5f4da 100644
 --- a/mediastreamer2/src/voip/ice.c
 +++ b/mediastreamer2/src/voip/ice.c
 @@ -952,7 +952,45 @@ static void ice_check_list_add_stun_server_request(IceCheckList *cl, IceStunServ

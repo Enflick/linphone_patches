@@ -1,13 +1,13 @@
 diff --git a/liblinphone/src/sal/offeranswer.cpp b/liblinphone/src/sal/offeranswer.cpp
-index 2e79993c0..151191e57 100644
+index 059926e9f..c04e44789 100644
 --- a/liblinphone/src/sal/offeranswer.cpp
 +++ b/liblinphone/src/sal/offeranswer.cpp
 @@ -192,12 +192,24 @@ bool OfferAnswerEngine::onlyTelephoneEvent(const std::list<OrtpPayloadType *> &l
  
- PayloadType *OfferAnswerEngine::genericMatch(const std::list<OrtpPayloadType *> &local_payloads,
-                                              const PayloadType *refpt,
--                                             BCTBX_UNUSED(const std::list<OrtpPayloadType *> &remote_payloads)) {
-+                                             const std::list<OrtpPayloadType *> &remote_payloads) {
+ OrtpPayloadType *OfferAnswerEngine::genericMatch(const std::list<OrtpPayloadType *> &local_payloads,
+                                                  const OrtpPayloadType *refpt,
+-                                                 BCTBX_UNUSED(const std::list<OrtpPayloadType *> &remote_payloads)) {
++                                                 const std::list<OrtpPayloadType *> &remote_payloads) {
  	for (const auto &pt : local_payloads) {
 +		// ms_message("local_payload (%s/%i/%i) vs ref (%s/%i/%i)", pt->mime_type, pt->clock_rate, pt->channels, refpt->mime_type, refpt->clock_rate, refpt->channels);
  		if (pt->mime_type && refpt->mime_type && strcasecmp(pt->mime_type, refpt->mime_type) == 0 &&
