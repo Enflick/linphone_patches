@@ -24,9 +24,12 @@ export PATH_TO_SPM_DIR=~/Git/linphone/spm
 export LINPHONE_VERSION=$(git describe --tags --exact-match)
 ```
 
-### Apply patches as needed
+### Cleanup git state, then apply reverts and patches as needed
 
 ```
+git co . && git submodule foreach 'git reset ; git checkout . ; git clean -fd'
+git submodule update --init --recursive
+pushd liblinphone ; git revert --no-edit 96de42ced6146111fafd3de7788fbb8020b0506e ; popd
 for p in ${PATH_TO_SPM_DIR}/*.patch; do echo $p; patch --strip=1 --forward --input $p; done
 ```
 
