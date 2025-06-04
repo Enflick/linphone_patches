@@ -1,0 +1,92 @@
+diff --git a/mediastreamer2/src/audiofilters/msiounit.mm b/mediastreamer2/src/audiofilters/msiounit.mm
+index 5e3b9f6a..da7bc201 100644
+--- a/mediastreamer2/src/audiofilters/msiounit.mm
++++ b/mediastreamer2/src/audiofilters/msiounit.mm
+@@ -964,6 +964,8 @@ static bool_t au_audio_session_is_active(MSSndCard *obj) {
+ 	return au_holder.audio_session_activated;
+ }
+ 
++unsigned char linphone_tn_check_audio_unit_is_up_synchronous = 1;
++
+ static void au_audio_session_activated(MSSndCard *obj, bool_t activated) {
+ 	AudioUnitHolder *au_holder = [AudioUnitHolder sharedInstance];
+ 	bool_t need_audio_session_reconfiguration = FALSE;
+@@ -1001,7 +1003,11 @@ static void au_audio_session_activated(MSSndCard *obj, bool_t activated) {
+ 			*/
+ 			handle_sample_rate_change(need_audio_session_reconfiguration);
+ 			/* The next is done on a separate thread because it is considerably slow, so don't block the application calling thread here. */
+-			[au_holder check_audio_unit_is_up_async];
++			if (linphone_tn_check_audio_unit_is_up_synchronous) {
++				[au_holder check_audio_unit_is_up];
++			} else {
++				[au_holder check_audio_unit_is_up_async];
++			}
+ 		}
+ 	}else if (!activated){
+ 		if ([au_holder audio_unit_state] == MSAudioUnitStarted) {
+@@ -1274,7 +1280,11 @@ static void au_read_process(MSFilter *f){
+ 			ms_error("Stalled AudioUnit detected, will restart it");
+ 			au_holder.stalled = TRUE;
+ 			[au_holder recreate_audio_unit];
+-			[au_holder check_audio_unit_is_up_async];
++			if (linphone_tn_check_audio_unit_is_up_synchronous) {
++				[au_holder check_audio_unit_is_up];
++			} else {
++				[au_holder check_audio_unit_is_up_async];
++			}
+ 		}else d->read_samples_last_activity_check = d->read_samples;
+ 	}
+ }
+diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphonecore.c
+index 2d5c2a09b..e0070ca72 100644
+--- a/liblinphone/coreapi/linphonecore.c
++++ b/liblinphone/coreapi/linphonecore.c
+@@ -6340,6 +6340,18 @@ const char *linphone_core_get_stun_server(const LinphoneCore *lc) {
+ 	else return linphone_config_get_string(lc->config, "net", "stun_server", NULL);
+ }
+ 
++// TN patch
++extern unsigned char linphone_tn_check_audio_unit_is_up_synchronous;
++
++bool_t linphone_core_get_check_audio_unit_is_up_synchronous_enabled(const LinphoneCore */*core*/) {
++	return linphone_tn_check_audio_unit_is_up_synchronous;
++}
++
++void linphone_core_set_check_audio_unit_is_up_synchronous_enabled(LinphoneCore */*core*/, bool_t enable) {
++	linphone_tn_check_audio_unit_is_up_synchronous = enable;
++}
++// TN patch
++
+ bool_t linphone_core_upnp_available() {
+ 	return FALSE;
+ }
+diff --git a/liblinphone/include/linphone/core.h b/liblinphone/include/linphone/core.h
+index e9426adc4..6dca3f765 100644
+--- a/liblinphone/include/linphone/core.h
++++ b/liblinphone/include/linphone/core.h
+@@ -3181,6 +3181,25 @@ LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_core_set_stun_server(LinphoneC
+  */
+ LINPHONE_PUBLIC LINPHONE_DEPRECATED const char *linphone_core_get_stun_server(const LinphoneCore *core);
+ 
++// TN patch
++
++/**
++ * Tells whether we should enable a synchronous check_audio_unit_is_up on the run loop.
++ * @param core #LinphoneCore object @notnil
++ * @ingroup media_parameters
++ */
++bool_t linphone_core_get_check_audio_unit_is_up_synchronous_enabled(const LinphoneCore *core);
++
++/**
++ * Tells whether we should enable a synchronous check_audio_unit_is_up on the run loop.
++ * @param core #LinphoneCore object @notnil
++ * @param enable Boolean value telling whether the feature is enabled.
++ * @ingroup media_parameters
++ */
++void linphone_core_set_check_audio_unit_is_up_synchronous_enabled(LinphoneCore *core, bool_t enable);
++
++// TN patch
++
+ /**
+  * Return the availability of uPnP.
+  * @return true if uPnP is available otherwise return false.
