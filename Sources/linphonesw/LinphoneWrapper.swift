@@ -17582,6 +17582,24 @@ public class Core : LinphoneObject
 
 	}
 		
+	/// Tells whether we should enable a synchronous check_audio_unit_is_up on the run
+	/// loop. 
+	/// - Parameter enable: Boolean value telling whether the feature is enabled. 
+	
+	/// Get a pointer on the internal conference object. 
+	/// - Returns: A pointer on `Conference` or nil if no conference are going on.    
+	public var conference: Conference?
+	{
+	
+						let cPointer = linphone_core_get_conference(cPtr)
+			if (cPointer == nil) {
+				return nil
+			}
+			let result = Conference.getSwiftObject(cObject:cPointer!)
+			return result
+
+	}
+		
 	/// Enable sending conference invitations in the chat message body instead of as a
 	/// file attachment. 
 	/// - Parameter enable: true to send ICS as message body, false to send it as file
