@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2010-2022 Belledonne Communications SARL.
  *
- * This file is part of Liblinphone 
+ * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -36,21 +36,23 @@ extern "C" {
  * Create a new #LinphoneVideoSourceDescriptor object.
  * @return The newly created #LinphoneVideoSourceDescriptor object. @notnil
  */
-LINPHONE_PUBLIC LinphoneVideoSourceDescriptor* linphone_video_source_descriptor_new(void);
+LINPHONE_PUBLIC LinphoneVideoSourceDescriptor *linphone_video_source_descriptor_new(void);
 
 /**
  * Instantiate a new video source descriptor with values from source.
  * @param descriptor The #LinphoneVideoSourceDescriptor object to be cloned. @notnil
  * @return The newly created #LinphoneVideoSourceDescriptor object. @notnil
  */
-LINPHONE_PUBLIC LinphoneVideoSourceDescriptor* linphone_video_source_descriptor_clone(const LinphoneVideoSourceDescriptor *descriptor);
+LINPHONE_PUBLIC LinphoneVideoSourceDescriptor *
+linphone_video_source_descriptor_clone(const LinphoneVideoSourceDescriptor *descriptor);
 
 /**
  * Take a reference on a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
  * @return The same #LinphoneVideoSourceDescriptor object. @notnil
  */
-LINPHONE_PUBLIC LinphoneVideoSourceDescriptor* linphone_video_source_descriptor_ref(LinphoneVideoSourceDescriptor *descriptor);
+LINPHONE_PUBLIC LinphoneVideoSourceDescriptor *
+linphone_video_source_descriptor_ref(LinphoneVideoSourceDescriptor *descriptor);
 
 /**
  * Release a #LinphoneVideoSourceDescriptor.
@@ -63,53 +65,101 @@ LINPHONE_PUBLIC void linphone_video_source_descriptor_unref(LinphoneVideoSourceD
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
  * @return The #LinphoneVideoSourceType corresponding to this video source descriptor.
  */
-LINPHONE_PUBLIC LinphoneVideoSourceType linphone_video_source_descriptor_get_type(const LinphoneVideoSourceDescriptor *descriptor);
+LINPHONE_PUBLIC LinphoneVideoSourceType
+linphone_video_source_descriptor_get_type(const LinphoneVideoSourceDescriptor *descriptor);
 
 /**
  * Gets the call of a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
- * @return The #LinphoneCall of the video source descriptor if it's type is LinphoneVideoSourceCall, NULL otherwise. @maybenil
+ * @return The #LinphoneCall of the video source descriptor if it's type is LinphoneVideoSourceCall, NULL otherwise.
+ * @maybenil
  */
-LINPHONE_PUBLIC LinphoneCall* linphone_video_source_descriptor_get_call(const LinphoneVideoSourceDescriptor *descriptor);
+LINPHONE_PUBLIC LinphoneCall *
+linphone_video_source_descriptor_get_call(const LinphoneVideoSourceDescriptor *descriptor);
 
 /**
  * Sets the source of a #LinphoneVideoSourceDescriptor with a call.
  *
  * Setting a #LinphoneVideoSourceDescriptor with a call will require the lib to have two calls running at the same time.
- * To do so the media resource mode has to be set to LinphoneSharedMediaResources with #linphone_core_set_media_resource_mode().
+ * To do so the media resource mode has to be set to LinphoneSharedMediaResources with
+ * #linphone_core_set_media_resource_mode().
  *
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
  * @param call The #LinphoneCall that will be used as a video source. @maybenil
  */
-LINPHONE_PUBLIC void linphone_video_source_descriptor_set_call(LinphoneVideoSourceDescriptor *descriptor, LinphoneCall *call);
+LINPHONE_PUBLIC void linphone_video_source_descriptor_set_call(LinphoneVideoSourceDescriptor *descriptor,
+                                                               LinphoneCall *call);
 
 /**
  * Gets the camera id of a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
- * @return The camera id of the video source descriptor if it's type is LinphoneVideoSourceCamera, NULL otherwise. @maybenil
+ * @return The camera id of the video source descriptor if it's type is LinphoneVideoSourceCamera, NULL otherwise.
+ * @maybenil
  */
-LINPHONE_PUBLIC const char* linphone_video_source_descriptor_get_camera_id(const LinphoneVideoSourceDescriptor *descriptor);
+LINPHONE_PUBLIC const char *
+linphone_video_source_descriptor_get_camera_id(const LinphoneVideoSourceDescriptor *descriptor);
 
 /**
  * Sets the source of a #LinphoneVideoSourceDescriptor with a camera id.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
  * @param camera_id The camera id that will be used as a video source. @maybenil
  */
-LINPHONE_PUBLIC void linphone_video_source_descriptor_set_camera_id(LinphoneVideoSourceDescriptor *descriptor, const char *camera_id);
+LINPHONE_PUBLIC void linphone_video_source_descriptor_set_camera_id(LinphoneVideoSourceDescriptor *descriptor,
+                                                                    const char *camera_id);
 
 /**
  * Gets the image path of a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
- * @return The image path of the video source descriptor if it's type is LinphoneVideoSourceImage, NULL otherwise. @maybenil
+ * @return The image path of the video source descriptor if it's type is LinphoneVideoSourceImage, NULL otherwise.
+ * @maybenil
  */
-LINPHONE_PUBLIC const char* linphone_video_source_descriptor_get_image(const LinphoneVideoSourceDescriptor *descriptor);
+LINPHONE_PUBLIC const char *linphone_video_source_descriptor_get_image(const LinphoneVideoSourceDescriptor *descriptor);
 
 /**
  * Sets the source of a #LinphoneVideoSourceDescriptor with an image path.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
  * @param image_path The image path that will be used as a video source. @maybenil
  */
-LINPHONE_PUBLIC void linphone_video_source_descriptor_set_image(LinphoneVideoSourceDescriptor *descriptor, const char *image_path);
+LINPHONE_PUBLIC void linphone_video_source_descriptor_set_image(LinphoneVideoSourceDescriptor *descriptor,
+                                                                const char *image_path);
+
+/**
+ * Gets the screen sharing type of a #LinphoneVideoSourceDescriptor.
+ * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
+ * @return The #LinphoneVideoSourceScreenSharing Type corresponding to this video source descriptor.
+ */
+LINPHONE_PUBLIC LinphoneVideoSourceScreenSharingType
+linphone_video_source_descriptor_get_screen_sharing_type(const LinphoneVideoSourceDescriptor *descriptor);
+
+/**
+ * Gets the screen sharing description of a #LinphoneVideoSourceDescriptor.
+ * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
+ * @return The native screen sharing description @maybenil
+ */
+LINPHONE_PUBLIC void *
+linphone_video_source_descriptor_get_screen_sharing(const LinphoneVideoSourceDescriptor *descriptor);
+
+/**
+ * Sets the source of a #LinphoneVideoSourceDescriptor as screen sharing. native_data depends of the type and the
+ * current platform:
+ * 1. #LinphoneVideoSourceScreenSharingDisplay
+ * - Linux : <uintptr_t> The index of the screen ordered by XineramaQueryScreens.
+ * - Mac : <CGDirectDisplayID> The display identification that can be retrieved from SCShareableContent.
+ * - Windows : <uintptr_t> The index of the screen ordered by IDXGIAdapter->EnumOutputs.
+ * 2. #LinphoneVideoSourceScreenSharingWindow
+ * - Linux : <Window> The Window object that can be retrieved from XQueryPointer.
+ * - Mac : <CGWindowID> The window identification that can be retrieved from NSEvent.
+ * - Windows : <HWND> The window handle that can be retrived from WindowFromPoint.
+ * 3. #LinphoneVideoSourceScreenSharingArea
+ * - not yet supported.
+ *
+ * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
+ * @param type The #LinphoneVideoSourceScreenSharingType type of native_data. @notnil
+ * @param native_data The screen handle that will be used as a video source. @maybenil
+ */
+LINPHONE_PUBLIC void linphone_video_source_descriptor_set_screen_sharing(LinphoneVideoSourceDescriptor *descriptor,
+                                                                         LinphoneVideoSourceScreenSharingType type,
+                                                                         void *native_data);
 
 /**
  * @}

@@ -14,9 +14,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.linphone.msopenh264</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>9.0</string>
+	<string>14.7</string>
 	<key>MinimumOSVersion</key>
-	<string>9.0</string>
+	<string>14.7</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>

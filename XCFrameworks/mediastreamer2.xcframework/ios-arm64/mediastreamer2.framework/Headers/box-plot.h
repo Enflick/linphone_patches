@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2010-2022 Belledonne Communications SARL.
  *
- * This file is part of mediastreamer2 
+ * This file is part of mediastreamer2
  * (see https://gitlab.linphone.org/BC/public/mediastreamer2).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,9 +26,10 @@
 typedef struct _MSBoxPlot {
 	int64_t min;
 	int64_t max;
-	double mean;
-	double quad_moment; // E(X^2)
+	int64_t sum;
+	uint64_t deviation_sum;
 	uint64_t count;
+	double mean;
 } MSBoxPlot;
 
 void ms_box_plot_reset(MSBoxPlot *bp);
@@ -39,13 +40,13 @@ double ms_box_plot_get_standard_deviation(const MSBoxPlot *bp);
 
 char *ms_box_plot_to_string(const MSBoxPlot *bp, const char *unit);
 
-
 typedef struct _MSUBoxPlot {
 	uint64_t min;
 	uint64_t max;
-	double mean;
-	double quad_moment; // E(X^2)
+	uint64_t sum;
+	uint64_t deviation_sum;
 	uint64_t count;
+	double mean;
 } MSUBoxPlot;
 
 void ms_u_box_plot_reset(MSUBoxPlot *bp);
@@ -55,6 +56,5 @@ double ms_u_box_plot_get_variance(const MSUBoxPlot *bp);
 double ms_u_box_plot_get_standard_deviation(const MSUBoxPlot *bp);
 
 char *ms_u_box_plot_to_string(const MSUBoxPlot *bp, const char *unit);
-
 
 #endif // _MS2_BOX_PLOT_H

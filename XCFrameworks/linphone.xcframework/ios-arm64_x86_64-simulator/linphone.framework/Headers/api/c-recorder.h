@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2010-2022 Belledonne Communications SARL.
  *
- * This file is part of Liblinphone 
+ * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,9 +21,9 @@
 #ifndef LINPHONE_RECORDER_H
 #define LINPHONE_RECORDER_H
 
-#include "linphone/types.h"
-#include "linphone/api/c-types.h"
 #include "linphone/api/c-recorder-params.h"
+#include "linphone/api/c-types.h"
+#include "linphone/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,14 +40,14 @@ extern "C" {
  * @param params The #LinphoneRecorderParams object. @notnil
  * @return the newly created #LinphoneRecorder object. @notnil
  */
-LINPHONE_PUBLIC LinphoneRecorder* linphone_recorder_new(LinphoneCore *core, LinphoneRecorderParams *params);
+LINPHONE_PUBLIC LinphoneRecorder *linphone_recorder_new(LinphoneCore *core, const LinphoneRecorderParams *params);
 
 /**
  * Take a reference on a #LinphoneRecorder object.
  * @param recorder The #LinphoneRecorder object. @notnil
  * @return the same #LinphoneRecorder object. @notnil
  */
-LINPHONE_PUBLIC LinphoneRecorder* linphone_recorder_ref(LinphoneRecorder *recorder);
+LINPHONE_PUBLIC LinphoneRecorder *linphone_recorder_ref(LinphoneRecorder *recorder);
 
 /**
  * Release a #LinphoneRecorder object.
@@ -56,14 +56,16 @@ LINPHONE_PUBLIC LinphoneRecorder* linphone_recorder_ref(LinphoneRecorder *record
 LINPHONE_PUBLIC void linphone_recorder_unref(LinphoneRecorder *recorder);
 
 /**
- * Open a file for recording.
+ * Opens a file for recording.
+ * If the file already exists, it will open in append mode, otherwise it is created.
+
  * @param recorder The #LinphoneRecorder object. @notnil
  * @param file The path to the file to open. @notnil
  */
 LINPHONE_PUBLIC LinphoneStatus linphone_recorder_open(LinphoneRecorder *recorder, const char *file);
 
 /**
- * Close the opened file.
+ * Closes the opened file.
  * @param recorder The #LinphoneRecorder object. @notnil
  */
 LINPHONE_PUBLIC void linphone_recorder_close(LinphoneRecorder *recorder);
@@ -73,16 +75,16 @@ LINPHONE_PUBLIC void linphone_recorder_close(LinphoneRecorder *recorder);
  * @param recorder The #LinphoneRecorder object. @notnil
  * @return the file used for the recording if any. @maybenil
  */
-LINPHONE_PUBLIC const char* linphone_recorder_get_file(const LinphoneRecorder *recorder);
+LINPHONE_PUBLIC const char *linphone_recorder_get_file(const LinphoneRecorder *recorder);
 
 /**
- * Start the recording into the opened file.
+ * Starts the recording into the opened file.
  * @param recorder The #LinphoneRecorder object. @notnil
  */
 LINPHONE_PUBLIC LinphoneStatus linphone_recorder_start(LinphoneRecorder *recorder);
 
 /**
- * Pause the recording.
+ * Pauses the recording.
  * @param recorder The #LinphoneRecorder object. @notnil
  */
 LINPHONE_PUBLIC LinphoneStatus linphone_recorder_pause(LinphoneRecorder *recorder);
@@ -109,7 +111,7 @@ LINPHONE_PUBLIC int linphone_recorder_get_duration(const LinphoneRecorder *recor
 LINPHONE_PUBLIC float linphone_recorder_get_capture_volume(const LinphoneRecorder *recorder);
 
 /**
- * Create a content from the recording, for example to send it in a chat message.
+ * Create a #LinphoneContent object from the recording, for example to send it within a #LinphoneChatMessage.
  * @warning Recorder must be in Closed state!
  * @param recorder The #LinphoneRecorder object. @notnil
  * @return the #LinphoneContent matching the recording, or NULL. @maybenil
@@ -117,28 +119,28 @@ LINPHONE_PUBLIC float linphone_recorder_get_capture_volume(const LinphoneRecorde
 LINPHONE_PUBLIC LinphoneContent *linphone_recorder_create_content(LinphoneRecorder *recorder);
 
 /**
- * Set the #LinphoneRecorderParams object.
+ * Sets the #LinphoneRecorderParams object.
  * @param recorder The #LinphoneRecorder object. @notnil
  * @param params The #LinphoneRecorderParams object to set. @notnil
  */
 LINPHONE_PUBLIC void linphone_recorder_set_params(LinphoneRecorder *recorder, LinphoneRecorderParams *params);
 
 /**
- * Retrieve the #LinphoneRecorderParams object.
+ * Retrieves the #LinphoneRecorderParams object.
  * @param recorder The #LinphoneRecorder object. @notnil
  * @return The #LinphoneRecorderParams object. @notnil
  */
 LINPHONE_PUBLIC const LinphoneRecorderParams *linphone_recorder_get_params(const LinphoneRecorder *recorder);
 
 /**
- * Set the user data.
+ * Sets the user data.
  * @param recorder The #LinphoneRecorder object. @notnil
  * @param user_data The user data to set. @maybenil
  */
 LINPHONE_PUBLIC void linphone_recorder_set_user_data(LinphoneRecorder *recorder, void *user_data);
 
 /**
- * Retrieve the user data.
+ * Retrieves the user data.
  * @param recorder The #LinphoneRecorder object. @notnil
  * @return the user data to retrieve. @maybenil
  */

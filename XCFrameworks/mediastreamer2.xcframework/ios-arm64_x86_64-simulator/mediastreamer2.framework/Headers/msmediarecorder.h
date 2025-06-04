@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2010-2022 Belledonne Communications SARL.
  *
- * This file is part of mediastreamer2 
+ * This file is part of mediastreamer2
  * (see https://gitlab.linphone.org/BC/public/mediastreamer2).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,11 +21,11 @@
 #ifndef msmediarecorder_h
 #define msmediarecorder_h
 
-#include <mediastreamer2/mssndcard.h>
 #include <mediastreamer2/msinterfaces.h>
+#include <mediastreamer2/msmediaplayer.h>
+#include <mediastreamer2/mssndcard.h>
 #include <mediastreamer2/msvideo.h>
 #include <mediastreamer2/mswebcam.h>
-#include <mediastreamer2/msmediaplayer.h>
 
 /**
  * Media file recorder
@@ -37,26 +37,31 @@ typedef struct _MSMediaRecorder MSMediaRecorder;
 
 // typedef void (*MSMediaRecorderYourCallback)(void *user_data);
 
- /**
+/**
  * End of Callbacks definitions */
 
-
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 /**
  * Instanciate a media recorder
  * @param factory a MSFactory
- * @param snd_card Recording sound card
- * @param web_cam Recording camera
+ * @param snd_card Recording sound card, may be NULL if no audio record is requested.
+ * @param web_cam Recording camera, may be NULL if no video record is requested.
  * @param video_display_name Video out
  * @param window_id Pointer on the drawing window
  * @param format File format (Wave or MKV)
  * @param video_codec Video codec if MKV file (h264 or vp8)
  * @return A pointer on the created MSMediaRecorder
  */
-MS2_PUBLIC MSMediaRecorder *ms_media_recorder_new(MSFactory *factory, MSSndCard *snd_card, MSWebCam *web_cam, const char *video_display_name, void *window_id, MSFileFormat format, const char *video_codec);
+MS2_PUBLIC MSMediaRecorder *ms_media_recorder_new(MSFactory *factory,
+                                                  MSSndCard *snd_card,
+                                                  MSWebCam *web_cam,
+                                                  const char *video_display_name,
+                                                  void *window_id,
+                                                  MSFileFormat format,
+                                                  const char *video_codec);
 
 /**
  * Free a media Recorder
@@ -69,7 +74,14 @@ MS2_PUBLIC void ms_media_recorder_free(MSMediaRecorder *obj);
  * @param obj The recorder
  * @return The window ID
  */
-MS2_PUBLIC void * ms_media_recorder_get_window_id(const MSMediaRecorder *obj);
+MS2_PUBLIC void *ms_media_recorder_get_window_id(const MSMediaRecorder *obj);
+
+/**
+ * Create the window ID
+ * @param obj The recorder
+ * @return The window ID
+ */
+MS2_PUBLIC void *ms_media_recorder_create_window_id(MSMediaRecorder *obj);
 
 /**
  * Open a media file to write to
@@ -77,7 +89,16 @@ MS2_PUBLIC void * ms_media_recorder_get_window_id(const MSMediaRecorder *obj);
  * @param filepath Path of the file to write to
  * @return TRUE if the file could be created
  */
-MS2_PUBLIC bool_t ms_media_recorder_open(MSMediaRecorder *obj, const char *filepath, int device_orientation);
+MS2_PUBLIC bool_t ms_media_recorder_open(MSMediaRecorder *obj, const char *filepath);
+
+/**
+ * Open a media file to write to
+ * @param obj The recorder
+ * @param filepath Path of the file to write to
+ * @param append boolean to enable append mode (in case the file already exists).
+ * @return TRUE if the file could be created
+ */
+MS2_PUBLIC bool_t ms_media_recorder_open_2(MSMediaRecorder *obj, const char *filepath, bool_t append);
 
 /**
  * Close a media file
@@ -133,9 +154,16 @@ MS2_PUBLIC void ms_media_recorder_remove_file(MSMediaRecorder *obj, const char *
  */
 MS2_PUBLIC float ms_media_recorder_get_capture_volume(const MSMediaRecorder *obj);
 
+/**
+ * Set the device orientation. Must be set before calling ms_media_recorder_open(),
+ * cannot be changed afterwards.
+ * @param obj Recorder
+ * @param device_orientation the orientation in degrees.
+ */
+MS2_PUBLIC void ms_media_recorder_set_device_orientation(MSMediaRecorder *obj, int device_orientation);
+
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

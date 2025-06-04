@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2010-2022 Belledonne Communications SARL.
  *
- * This file is part of Liblinphone 
+ * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -58,7 +58,8 @@ LINPHONE_PUBLIC const char *linphone_audio_device_get_driver_name(const Linphone
  * @param audio_device the #LinphoneAudioDevice. @notnil
  * @returns the #LinphoneAudioDeviceCapabilities of the audio device (RECORD, PLAY or both) as a bit mask
  */
-LINPHONE_PUBLIC LinphoneAudioDeviceCapabilities linphone_audio_device_get_capabilities(const LinphoneAudioDevice *audio_device);
+LINPHONE_PUBLIC LinphoneAudioDeviceCapabilities
+linphone_audio_device_get_capabilities(const LinphoneAudioDevice *audio_device);
 
 /**
  * Returns the type of the device
@@ -73,7 +74,19 @@ LINPHONE_PUBLIC LinphoneAudioDeviceType linphone_audio_device_get_type(const Lin
  * @param capability the #LinphoneAudioDeviceCapabilities to check
  * @returns TRUE if the audio device has the capability, FALSE otherwise
  */
-LINPHONE_PUBLIC bool_t linphone_audio_device_has_capability(const LinphoneAudioDevice *audio_device, const LinphoneAudioDeviceCapabilities capability);
+LINPHONE_PUBLIC bool_t linphone_audio_device_has_capability(const LinphoneAudioDevice *audio_device,
+                                                            const LinphoneAudioDeviceCapabilities capability);
+
+/**
+ * Returns whether the audio device automatically follows the system's audio routing policy.
+ * This capability is available on some system (typically iOS) and might be convenient to simply specify
+ * liblinphone to let the system decide about which audio route is being used to handle a call.
+ * The actual #LinphoneAudioDeviceType may be unknown at some point, typically when no calls are running, otherwise
+ * it is reflected to be the actual system's audio route.
+ * @param audio_device the #LinphoneAudioDevice. @notnil
+ * @returns TRUE if the audio device automatically follows the system audio routing policy.
+ */
+LINPHONE_PUBLIC bool_t linphone_audio_device_get_follows_system_routing_policy(const LinphoneAudioDevice *audio_device);
 
 /**
  * Takes a reference on a #LinphoneAudioDevice.

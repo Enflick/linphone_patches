@@ -30,7 +30,6 @@ let package = Package(
                 "mscodec2",
                 "msopenh264",
                 "mssilk",
-                "mswebrtc",
                 "ortp",
             ]
         ),
@@ -73,10 +72,6 @@ let package = Package(
         .binaryTarget(
             name: "mssilk",
             path: "XCFrameworks/mssilk.xcframework"
-        ),
-        .binaryTarget(
-            name: "mswebrtc",
-            path: "XCFrameworks/mswebrtc.xcframework"
         ),
         .binaryTarget(
             name: "ortp",

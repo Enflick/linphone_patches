@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <memory>
 #include <stdexcept>
 
 namespace ownership {
@@ -19,15 +20,38 @@ namespace ownership {
  */
 template <class T>
 class BorrowedMut {
-	T* mPointer;
+	T *mPointer;
 
 public:
-	/* State explicitly that this pointer represents a mutable borrow
-	 */
-	explicit BorrowedMut(T* pointer) : mPointer(pointer) {
+	/* State explicitly that this pointer represents a mutable borrow */
+	explicit BorrowedMut(T *pointer) : mPointer(pointer) {
 	}
 
-	operator T*() {
+	/* Downcasts from smart pointers */
+	BorrowedMut(const std::shared_ptr<T> &shared) : mPointer(shared.get()) {
+	}
+	template <class Deleter>
+	BorrowedMut(const std::unique_ptr<T, Deleter> &unique) : mPointer(unique.get()) {
+	}
+
+	/* Cast wrapped type */
+	template <class U>
+	BorrowedMut(BorrowedMut<U> other) : mPointer(other) {
+	}
+
+	T *operator->() {
+		return mPointer;
+	};
+
+	operator T *() {
+		return mPointer;
+	};
+
+	const T *operator->() const {
+		return mPointer;
+	};
+
+	operator const T *() const {
 		return mPointer;
 	};
 };
@@ -41,7 +65,7 @@ public:
  */
 template <class T>
 class Owned {
-	T* mPointer;
+	T *mPointer;
 
 	void assertFreed() {
 		if (mPointer != nullptr) {
@@ -53,7 +77,7 @@ public:
 	Owned(std::nullptr_t null) : mPointer(null) {
 	}
 	/* State explicitly that this pointer owns its pointee */
-	explicit Owned(T* pointer) : mPointer(pointer) {
+	explicit Owned(T *pointer) : mPointer(pointer) {
 	}
 	/* Avoid inadvertently creating an owned pointer from a borrowed pointer */
 	Owned(BorrowedMut<T> borrowed) = delete;
@@ -62,20 +86,20 @@ public:
 	}
 
 	// Move only semantics to ensure ownership is always transferred
-	Owned(Owned<T>&& other) : mPointer(other.take()) {
+	Owned(Owned<T> &&other) : mPointer(other.take()) {
 	}
-	Owned& operator=(Owned<T>&& other) {
+	Owned &operator=(Owned<T> &&other) {
 		assertFreed();
 		mPointer = other.take();
 		return *this;
 	}
-	Owned(const Owned<T>& other) = delete;
-	Owned& operator=(const Owned<T>& other) = delete;
+	Owned(const Owned<T> &other) = delete;
+	Owned &operator=(const Owned<T> &other) = delete;
 
 	/* Move the raw pointer out of the wrapper (leaving nullptr in its place).
 	 * Use it to pass ownership to the appropriate destructor
 	 */
-	T* take() {
+	T *take() {
 		auto moved = mPointer;
 		mPointer = nullptr;
 		return moved;
@@ -89,7 +113,7 @@ public:
 	}
 
 	/* Automatically degrade into const pointer because that is always safe */
-	operator const T*() const {
+	operator const T *() const {
 		return mPointer;
 	};
 };
@@ -101,34 +125,34 @@ public:
  */
 template <class T>
 class Borrowed {
-	const T* mPointer;
+	const T *mPointer;
 
 public:
 	/* State explicitly that this pointer represents an immutable borrow */
-	explicit Borrowed(const T* pointer) : mPointer(pointer) {
+	explicit Borrowed(const T *pointer) : mPointer(pointer) {
 	}
-	Borrowed(const Owned<T>& owned) : Borrowed(static_cast<const T*>(owned)) {
+	Borrowed(const Owned<T> &owned) : Borrowed(static_cast<const T *>(owned)) {
 	}
-	Borrowed(const BorrowedMut<T>& mutBorrow) : Borrowed(static_cast<const T*>(mutBorrow)) {
+	Borrowed(const BorrowedMut<T> &mutBorrow) : Borrowed(static_cast<const T *>(mutBorrow)) {
 	}
 
-	operator const T*() const {
+	operator const T *() const {
 		return mPointer;
 	};
 };
 
 template <class T>
-auto owned(T* pointer) {
+auto owned(T *pointer) {
 	return Owned<T>(pointer);
 }
 
 template <class T>
-auto borrowed(const T* pointer) {
+auto borrowed(const T *pointer) {
 	return Borrowed<T>(pointer);
 }
 
 template <class T>
-auto borrowed_mut(T* pointer) {
+auto borrowed_mut(T *pointer) {
 	return BorrowedMut<T>(pointer);
 }
 
