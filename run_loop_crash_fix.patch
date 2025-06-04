@@ -33,7 +33,7 @@ index 3b13bece..b00fe140 100644
 +
 +unsigned char linphone_tn_run_loop_read_mutex_state_hack_enabled = 1;
 +
-+static inline is_mutex_destroyed(bctbx_mutex_t *mtx) {
++static inline int is_mutex_destroyed(bctbx_mutex_t *mtx) {
 +	return ((struct __pthread_mutex_internal_t *)mtx)->state == 0xffff;
 +}
 +
