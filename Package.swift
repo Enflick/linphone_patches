@@ -16,7 +16,6 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
-
         .target(
             name: "linphonesw",
             dependencies: [
@@ -30,7 +29,6 @@ let package = Package(
                 "mscodec2",
                 "msopenh264",
                 "mssilk",
-                "mswebrtc",
                 "ortp",
             ]
         ),
@@ -73,10 +71,6 @@ let package = Package(
         .binaryTarget(
             name: "mssilk",
             path: "XCFrameworks/mssilk.xcframework"
-        ),
-        .binaryTarget(
-            name: "mswebrtc",
-            path: "XCFrameworks/mswebrtc.xcframework"
         ),
         .binaryTarget(
             name: "ortp",
