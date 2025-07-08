@@ -1,0 +1,40 @@
+diff --git a/liblinphone/CMakeLists.txt b/liblinphone/CMakeLists.txt
+index 475ff16a8..5d43fb68f 100644
+--- a/liblinphone/CMakeLists.txt
++++ b/liblinphone/CMakeLists.txt
+@@ -228,7 +228,7 @@ if(ENABLE_LIME OR ENABLE_LIME_X3DH)
+ endif()
+ if(ENABLE_CXX_WRAPPER OR ENABLE_CSHARP_WRAPPER OR ENABLE_JAVA_WRAPPER OR ENABLE_SWIFT_WRAPPER OR ENABLE_DOC)
+ 	find_package(PythonInterp 3 REQUIRED)
+-	check_python_module(pystache)
++	# check_python_module(pystache)
+ 	check_python_module(six)
+ 	if(ENABLE_DOC)
+ 		#check_python_module(swift_domain)
+diff --git a/cmake-builder/toolchains/ios/toolchain-ios.cmake b/cmake-builder/toolchains/ios/toolchain-ios.cmake
+index e4451b8..67489b0 100644
+--- a/cmake-builder/toolchains/ios/toolchain-ios.cmake
++++ b/cmake-builder/toolchains/ios/toolchain-ios.cmake
+@@ -95,6 +95,9 @@ if(CMAKE_GENERATOR STREQUAL "Xcode")
+ 	set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+ 	set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
+ 	set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "bitcode")
++	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
++	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -std=c++14")
++	set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
+ endif()
+ 
+ # Define the compiler
+diff --git a/mediastreamer2/CMakeLists.txt b/mediastreamer2/CMakeLists.txt
+index 1da9921f..5187fe0d 100644
+--- a/mediastreamer2/CMakeLists.txt
++++ b/mediastreamer2/CMakeLists.txt
+@@ -695,8 +695,6 @@ else()
+ 		if(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL "10")
+ 			list(APPEND STRICT_OPTIONS_CXX "-Wno-deprecated-copy") # introduced by clang 10
+ 		endif()
+-	elseif(ENABLE_QT_GL AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER "9")
+-		list(APPEND STRICT_OPTIONS_CPP "-Wno-error=deprecated-copy") # introduced by gcc 9
+ 	endif()
+ 
+ 	if(CMAKE_C_COMPILER_ID MATCHES "Clang")

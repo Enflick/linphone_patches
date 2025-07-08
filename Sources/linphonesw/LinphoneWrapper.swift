@@ -10013,10 +10013,18 @@ public class Call : LinphoneObject
 	
 	
 	
-	/// Causes a running call to reconnect, the same way as a network reconnect. 
-	public func reconnect() 
+	/// Causes a running call to reconnect, the same way as a network reconnect.
+	public func reconnect()
 	{
 		linphone_call_reconnect(cPtr)
+	}
+	
+	
+	
+	/// Causes a fake simulated native crash - null pointer dereference.
+	public func simulateNativeCrash()
+	{
+		linphone_simulate_native_crash(OpaquePointer(bitPattern: 0))
 	}
 	
 	
