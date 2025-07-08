@@ -1,18 +1,18 @@
 diff --git a/liblinphone/src/core/platform-helpers/mac-platform-helpers.mm b/liblinphone/src/core/platform-helpers/mac-platform-helpers.mm
-index 363afcfed..5154cb84d 100644
+index f4c21a975..a3d16c909 100644
 --- a/liblinphone/src/core/platform-helpers/mac-platform-helpers.mm
 +++ b/liblinphone/src/core/platform-helpers/mac-platform-helpers.mm
 @@ -32,6 +32,7 @@
- #include "logger/logger.h"
  #include "core/core.h"
+ #include "logger/logger.h"
  #include "mac-platform-helpers.h"
 +#include "linphone/lpconfig.h"
  
  // =============================================================================
  
-@@ -170,9 +171,13 @@
+@@ -161,9 +162,13 @@ void MacPlatformHelpers::setHttpProxy(const string &host, int port) {
  
- //Get global proxy settings from system and set variables mHttpProxy{Host,Port,Enabled}.
+ // Get global proxy settings from system and set variables mHttpProxy{Host,Port,Enabled}.
  void MacPlatformHelpers::getHttpProxySettings(void) {
 +	// TN patch - use_system_http_proxy is a Linphone config option that allows to use the system HTTP proxy
 +	// if set to 1, otherwise it will not use the system HTTP proxy.
@@ -22,6 +22,6 @@ index 363afcfed..5154cb84d 100644
  
 -	if (proxySettings) {
 +	if (useSystemHttpProxy && proxySettings) {
- 		CFNumberRef enabled = (CFNumberRef) CFDictionaryGetValue(proxySettings, kCFNetworkProxiesHTTPEnable);
+ 		CFNumberRef enabled = (CFNumberRef)CFDictionaryGetValue(proxySettings, kCFNetworkProxiesHTTPEnable);
  		if (enabled != NULL) {
  			int val = 0;
