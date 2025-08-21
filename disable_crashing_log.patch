@@ -1,0 +1,13 @@
+diff --git a/bctoolbox/include/bctoolbox/logging.h b/bctoolbox/include/bctoolbox/logging.h
+index 02a397f..013b855 100644
+--- a/bctoolbox/include/bctoolbox/logging.h
++++ b/bctoolbox/include/bctoolbox/logging.h
+@@ -353,7 +353,7 @@ public:
+ 	}
+ 
+ 	~pumpstream() {
+-		if (mIslogLevelEnabled) bctbx_log(mDomain, mLevel, "%s", mOstringstream.str().c_str());
++		// Disable due to possible crash PLT-981: if (mIslogLevelEnabled) bctbx_log(mDomain, mLevel, "%s", mOstringstream.str().c_str());
+ 	}
+ 
+ 	template <typename _Tp>
