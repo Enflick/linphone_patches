@@ -1,0 +1,41 @@
+commit f1257b46820e8a61eaffa1566dc1df914649f2f8
+Author: Simon Morlat <simon.morlat@linphone.org>
+Date:   Thu Nov 13 16:04:47 2025 +0100
+
+    Fix (tentative) for a rare crash while resolving the stun server address from a NatPolicy object.
+
+diff --git a/liblinphone/src/nat/nat-policy.cpp b/liblinphone/src/nat/nat-policy.cpp
+index fcdfba2a9d..5c06667dc8 100644
+--- a/liblinphone/src/nat/nat-policy.cpp
++++ b/liblinphone/src/nat/nat-policy.cpp
+@@ -61,9 +61,8 @@ NatPolicy::NatPolicy(const std::shared_ptr<Core> &core, NatPolicy::ConstructionM
+ }
+ 
+ NatPolicy::NatPolicy(const NatPolicy &other)
+-    : HybridObject<LinphoneNatPolicy, NatPolicy>(other), std::enable_shared_from_this<LinphonePrivate::NatPolicy>(
+-                                                             other),
+-      CoreAccessor(other.getCore()) {
++    : HybridObject<LinphoneNatPolicy, NatPolicy>(other),
++      std::enable_shared_from_this<LinphonePrivate::NatPolicy>(other), CoreAccessor(other.getCore()) {
+ 	mStunServer = other.mStunServer;
+ 	mStunServerUsername = other.mStunServerUsername;
+ 	mRef = other.mRef;
+@@ -212,9 +211,17 @@ void NatPolicy::stunServerResolved(belle_sip_resolver_results_t *results) {
+ 	}
+ 	const struct addrinfo *ais =
+ 	    mResolverResults ? belle_sip_resolver_results_get_addrinfos(mResolverResults) : nullptr;
+-	for (auto &p : mResolverResultsFunctions)
++	/*
++	 * - Make a copy of the notify functions to invoke, to prevent a risk that the map is being
++	 * modified while being iterated.
++	 * - Protect against a possible deletion of the NatPolicy object while invoking the notify functions.
++	 */
++	ref();
++	auto copyOfResultFunctions = mResolverResultsFunctions;
++	for (auto &p : copyOfResultFunctions)
+ 		p.second(ais);
+ 	mResolverResultsFunctions.clear();
++	unref();
+ }
+ 
+ bool NatPolicy::resolveStunServer() {
