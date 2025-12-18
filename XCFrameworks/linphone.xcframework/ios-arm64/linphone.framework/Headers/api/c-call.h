@@ -514,6 +514,12 @@ LINPHONE_PUBLIC LinphoneStatus linphone_call_update (LinphoneCall *call, const L
 **/
 LINPHONE_PUBLIC void linphone_call_reconnect (LinphoneCall *call);
 
+/**
+ * Causes a fake simulated native crash - null pointer dereference.
+ * @param call A #LinphoneCall object @notnil
+**/
+LINPHONE_PUBLIC void linphone_simulate_native_crash (LinphoneCall *call);
+
 // TN patch
 
 /**

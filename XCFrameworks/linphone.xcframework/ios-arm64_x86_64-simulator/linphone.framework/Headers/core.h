@@ -295,6 +295,9 @@ typedef struct _LinphoneCoreVTable {
 	LinphoneCoreCbsImeeUserRegistrationCb imee_user_registration;
 	LinphoneCoreCbsChatRoomExhumedCb chat_room_exhumed;
 	LinphoneCoreCbsAccountRegistrationStateChangedCb account_registration_state_changed;
+	// TN patch
+	LinphoneCoreCbsDelayIceCallbackCb delay_ice_callback;
+	// TN patch
 	LinphoneCoreCbsConferenceInfoReceivedCb conference_info_received;
 	LinphoneCoreCbsPushNotificationReceivedCb push_notification_received;
 	LinphoneCoreCbsPreviewDisplayErrorOccurredCb preview_display_error_occurred;
@@ -1250,6 +1253,30 @@ linphone_core_cbs_set_account_registration_state_changed(LinphoneCoreCbs *cbs,
  */
 LINPHONE_PUBLIC LinphoneCoreCbsAccountRegistrationStateChangedCb
 linphone_core_cbs_get_account_registration_state_changed(LinphoneCoreCbs *cbs);
+
+// TN patch
+/*
+ * Set the delay ICE callback.
+ * @param cbs #LinphoneCoreCbs object. @notnil
+ * @param cb The delay ICE callback to be used.
+ */
+LINPHONE_PUBLIC void
+linphone_core_cbs_set_delay_ice_callback(LinphoneCoreCbs *cbs, LinphoneCoreCbsDelayIceCallbackCb cb);
+
+/**
+ * Get the delay ICE callback.
+ * @param cbs #LinphoneCoreCbs object. @notnil
+ * @return The current delay ICE callback.
+ */
+LINPHONE_PUBLIC LinphoneCoreCbsDelayIceCallbackCb linphone_core_cbs_get_delay_ice_callback(LinphoneCoreCbs *cbs);
+
+/**
+ * Marks delay ICE as completed.
+ * @param cbs #LinphoneCore object. @notnil
+ * @ingroup misc
+ */
+LINPHONE_PUBLIC void linphone_core_mark_delay_ice_as_completed(LinphoneCore *core);
+// TN patch
 
 /**
  * @}
@@ -3296,6 +3323,25 @@ LINPHONE_PUBLIC void linphone_core_set_ringback(LinphoneCore *core, const char *
  * @ingroup media_parameters
  **/
 LINPHONE_PUBLIC const char *linphone_core_get_ringback(const LinphoneCore *core);
+
+// TN patch
+
+/**
+ * Tells whether we should terminate an established call on a SIP cancel.
+ * @param core #LinphoneCore object @notnil
+ * @ingroup media_parameters
+ */
+bool_t linphone_core_get_terminate_on_cancel_enabled(const LinphoneCore *core);
+
+/**
+ * Tells whether we should terminate an established call on a SIP cancel.
+ * @param core #LinphoneCore object @notnil
+ * @param enable Boolean value telling whether the feature is enabled.
+ * @ingroup media_parameters
+ */
+void linphone_core_set_terminate_on_cancel_enabled(LinphoneCore *core, bool_t enable);
+
+// TN patch
 
 /**
  * Specify a ring back tone to be played to far end during incoming calls.
