@@ -12,7 +12,7 @@ git submodule update --init --recursive
 ### Checkout the version you want
 
 ```
-git checkout 5.4.17
+git checkout 5.4.85
 ```
 
 ## Follow Linphone SDK README's build dependencies section as needed, then build and package using the following steps.
@@ -29,7 +29,6 @@ export LINPHONE_VERSION=$(git describe --tags --exact-match)
 ```
 git co . && git submodule foreach 'git reset ; git checkout . ; git clean -fd'
 git submodule update --init --recursive
-pushd liblinphone ; git revert --no-edit 96de42ced6146111fafd3de7788fbb8020b0506e ; popd
 for p in ${PATH_TO_SPM_DIR}/*.patch; do echo $p; patch --strip=1 --forward --input $p; done
 ```
 
