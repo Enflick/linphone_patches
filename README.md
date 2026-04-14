@@ -12,7 +12,7 @@ git submodule update --init --recursive
 ### Checkout the version you want
 
 ```
-git checkout 5.4.17
+git checkout 5.4.105
 ```
 
 ## Follow Linphone SDK README's build dependencies section as needed, then build and package using the following steps.
@@ -29,7 +29,6 @@ export LINPHONE_VERSION=$(git describe --tags --exact-match)
 ```
 git co . && git submodule foreach 'git reset ; git checkout . ; git clean -fd'
 git submodule update --init --recursive
-pushd liblinphone ; git revert --no-edit 96de42ced6146111fafd3de7788fbb8020b0506e ; popd
 for p in ${PATH_TO_SPM_DIR}/*.patch; do echo $p; patch --strip=1 --forward --input $p; done
 ```
 
@@ -44,20 +43,24 @@ mkdir -p build/ && cd build/
 Note: Linphone 5.2.x appears to need Xcode 15.4 for -mno-thumb, use `xcode-select --switch` or `xcodes` if needed to switch to 15.4
 
 ```
-cmake .. -G Xcode --preset=ios-sdk -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO -DENABLE_DOC=NO -DENABLE_SWIFT_WRAPPER=NO \
+cmake .. -G Ninja --preset=ios-sdk -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO \
 && cmake --build . --parallel 4 \
 && rm -rf linphone-sdk-ios-${LINPHONE_VERSION} \
 && unzip -d linphone-sdk-ios-${LINPHONE_VERSION} linphone-sdk-*.zip \
 && rm -rf ${PATH_TO_SPM_DIR}/XCFrameworks/* \
+&& cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/share/linphonesw/* ${PATH_TO_SPM_DIR}/Sources/linphonesw/ \
 && cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/XCFrameworks/ ${PATH_TO_SPM_DIR}/XCFrameworks/ \
+&& pushd ${PATH_TO_SPM_DIR}/XCFrameworks/ \
+&& find . | grep 'framework\.dSYM\|dSYMs' | xargs -I{} rm -rf {} \
+&& popd \
 && echo 'Success!'
 ```
 
-## Upload dSYMS from the build folder
+## Upload dSYM folders from the original build (they are excluded from the SPM repo for size reasons)
 
 ```
 export DATADOG_API_KEY=<your-key-here>
-npx @datadog/datadog-ci dsyms upload ./ios-arm64/lib/Debug/
+npx @datadog/datadog-ci dsyms upload ./linphone-sdk-novideo/ios-arm64/Frameworks/
 ```
 
 ### Android cmake build steps, the artifacts then need to be manually uploaded to Nexus

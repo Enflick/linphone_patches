@@ -302,10 +302,10 @@ public enum MediaResourceMode:Int
 {
 	
 	/// Media resources are not shared. 
-	case ExclusiveMediaResources = 0
+	case Exclusive = 0
 	
 	/// Media resources are shared. 
-	case SharedMediaResources = 1
+	case Shared = 1
 }
 
 ///Basic status as defined in section 4.1.4 of RFC 3863. 
@@ -875,6 +875,60 @@ public enum ZrtpPeerStatus:Int
 
 func charArrayToString(charPointer: UnsafePointer<CChar>?) -> String {
 	return charPointer != nil ? String(cString: charPointer!) : ""
+}
+
+// This is a specific work around: these functions can return "defaultString" in some cases,
+// However the Swift will automatically create a invisible cDefaultString of type char* to pass as argument
+// to the C function. The cDefaultString will then be "returned" by linphone_config_get_string, and
+// instantly destroyed by the Swift garbage collector, causing an empty string as a result.
+
+public extension Config {
+	/// Retrieves a configuration item as a string, given its section, key, and default
+	/// value.
+	/// The default value string is returned if the config item isn't found.
+	/// - Parameter section: The section from which to retrieve a configuration item
+	/// - Parameter key: The name of the configuration item to retrieve
+	/// - Parameter defaultString: The default value to return if not found.
+	/// - Returns: the found value or the default one if not found.
+	public func getString(section:String, key:String, defaultString:String?) -> String
+	{
+		var result = ""
+		(defaultString ?? "").withCString { cStr in
+			result = charArrayToString(charPointer: linphone_config_get_string(cPtr, section, key, cStr))
+		}
+		return result
+	}
+
+	/// Retrieves a default configuration item as a string, given its section, key, and
+	/// default value.
+	/// The default value string is returned if the config item isn't found.
+	/// - Parameter section: The section from which to retrieve the default value
+	/// - Parameter key: The name of the configuration item to retrieve
+	/// - Parameter defaultValue: The default value to return if not found
+	/// - Returns: the found default value or default_value if not found.
+	public func getDefaultString(section:String, key:String, defaultValue:String) -> String
+	{
+		var result = ""
+		defaultValue.withCString { cStr in
+			result = charArrayToString(charPointer: linphone_config_get_section_param_string(cPtr, section, key, cStr))
+		}
+		return result
+	}
+
+	/// Retrieves a section parameter item as a string, given its section and key.
+	/// The default value string is returned if the config item isn't found.
+	/// - Parameter section: The section from which to retrieve the default value
+	/// - Parameter key: The name of the configuration item to retrieve
+	/// - Parameter defaultValue: The default value to return if not found.
+	/// - Returns: the found default value or default_value if not found.
+	public func getSectionParamString(section:String, key:String, defaultValue:String?) -> String
+	{
+		var result = ""
+		(defaultValue ?? "").withCString { cStr in
+			result = charArrayToString(charPointer: linphone_config_get_section_param_string(cPtr, section, key, cStr))
+		}
+		return result
+	}
 }
 
 /// Class basic linphone class
@@ -3634,11 +3688,6 @@ class ConferenceSchedulerDelegateManager
 public protocol CoreDelegate : AnyObject {
 	
 	
-	/// Callback for notifying about an alert (e.g on Qos) 
-	/// - Parameter core: ``Core`` object    
-	/// - Parameter alert: ``Alert`` to notify    
-	func onNewAlertTriggered(core: Core, alert: Alert)
-	
 	/// Delay ICE callback. 
 	/// - Parameter core: the ``Core``    
 	func onDelayIceCallback(core: Core)
@@ -4075,11 +4124,14 @@ public protocol CoreDelegate : AnyObject {
 	/// - Parameter core: LinphoneCore object.    
 	/// - Parameter filePath: the name of the saved file.    
 	func onSnapshotTaken(core: Core, filePath: String)
+	
+	/// Callback for notifying about an alert (e.g on Qos) 
+	/// - Parameter core: ``Core`` object    
+	/// - Parameter alert: ``Alert`` to notify    
+	func onNewAlertTriggered(core: Core, alert: Alert)
 }
 
 public extension CoreDelegate {
-	
-	func onNewAlertTriggered(core: Core, alert: Alert) {}
 	
 	func onDelayIceCallback(core: Core) {}
 	
@@ -4210,11 +4262,12 @@ public extension CoreDelegate {
 	func onMessageWaitingIndicationChanged(core: Core, lev: Event, mwi: MessageWaitingIndication) {}
 	
 	func onSnapshotTaken(core: Core, filePath: String) {}
+	
+	func onNewAlertTriggered(core: Core, alert: Alert) {}
 }
 
 public final class CoreDelegateStub : CoreDelegate
 {
-	var _onNewAlertTriggered: ((Core, Alert) -> Void)?
 	var _onDelayIceCallback: ((Core) -> Void)?
 	var _onGlobalStateChanged: ((Core, GlobalState, String) -> Void)?
 	var _onRegistrationStateChanged: ((Core, ProxyConfig, RegistrationState, String) -> Void)?
@@ -4280,9 +4333,8 @@ public final class CoreDelegateStub : CoreDelegate
 	var _onAccountRemoved: ((Core, Account) -> Void)?
 	var _onMessageWaitingIndicationChanged: ((Core, Event, MessageWaitingIndication) -> Void)?
 	var _onSnapshotTaken: ((Core, String) -> Void)?
+	var _onNewAlertTriggered: ((Core, Alert) -> Void)?
 
-	
-	public func onNewAlertTriggered(core: Core, alert: Alert){_onNewAlertTriggered.map{$0(core, alert)}}
 	
 	public func onDelayIceCallback(core: Core){_onDelayIceCallback.map{$0(core)}}
 	
@@ -4413,9 +4465,10 @@ public final class CoreDelegateStub : CoreDelegate
 	public func onMessageWaitingIndicationChanged(core: Core, lev: Event, mwi: MessageWaitingIndication){_onMessageWaitingIndicationChanged.map{$0(core, lev, mwi)}}
 	
 	public func onSnapshotTaken(core: Core, filePath: String){_onSnapshotTaken.map{$0(core, filePath)}}
+	
+	public func onNewAlertTriggered(core: Core, alert: Alert){_onNewAlertTriggered.map{$0(core, alert)}}
 
 	public init (
-		onNewAlertTriggered: ((Core, Alert) -> Void)? = nil,
 		onDelayIceCallback: ((Core) -> Void)? = nil,
 		onGlobalStateChanged: ((Core, GlobalState, String) -> Void)? = nil,
 		onRegistrationStateChanged: ((Core, ProxyConfig, RegistrationState, String) -> Void)? = nil,
@@ -4480,9 +4533,9 @@ public final class CoreDelegateStub : CoreDelegate
 		onAccountAdded: ((Core, Account) -> Void)? = nil,
 		onAccountRemoved: ((Core, Account) -> Void)? = nil,
 		onMessageWaitingIndicationChanged: ((Core, Event, MessageWaitingIndication) -> Void)? = nil,
-		onSnapshotTaken: ((Core, String) -> Void)? = nil
+		onSnapshotTaken: ((Core, String) -> Void)? = nil,
+		onNewAlertTriggered: ((Core, Alert) -> Void)? = nil
 	) {
-		self._onNewAlertTriggered = onNewAlertTriggered
 		self._onDelayIceCallback = onDelayIceCallback
 		self._onGlobalStateChanged = onGlobalStateChanged
 		self._onRegistrationStateChanged = onRegistrationStateChanged
@@ -4548,6 +4601,7 @@ public final class CoreDelegateStub : CoreDelegate
 		self._onAccountRemoved = onAccountRemoved
 		self._onMessageWaitingIndicationChanged = onMessageWaitingIndicationChanged
 		self._onSnapshotTaken = onSnapshotTaken
+		self._onNewAlertTriggered = onNewAlertTriggered
 	}
 }
 
@@ -4562,14 +4616,6 @@ class CoreDelegateManager
 			data in
 			if (data != nil) {
 				Unmanaged<CoreDelegateManager>.fromOpaque(data!).release()
-			}
-		})
-
-		linphone_core_cbs_set_new_alert_triggered(cPtr, { (core, alert) -> Void in
-			if (core != nil) {
-				let sObject = Core.getSwiftObject(cObject: core!)
-				let delegate = sObject.currentDelegate
-				delegate?.onNewAlertTriggered(core: sObject, alert: Alert.getSwiftObject(cObject: alert!))
 			}
 		})
 
@@ -5100,6 +5146,14 @@ class CoreDelegateManager
 				delegate?.onSnapshotTaken(core: sObject, filePath: charArrayToString(charPointer: filePath))
 			}
 		})
+
+		linphone_core_cbs_set_new_alert_triggered(cPtr, { (core, alert) -> Void in
+			if (core != nil) {
+				let sObject = Core.getSwiftObject(cObject: core!)
+				let delegate = sObject.currentDelegate
+				delegate?.onNewAlertTriggered(core: sObject, alert: Alert.getSwiftObject(cObject: alert!))
+			}
+		})
 	}
 
 
@@ -5129,8 +5183,8 @@ public protocol EventDelegate : AnyObject {
 	func onSubscribeStateChanged(event: Event, state: SubscriptionState)
 	
 	/// Callback used to notify the received to a PUBLISH. 
-	/// - Parameter event: The LinphoneEvent object that receive the PUBLISH    
-	/// - Parameter content: The LinphoneContent object that containe the body of the
+	/// - Parameter event: The LinphoneEvent object that receives the PUBLISH    
+	/// - Parameter content: The LinphoneContent object that contains the body of the
 	/// event    
 	func onPublishReceived(event: Event, content: Content?)
 	
@@ -6552,65 +6606,6 @@ public class AccountCreator : LinphoneObject
 	}
 
 	
-	///Enum describing the status of server request, used by the ``AccountCreator``. 
-	public enum Status:Int
-	{
-		
-		/// Request status. 
-		case RequestOk = 0
-		/// Request failed. 
-		case RequestFailed = 1
-		/// Request failed due to missing argument(s) 
-		case MissingArguments = 2
-		/// Request failed due to missing callback(s) 
-		case MissingCallbacks = 3
-		/// Account status. 
-		case AccountCreated = 4
-		/// Account not created. 
-		case AccountNotCreated = 5
-		/// Account exist. 
-		case AccountExist = 6
-		/// Account exist with alias. 
-		case AccountExistWithAlias = 7
-		/// Account not exist. 
-		case AccountNotExist = 8
-		/// Account was created with Alias. 
-		case AliasIsAccount = 9
-		/// Alias exist. 
-		case AliasExist = 10
-		/// Alias not exist. 
-		case AliasNotExist = 11
-		/// Account activated. 
-		case AccountActivated = 12
-		/// Account already activated. 
-		case AccountAlreadyActivated = 13
-		/// Account not activated. 
-		case AccountNotActivated = 14
-		/// Account linked. 
-		case AccountLinked = 15
-		/// Account not linked. 
-		case AccountNotLinked = 16
-		/// Server. 
-		case ServerError = 17
-		/// Error cannot send SMS. 
-		case PhoneNumberInvalid = 18
-		/// Error key doesn't match. 
-		case WrongActivationCode = 19
-		/// Error too many SMS sent. 
-		case PhoneNumberOverused = 20
-		/// Error algo isn't MD5 or SHA-256. 
-		case AlgoNotSupported = 21
-		/// Generic error. 
-		case UnexpectedError = 22
-		/// This API isn't implemented in the current backend. 
-		case NotImplementedError = 23
-		/// Request has been denied, probably due to invalid auth token. 
-		case RequestNotAuthorized = 24
-		/// Request has been denied, due to too many requests sent in given period. 
-		case RequestTooManyRequests = 25
-	}
-
-	
 	///Enum describing transport checking, used by the ``AccountCreator``. 
 	public enum TransportStatus:Int
 	{
@@ -6740,6 +6735,65 @@ public class AccountCreator : LinphoneObject
 		case InvalidCountryCode = 8
 		/// Phone number invalid. 
 		case Invalid = 16
+	}
+
+	
+	///Enum describing the status of server request, used by the ``AccountCreator``. 
+	public enum Status:Int
+	{
+		
+		/// Request status. 
+		case RequestOk = 0
+		/// Request failed. 
+		case RequestFailed = 1
+		/// Request failed due to missing argument(s) 
+		case MissingArguments = 2
+		/// Request failed due to missing callback(s) 
+		case MissingCallbacks = 3
+		/// Account status. 
+		case AccountCreated = 4
+		/// Account not created. 
+		case AccountNotCreated = 5
+		/// Account exist. 
+		case AccountExist = 6
+		/// Account exist with alias. 
+		case AccountExistWithAlias = 7
+		/// Account not exist. 
+		case AccountNotExist = 8
+		/// Account was created with Alias. 
+		case AliasIsAccount = 9
+		/// Alias exist. 
+		case AliasExist = 10
+		/// Alias not exist. 
+		case AliasNotExist = 11
+		/// Account activated. 
+		case AccountActivated = 12
+		/// Account already activated. 
+		case AccountAlreadyActivated = 13
+		/// Account not activated. 
+		case AccountNotActivated = 14
+		/// Account linked. 
+		case AccountLinked = 15
+		/// Account not linked. 
+		case AccountNotLinked = 16
+		/// Server. 
+		case ServerError = 17
+		/// Error cannot send SMS. 
+		case PhoneNumberInvalid = 18
+		/// Error key doesn't match. 
+		case WrongActivationCode = 19
+		/// Error too many SMS sent. 
+		case PhoneNumberOverused = 20
+		/// Error algo isn't MD5 or SHA-256. 
+		case AlgoNotSupported = 21
+		/// Generic error. 
+		case UnexpectedError = 22
+		/// This API isn't implemented in the current backend. 
+		case NotImplementedError = 23
+		/// Request has been denied, probably due to invalid auth token. 
+		case RequestNotAuthorized = 24
+		/// Request has been denied, due to too many requests sent in given period. 
+		case RequestTooManyRequests = 25
 	}
 	
 	
@@ -8355,14 +8409,15 @@ public class AccountParams : LinphoneObject
 		}
 	}
 		
-	/// Set whether liblinphone should replace "+" by international calling prefix in
-	/// dialed numbers (passed to linphone_core_invite). 
+	/// Set whether liblinphone should replace "+" by international calling prefix
+	/// (ICP) in dialed numbers (passed to linphone_core_invite). 
 	/// - Parameter enable: true to replace + by the international prefix, false
 	/// otherwise. 
 	
-	/// Return whether or not the + should be replaced by 00. 
-	/// - Returns: Whether liblinphone should replace "+" by "00" in dialed numbers
-	/// (passed to ``Core/invite(url:)``). 
+	/// Return whether or not the + should be replaced by the International Call
+	/// Prefix. 
+	/// - Returns: Whether liblinphone should replace "+" by the International Call
+	/// Prefix. in dialed numbers (passed to ``Core/invite(url:)``). 
 	public var dialEscapePlusEnabled: Bool
 	{
 	
@@ -8502,9 +8557,14 @@ public class AccountParams : LinphoneObject
 		}
 	}
 		
-	/// Sets an international prefix to be automatically prepended when inviting a
-	/// number with ``Core/invite(url:)``; This international prefix shall usually be
-	/// the country code of the country where the user is living, without "+". 
+	/// Sets an international prefix (country code) to be automatically prepended when
+	/// inviting a number with ``Core/invite(url:)`` or when using
+	/// ``Account/normalizePhoneNumber(username:)``. 
+	/// This international prefix shall usually be the country code of the country
+	/// where the user is living, without "+". - Warning: It is also referred as 'ccc'
+	/// (Calling Country Code) and must not be confused with the ICP (International
+	/// Call Prefix). The ICP is a fixed property of the country dial plan, and cannot
+	/// be set in the ``AccountParams`` . 
 	/// - Parameter prefix: The prefix to set (withouth the +).    
 	
 	/// Gets the prefix set for this account params. 
@@ -8565,7 +8625,7 @@ public class AccountParams : LinphoneObject
 		
 	/// Set the base(s) x3dh algorithm. 
 	/// accept an ordered comma separated list (without space) of lime base algorithms
-	/// accepted values are a combinaison of : c25519, c448 and c25519k512 nil is also
+	/// accepted values are a combination of: c25519, c448 and c25519mlk512 nil is also
 	/// valid, it will unset the value 
 	/// - Parameter algo: The x3dh base algorithm.    
 	
@@ -8898,9 +8958,19 @@ public class AccountParams : LinphoneObject
 	}
 		
 	/// Set the realm of the given account params. 
+	/// This is optional, but recommended as it allows digest authentication context to
+	/// be re-used accross subsequent SIP requests, which reduces by almost half the
+	/// number of SIP rmessages exchanged between a client and a server. The server is
+	/// required to support the qop=auth digest authentication mode to benefit from
+	/// this feature. - See also: rfc7616 https://datatracker.ietf.org/doc/html/rfc7616 
 	/// - Parameter realm: New realm value.    
 	
 	/// Get the realm of the given account params. 
+	/// This is optional, but recommended as it allows digest authentication context to
+	/// be re-used accross subsequent SIP requests, which reduces by almost half the
+	/// number of SIP rmessages exchanged between a client and a server. The server is
+	/// required to support the qop=auth digest authentication mode to benefit from
+	/// this feature. - See also: rfc7616 https://datatracker.ietf.org/doc/html/rfc7616 
 	/// - Returns: The realm of the account params.    
 	public var realm: String?
 	{
@@ -10289,8 +10359,9 @@ public class AuthInfo : LinphoneObject
 	}
 		
 	/// Set the OAUTH2 client_id. 
-	/// The client_id may be used to renew access token from refresh token. - See also:
-	/// ``setRefreshToken(token:)`` 
+	/// The client_id may be used to renew access token from refresh token. If a
+	/// client_secret is required, it has to be set through
+	/// ``setClientSecret(clientSecret:)``. - See also: ``setRefreshToken(token:)`` 
 	/// - Parameter clientId: the client_id.    
 	
 	/// Get the previously set OAUTH2 client_id. 
@@ -10311,6 +10382,32 @@ public class AuthInfo : LinphoneObject
 		set
 		{
 			linphone_auth_info_set_client_id(cPtr, newValue)
+		}
+	}
+		
+	/// Set the OAUTH2 client_secret. 
+	/// The client_secret may be used to renew access token from refresh token.
+	/// - See also: ``setRefreshToken(token:)`` 
+	/// - Parameter clientSecret: the client_secret.    
+	
+	/// Get the previously set OAUTH2 client_secret. 
+	/// - Returns: the client_secret.    
+	public var clientSecret: String?
+	{
+	
+		get
+		{ 
+			
+			let cPointer = linphone_auth_info_get_client_secret(cPtr)
+			if (cPointer == nil) {
+				return nil
+			}
+			let result = charArrayToString(charPointer: cPointer)
+			return result
+		}
+		set
+		{
+			linphone_auth_info_set_client_secret(cPtr, newValue)
 		}
 	}
 		
@@ -12207,7 +12304,21 @@ public class Call : LinphoneObject
 	
 	/// Create a native video window id where the video is to be displayed. 
 	/// - See also: ``Core/setNativeVideoWindowId(windowId:)`` for a general discussion
-	/// about window IDs. 
+	/// about window IDs.
+	/// A context can be used to prevent Linphone from allocating the container
+	/// (#MSOglContextInfo for MSOGL). nil if not used. 
+	/// - Parameter context: preallocated Window ID (Used only for MSOGL)    
+	/// - Returns: the native video window id (type may vary depending on platform).    
+	public func createNativeVideoWindowId(context:UnsafeMutableRawPointer?) throws -> UnsafeMutableRawPointer
+	{
+		return linphone_call_create_native_video_window_id_2(cPtr, context)
+	}
+	
+	
+	
+	/// Create a native video window id where the video is to be displayed. 
+	/// - See also: ``Core/setNativeVideoWindowId(windowId:)`` for a general discussion
+	/// about window IDs.
 	/// - Returns: the native video window id (type may vary depending on platform).    
 	public func createNativeVideoWindowId() throws -> UnsafeMutableRawPointer
 	{
@@ -12389,15 +12500,6 @@ public class Call : LinphoneObject
 	public func reconnect() 
 	{
 		linphone_call_reconnect(cPtr)
-	}
-	
-	
-	
-	/// Causes a running call to reconnect, the same way as a network reconnect. 
-	public func simulateNativeCrash() 
-	{
-        let nilPtr: OpaquePointer? = nil
-		linphone_simulate_native_crash(nilPtr)
 	}
 	
 	
@@ -15716,16 +15818,17 @@ public class ChatParams : LinphoneObject
 
 	}
 		
-	/// Set lifetime (in seconds) for all new ephemral messages in the text
+	/// Set lifetime (in seconds) for all new ephemeral messages in the text
 	/// capabilities of the chat. 
 	/// After the message is read, it will be deleted after "time" seconds. - See also:
-	/// linphone_chat_params_ephemeral_enabled() 
-	/// - Parameter time: The ephemeral lifetime, default is disabled (0) 
+	/// ``ChatRoom/activateEphemeral(lifetime:)`` 
+	/// - deprecated: 20/02/2026 Use ``activateEphemeral(lifetime:)`` or
+	/// ``deactivateEphemeral()`` instead. 
 	
 	/// Get lifetime (in seconds) for all new ephemeral messages in the text
 	/// capabilities of the chat. 
 	/// After the message is read, it will be deleted after "time" seconds. - See also:
-	/// linphone_chat_params_ephemeral_enabled() 
+	/// ``ChatRoom/activateEphemeral(lifetime:)`` 
 	/// - Returns: the ephemeral lifetime (in seconds) 
 	public var ephemeralLifetime: Int
 	{
@@ -15734,6 +15837,7 @@ public class ChatParams : LinphoneObject
 		{ 
 						return Int(linphone_chat_params_get_ephemeral_lifetime(cPtr))
 		}
+	@available(*, deprecated)
 		set
 		{
 			linphone_chat_params_set_ephemeral_lifetime(cPtr, (newValue))
@@ -15782,6 +15886,21 @@ public class ChatParams : LinphoneObject
 		
 	
 	
+	/// Set lifetime (in seconds) for all new ephemeral messages in the text
+	/// capabilities of the chat. 
+	/// After the message is read, it will be deleted after "time" seconds. - See also:
+	/// ``ChatRoom/activateEphemeral(lifetime:)`` 
+	/// - Parameter lifetime: The ephemeral lifetime, strictly positive 
+	public func activateEphemeral(lifetime:UInt) throws 
+	{
+		let exception_result = linphone_chat_params_activate_ephemeral(cPtr, CUnsignedInt(lifetime))
+		guard exception_result == 0 else {
+			throw LinphoneError.exception(result: "activateEphemeral returned value \(exception_result)")
+		}
+	}
+	
+	
+	
 	/// Clone a ``ChatParams``. 
 	/// - Returns: An allocated ``ChatParams`` with the same parameters than params    
 	public func clone() -> ChatParams?
@@ -15793,6 +15912,15 @@ public class ChatParams : LinphoneObject
 		let result = ChatParams.getSwiftObject(cObject: cPointer!)
 		belle_sip_object_unref(UnsafeMutableRawPointer(cPointer))
 		return result
+	}
+	
+	
+	
+	/// Deactivate new ephemeral messages in the text capabilities of the chat. 
+	/// - See also: ``ChatRoom/deactivateEphemeral()`` 
+	public func deactivateEphemeral() 
+	{
+		linphone_chat_params_deactivate_ephemeral(cPtr)
 	}
 }
 
@@ -16172,10 +16300,13 @@ public class ChatRoom : LinphoneObject
 		
 	
 	/// Returns current parameters associated with the chat room. 
-	/// This is typically the parameters passed at chat room chat_roomeation to
-	/// linphone_core_chat_roomeate_chat_room() or some default parameters if no
-	/// ``ChatRoomParams`` was explicitely passed during chat room chat_roomeation. 
+	/// This is typically the parameters passed during the ``ChatRoom`` creation
+	/// process to linphone_core_chat_room_create_chat_room() or some default
+	/// parameters if no ``ChatRoomParams`` was explicitely passed during ``ChatRoom``
+	/// creation. 
 	/// - Returns: the current ``ChatRoomParams`` parameters.    
+	/// - deprecated: 17/07/2025. Use ``getParams()`` instead. 
+	@available(*, deprecated)
 	public var currentParams: ChatRoomParams?
 	{
 	
@@ -16215,6 +16346,8 @@ public class ChatRoom : LinphoneObject
 	/// starts when the message has been displayed at the recipent, which means:
 	/// - Parameter enable: true if the ephemeral message feature is enabled, false
 	/// otherwise. 
+	/// - deprecated: 20/02/2026. Use ``activateEphemeral(lifetime:)`` or
+	/// ``deactivateEphemeral()`` instead. 
 	
 	/// Returns whether or not the ephemeral message feature is enabled in the chat
 	/// room. 
@@ -16226,6 +16359,7 @@ public class ChatRoom : LinphoneObject
 		{ 
 						return linphone_chat_room_ephemeral_enabled(cPtr) != 0
 		}
+	@available(*, deprecated)
 		set
 		{
 			linphone_chat_room_enable_ephemeral(cPtr, newValue==true ? 1:0)
@@ -16237,10 +16371,12 @@ public class ChatRoom : LinphoneObject
 	/// ``ephemeralEnabled()`` 
 	/// - Parameter time: The ephemeral lifetime, default is 0 (disabled) 
 	/// - Warning: A value of "time" equal to 0 disables ephemeral messages 
+	/// - deprecated: 20/02/2026. Use ``activateEphemeral(lifetime:)`` or
+	/// ``deactivateEphemeral()`` instead. 
 	
 	/// Gets lifetime (in seconds) for all new ephemeral messages in the chat room. 
 	/// After the message is read, it will be deleted after "time" seconds. - See also:
-	/// ``ephemeralEnabled()`` 
+	/// ``activateEphemeral(lifetime:)`` 
 	/// - Returns: the ephemeral lifetime (in secoonds) 
 	public var ephemeralLifetime: Int
 	{
@@ -16249,6 +16385,7 @@ public class ChatRoom : LinphoneObject
 		{ 
 						return Int(linphone_chat_room_get_ephemeral_lifetime(cPtr))
 		}
+	@available(*, deprecated)
 		set
 		{
 			linphone_chat_room_set_ephemeral_lifetime(cPtr, (newValue))
@@ -16460,6 +16597,25 @@ public class ChatRoom : LinphoneObject
 	}
 		
 	
+	/// Returns current parameters associated with the chat room. 
+	/// This is typically the parameters passed during the ``ChatRoom`` creation
+	/// process to linphone_core_chat_room_create_chat_room() or some default
+	/// parameters if no ``ChatRoomParams`` was explicitely passed during ``ChatRoom``
+	/// creation. 
+	/// - Returns: the current ``ChatRoomParams`` parameters.    
+	public var params: ConferenceParams?
+	{
+	
+						let cPointer = linphone_chat_room_get_params(cPtr)
+			if (cPointer == nil) {
+				return nil
+			}
+			let result = ConferenceParams.getSwiftObject(cObject:cPointer!)
+			return result
+
+	}
+		
+	
 	/// Gets the list of participants of a chat room. 
 	/// - Returns: A   of the participants       
 	public var participants: [Participant]
@@ -16610,6 +16766,25 @@ public class ChatRoom : LinphoneObject
 		}
 	}
 		
+	
+	
+	/// Activate the ephemeral message feature in the chat room with a specified
+	/// timeout. 
+	/// Works only for flexisip-based chat room. An ephemeral message will
+	/// automatically disappear from the sender and recipient's chatrooms after a set
+	/// period of time. The timer starts when the message has been displayed at the
+	/// recipent, which means:
+	/// - Parameter lifetime: The ephemeral lifetime strictly positive. To disable the
+	/// feature, use ``deactivateEphemeral()``. 
+	/// - Returns: 0 if successful, -1 otherwise 
+	public func activateEphemeral(lifetime:UInt) throws 
+	{
+		let exception_result = linphone_chat_room_activate_ephemeral(cPtr, CUnsignedInt(lifetime))
+		guard exception_result == 0 else {
+			throw LinphoneError.exception(result: "activateEphemeral returned value \(exception_result)")
+		}
+	}
+	
 	
 	
 	/// Adds a participant to a chat room. 
@@ -16787,6 +16962,19 @@ public class ChatRoom : LinphoneObject
 		let result = ChatMessage.getSwiftObject(cObject: cPointer!)
 		belle_sip_object_unref(UnsafeMutableRawPointer(cPointer))
 		return result
+	}
+	
+	
+	
+	/// Disable the ephemeral message feature in the chat room. 
+	/// See ``activateEphemeral(lifetime:)`` for more details.
+	/// - Returns: 0 if successful, -1 otherwise 
+	public func deactivateEphemeral() throws 
+	{
+		let exception_result = linphone_chat_room_deactivate_ephemeral(cPtr)
+		guard exception_result == 0 else {
+			throw LinphoneError.exception(result: "deactivateEphemeral returned value \(exception_result)")
+		}
 	}
 	
 	
@@ -17330,11 +17518,11 @@ public class ChatRoomParams : LinphoneObject
 		}
 	}
 		
-	/// Set lifetime (in seconds) for all new ephemral messages in the chat room. 
+	/// Set lifetime (in seconds) for all new ephemeral messages in the chat room. 
 	/// After the message is read, it will be deleted after "time" seconds. - See also:
 	/// linphone_chat_room_params_ephemeral_enabled() 
 	/// - Parameter time: The ephemeral lifetime, default is disabled (0) 
-	/// - deprecated: 20/05/2024. Use ``ChatParams/setEphemeralLifetime(time:)``
+	/// - deprecated: 20/05/2024. Use ``ChatParams/activateEphemeral(lifetime:)``
 	/// instead. 
 	
 	/// Get lifetime (in seconds) for all new ephemeral messages in the chat room. 
@@ -19389,9 +19577,11 @@ public class ConferenceScheduler : LinphoneObject
 		}
 	}	
 	/// Set the ``Account`` to use for the conference scheduler. 
-	/// - Parameter account: The ``Account`` to use, or nil if none has been selected.
-	/// The LinphoneConferenceScheduler keeps a reference to it and removes the
-	/// previous one, if any.    
+	/// - Warning: The ``ConferenceScheduler`` doesn't keep a reference to the account,
+	/// therefore the application must guarantee that the ``Account`` has been added to
+	/// the list held by the core prior to calling this function. 
+	/// - Parameter account: The ``Account`` to use, or nil if none has been selected. 
+	///   
 	
 	/// Get the ``Account`` that is used for the conference scheduler. 
 	/// - Returns: The selected ``Account`` for the call, or nil if none has been
@@ -19752,22 +19942,6 @@ public class Config : LinphoneObject
 	
 	
 	
-	/// Retrieves a default configuration item as a string, given its section, key, and
-	/// default value. 
-	/// The default value string is returned if the config item isn't found. 
-	/// - Parameter section: The section from which to retrieve the default value    
-	/// - Parameter key: The name of the configuration item to retrieve    
-	/// - Parameter defaultValue: The default value to return if not found 
-	/// - Returns: the found default value or default_value if not found. 
-	public func getDefaultString(section:String, key:String, defaultValue:String) -> String
-	{
-		let cstr = linphone_config_get_default_string(cPtr, section, key, defaultValue)
-		let result = charArrayToString(charPointer: cstr)
-		return result
-	}
-	
-	
-	
 	/// Retrieves a configuration item as a float, given its section, key, and default
 	/// value. 
 	/// The default float value is returned if the config item isn't found. 
@@ -19868,21 +20042,6 @@ public class Config : LinphoneObject
 	
 	
 	
-	/// Retrieves a section parameter item as a string, given its section and key. 
-	/// The default value string is returned if the config item isn't found. 
-	/// - Parameter section: The section from which to retrieve the default value    
-	/// - Parameter key: The name of the configuration item to retrieve    
-	/// - Parameter defaultValue: The default value to return if not found.    
-	/// - Returns: the found default value or default_value if not found.    
-	public func getSectionParamString(section:String, key:String, defaultValue:String?) -> String
-	{
-		let cstr = linphone_config_get_section_param_string(cPtr, section, key, defaultValue)
-		let result = charArrayToString(charPointer: cstr)
-		return result
-	}
-	
-	
-	
 	/// Retrieves the skip flag for a config item. 
 	/// - Parameter section: The section from which to retrieve the skip flag    
 	/// - Parameter key: The name of the configuration item to retrieve the skip flag
@@ -19901,22 +20060,6 @@ public class Config : LinphoneObject
 	public func getSkipFlagForSection(section:String) -> Bool
 	{
 		return linphone_config_get_skip_flag_for_section(cPtr, section) != 0
-	}
-	
-	
-	
-	/// Retrieves a configuration item as a string, given its section, key, and default
-	/// value. 
-	/// The default value string is returned if the config item isn't found. 
-	/// - Parameter section: The section from which to retrieve a configuration item    
-	/// - Parameter key: The name of the configuration item to retrieve    
-	/// - Parameter defaultString: The default value to return if not found.    
-	/// - Returns: the found value or the default one if not found.    
-	public func getString(section:String, key:String, defaultString:String?) -> String
-	{
-		let cstr = linphone_config_get_string(cPtr, section, key, defaultString)
-		let result = charArrayToString(charPointer: cstr)
-		return result
 	}
 	
 	
@@ -20656,6 +20799,21 @@ public class Content : LinphoneObject
 	public func addCustomHeader(headerName:String, headerValue:String) 
 	{
 		linphone_content_add_custom_header(cPtr, headerName, headerValue)
+	}
+	
+	
+	
+	/// Instantiate a new message content with values from source. 
+	/// - Returns: The newly created ``Content`` object.    
+	public func clone() -> Content?
+	{
+		let cPointer = linphone_content_clone(cPtr)
+		if (cPointer == nil) {
+			return nil
+		}
+		let result = Content.getSwiftObject(cObject: cPointer!)
+		belle_sip_object_unref(UnsafeMutableRawPointer(cPointer))
+		return result
 	}
 	
 	
@@ -21965,23 +22123,7 @@ public class Core : LinphoneObject
 			return swiftList
 
 	}
-
-
-
-	/// Get a pointer on the internal conference object.
-	/// - Returns: A pointer on `Conference` or nil if no conference are going on.
-	public var conference: Conference?
-	{
-		let cPointer = linphone_core_get_conference(cPtr)
-		if (cPointer == nil) {
-				return nil
-		}
-		let result = Conference.getSwiftObject(cObject:cPointer!)
-		return result
-	}
-
-
-
+		
 	/// Set the conference availability before start. 
 	/// It is the number of seconds clients can join the conference before its actual
 	/// start time. 
@@ -23055,6 +23197,30 @@ public class Core : LinphoneObject
 
 	}
 		
+	/// Sets whether to keep GRUU parameter in the conference addresses. 
+	/// - Parameter enabled: true if enabled, false otherwise. 
+	/// - Warning: This setting will also remove the GRUU parameter from all conference
+	/// and chat room addresses stored in the database at startup. Setting it to false
+	/// after it being set to true earlier on does not restore the previous state of
+	/// the database 
+	
+	/// Returns whether the gr parameter is kept in the conference address. 
+	/// - Returns: true if the "gr" parameter is kept in the conference address, false
+	/// otherwise. 
+	/// - See also: ``enableGruuInConferenceAddress(enabled:)`` for more informations 
+	public var gruuInConferenceAddressEnabled: Bool
+	{
+	
+		get
+		{ 
+						return linphone_core_gruu_in_conference_address_enabled(cPtr) != 0
+		}
+		set
+		{
+			linphone_core_enable_gruu_in_conference_address(cPtr, newValue==true ? 1:0)
+		}
+	}
+		
 	/// Tells ``Core`` to guess local hostname automatically in primary contact. 
 	/// - Parameter enable: whether to enable the guess hostname feature or not 
 	
@@ -23148,6 +23314,28 @@ public class Core : LinphoneObject
 			let result = ImNotifPolicy.getSwiftObject(cObject:cPointer!)
 			return result
 
+	}
+		
+	/// Set the IMDN resend period. 
+	/// It is the number of seconds after the first attempt to send, an IMDN message is
+	/// sent again on startup if failed earlier on 
+	/// - Parameter seconds: number of seconds after the first attempt to send an IMDN,
+	/// it is retried at startup. A negative value means all IMDNs are resent at
+	/// startup. 
+	
+	/// Gets the IMDN resend period. 
+	/// - Returns: the number of second to resend an failed IMDN message 
+	public var imdnResendPeriod: Int
+	{
+	
+		get
+		{ 
+						return Int(linphone_core_get_imdn_resend_period(cPtr))
+		}
+		set
+		{
+			linphone_core_set_imdn_resend_period(cPtr, (newValue))
+		}
 	}
 		
 	/// Sets the threshold for sending IMDN to all participants to a ``ChatRoom``. 
@@ -23251,17 +23439,6 @@ public class Core : LinphoneObject
 		{
 			linphone_core_enable_ipv6(cPtr, newValue==true ? 1:0)
 		}
-	}
-		
-	
-	/// Special function to indicate if the audio session is activated. 
-	/// Indicates if the audio session is activated.
-	/// - Returns: true to if activated, false otherwise. 
-	public var isAudioSessionActive: Bool
-	{
-	
-						return linphone_core_is_audio_session_active(cPtr) != 0
-
 	}
 		
 	
@@ -23508,7 +23685,7 @@ public class Core : LinphoneObject
 	/// This label is used by the logger to give context. When running an application
 	/// with several ``Core`` objects, (such as a test), it is useful to enhance the
 	/// log's readability'. 
-	/// - Parameter label: a developper-friendly label. 
+	/// - Parameter label: a developer-friendly label. 
 	
 	/// Get the label assigned to the LinphoneCore. 
 	/// The default value is nil (no label). 
@@ -23881,6 +24058,27 @@ public class Core : LinphoneObject
 		}
 	}
 		
+	/// It sets the duration of the timer that starts just after the SUBSCRIBE is sent
+	/// to delay the sending of chat messages in group chats. 
+	/// - Parameter duration: the duration of the timer in seconds. 
+	/// - Warning: it is only useful to set this property if
+	/// linphone_core_send_message_after_notify_enabled returns false 
+	
+	/// Returns the duration of the timer that delays the sending of chat messages. 
+	/// - Returns: the duration of the timer in seconds 
+	public var messageSendingDelay: Int
+	{
+	
+		get
+		{ 
+						return Int(linphone_core_get_message_sending_delay(cPtr))
+		}
+		set
+		{
+			linphone_core_set_message_sending_delay(cPtr, CInt(newValue))
+		}
+	}
+		
 	/// Enables or disables the microphone. 
 	/// This effectively enable or disable microphone (mute) for currently the running
 	/// call or conference if any, as well as it applies to future currently running
@@ -24009,7 +24207,7 @@ public class Core : LinphoneObject
 		
 	/// Set the native window id where the preview video (local camera) is to be
 	/// displayed. 
-	/// This has to be used in conjonction with ``usePreviewWindow(yesno:)``. see
+	/// This has to be used in conjunction with ``usePreviewWindow(yesno:)``. see
 	/// ``setNativeVideoWindowId(windowId:)`` for general details about window_id
 	/// On Android : #org.linphone.mediastream.video.capture.CaptureTextureView is used
 	/// for ``setNativePreviewWindowId(windowId:)``. It is inherited from #TextureView
@@ -24019,7 +24217,10 @@ public class Core : LinphoneObject
 	/// displayed.    
 	
 	/// Get the native window handle of the video preview window. 
-	/// see ``setNativeVideoWindowId(windowId:)`` for details about window_id
+	/// see ``setNativeVideoWindowId(windowId:)`` for details about window_id. If the
+	/// window ID has been set to LINPHONE_VIDEO_DISPLAY_AUTO, it will return the
+	/// window in use. In automatic mode, when no call is in progress, a preview will
+	/// be activated before the identifier is sent back.
 	/// There is a special case for Qt : ``getNativePreviewWindowId()`` returns a
 	/// #QQuickFramebufferObject::Renderer. Note : Qt blocks GUI thread when calling
 	/// createRenderer(), so it is safe to call linphone functions there if needed.
@@ -24037,10 +24238,20 @@ public class Core : LinphoneObject
 		}
 	}
 		
-	/// Sets whether to use the native ringing (Android only). 
+	/// Sets whether to use the platform-dependent ringing. 
+	/// This property is meaningful for Android platform only. When set to true, the
+	/// incoming call's ring tone is played by a Android MediaPlayer object playing the
+	/// phone's default ringtone, and manages vibrator as well. When set to false, the
+	/// incoming call's ring tone is played using liblinphone's internal ring tone
+	/// player, that is generic for all platforms.
 	/// - Parameter enable: True to enable native ringing, false otherwise 
 	
 	/// Returns whether the native ringing is enabled or not. 
+	/// This property is meaningful for Android platform only. When set to true, the
+	/// incoming call's ring tone is played by a Android MediaPlayer object playing the
+	/// phone's default ringtone, and manages vibrator as well. When set to false, the
+	/// incoming call's ring tone is played using liblinphone's internal ring tone
+	/// player, that is generic for all platforms. 
 	/// - Returns: True if we use the native ringing, false otherwise 
 	public var nativeRingingEnabled: Bool
 	{
@@ -24056,21 +24267,15 @@ public class Core : LinphoneObject
 	}
 		
 	/// Set the native video window id where the video is to be displayed. 
-	/// On Desktop platforms(MacOS, Linux, Windows), the display filter is "MSOGL" by
-	/// default. That means : If window_id is not set or set to
-	/// LINPHONE_VIDEO_DISPLAY_NONE, then the core will not create its own window,
-	/// unless the special id LINPHONE_VIDEO_DISPLAY_AUTO is given. This is currently
-	/// only supported for Linux X11 (Window type), Windows UWP (SwapChainPanel type)
-	/// and Windows Win32 (HWND type).
+	/// On Desktop platforms(MacOS, Linux, Windows):
 	/// The C# Wrapper on Windows for UWP takes directly a #SwapChainPanel without
 	/// Marshalling. On other platforms, window_id is a #MSOglContextInfo defined in
 	/// msogl.h of mediastreamer2 There is a special case for Qt : The "MSQOGL" filter
-	/// must be selected by using ``setVideoDisplayFilter(filterName:)``. Setting
-	/// window id is only used to stop rendering by passing
-	/// LINPHONE_VIDEO_DISPLAY_NONE. ``getNativeVideoWindowId()`` returns a
-	/// #QQuickFramebufferObject::Renderer and ``createNativeVideoWindowId()`` creates
-	/// one. After a creation, ``setNativeVideoWindowId(windowId:)`` must be called
-	/// with the new object.
+	/// must be selected by using ``setVideoDisplayFilter(filterName:)``. Rendering is
+	/// stopped by passing LINPHONE_VIDEO_DISPLAY_NONE or LINPHONE_VIDEO_DISPLAY_AUTO.
+	/// ``getNativeVideoWindowId()`` returns a #QQuickFramebufferObject::Renderer and
+	/// ``createNativeVideoWindowId(context:)`` creates one. After a creation,
+	/// ``setNativeVideoWindowId(windowId:)`` must be called with the new object.
 	/// On mobile operating systems, LINPHONE_VIDEO_DISPLAY_AUTO is not supported and
 	/// window_id depends of the platform : iOS : It is a UIView. Android : It is a
 	/// TextureView.
@@ -24078,7 +24283,9 @@ public class Core : LinphoneObject
 	/// displayed.    
 	
 	/// Get the native window handle of the video window. 
-	/// see linphone_core_set_native_video_window_id for details about window_id
+	/// see linphone_core_set_native_video_window_id for details about window_id If the
+	/// window ID has been set to LINPHONE_VIDEO_DISPLAY_AUTO and a call is in
+	/// progress, it will return the window in use.
 	/// There is a special case for Qt : ``getNativeVideoWindowId()`` returns a
 	/// #QQuickFramebufferObject::Renderer. Note : Qt blocks GUI thread when calling
 	/// createRenderer(), so it is safe to call linphone functions there if needed.
@@ -24404,6 +24611,8 @@ public class Core : LinphoneObject
 	/// - Returns: 0 if successful, -1 otherwise 
 	
 	/// Returns the default identity when no account is used. 
+	/// This SIP address usually contains a private ip address, and may not be routable
+	/// globally.
 	/// - Returns: the primary contact identity    
 	public var primaryContact: String
 	{
@@ -24420,6 +24629,23 @@ public class Core : LinphoneObject
 		guard exception_result == 0 else {
 			throw LinphoneError.exception(result: "username setter returned value \(exception_result)")
 		}
+	}
+		
+	
+	/// Same as ``getPrimaryContact()`` but the result is a ``Address`` object instead
+	/// of a string. 
+	/// - Returns: a ``Address`` object.       
+	public var primaryContactAddress: Address?
+	{
+	
+						let cPointer = linphone_core_get_primary_contact_address(cPtr)
+			if (cPointer == nil) {
+				return nil
+			}
+			let result = Address.getSwiftObject(cObject:cPointer!)
+			belle_sip_object_unref(UnsafeMutableRawPointer(cPointer))
+			return result
+
 	}
 		
 	
@@ -24995,6 +25221,28 @@ public class Core : LinphoneObject
 		set
 		{
 			linphone_core_enable_self_view(cPtr, newValue==true ? 1:0)
+		}
+	}
+		
+	/// Enable sending of chat message on group chats only after receiving the NOTIFY
+	/// full state If it is disabled, as it is the default value, message will be sent
+	/// after the delay set by linphone_core_get_message_sending_delay 
+	/// - Parameter enabled: true if enabled, false otherwise. 
+	
+	/// Returns enablement of sending chat messages on group chats after receiving the
+	/// NOTIFY full state. 
+	/// - Returns: true if the core waits for the NOTIFY full statet before sending
+	/// messages to group chats, false otherwise. 
+	public var sendMessageAfterNotifyEnabled: Bool
+	{
+	
+		get
+		{ 
+						return linphone_core_send_message_after_notify_enabled(cPtr) != 0
+		}
+		set
+		{
+			linphone_core_enable_send_message_after_notify(cPtr, newValue==true ? 1:0)
 		}
 	}
 		
@@ -26012,9 +26260,11 @@ public class Core : LinphoneObject
 	}
 		
 	/// Sets the DSCP field for outgoing video streams. 
-	/// The DSCP defines the quality of service in IP packets. - Note: It is usually
-	/// useless or a bad idea to try to play with DSCP bits unless having full control
-	/// on the network. 
+	/// The DSCP defines the quality of service in IP packets. When RTP bundling is
+	/// negociated during the call (see ``enableRtpBundle(value:)``), the video packets
+	/// are sent through the audio RTP/UDP connection, which leaves the video dscp
+	/// setting wihtout effect. - Note: It is usually useless or a bad idea to try to
+	/// play with DSCP bits unless having full control on the network. 
 	/// - Warning: Setting the DSCP bits is more or less well supported by operating
 	/// systems and sometimes requires to disable IPv6. 
 	/// - Parameter dscp: The DSCP value to set 
@@ -26421,7 +26671,7 @@ public class Core : LinphoneObject
 	
 	
 	/// Adds authentication information to the ``Core``. 
-	/// That piece of information will be used during all SIP transactions that require
+	/// These nformation will be used during all SIP or HTTP transactions that require
 	/// authentication. 
 	/// - Parameter info: The ``AuthInfo`` to add.    
 	public func addAuthInfo(info:AuthInfo) 
@@ -26451,7 +26701,7 @@ public class Core : LinphoneObject
 	
 	
 	/// Add or update a LDAP server and save it to the configuration. 
-	/// - Parameter ldap: The LDAP to add/update.    
+	/// - Parameter ldap: The ``Ldap`` object to add/update.    
 	/// - deprecated: 18/11/2024 use
 	/// ``addRemoteContactDirectory(remoteContactDirectory:)`` instead. 
 	@available(*, deprecated)
@@ -27025,10 +27275,9 @@ public class Core : LinphoneObject
 	/// Create a conference scheduler that can be used to schedule conferences on a
 	/// client conference service and then send conference information invitation as an
 	/// ICS object through chat. 
+	/// The default account (see ``getDefaultAccount()`` ) is used to determine which
+	/// kind of conference scheduler is created. 
 	/// - Returns: A pointer on the freshly created ``ConferenceScheduler``.    
-	/// - deprecated: 23/07/2024 Use ``createConferenceScheduler(account:)`` or
-	/// ``createConferenceSchedulerWithType(account:schedulingType:)`` instead. 
-	@available(*, deprecated)
 	public func createConferenceScheduler() throws -> ConferenceScheduler
 	{
 		let cPointer = linphone_core_create_conference_scheduler(cPtr)
@@ -27044,8 +27293,9 @@ public class Core : LinphoneObject
 	
 	/// Create a conference scheduler that can be used to create client conferences for
 	/// now or later and then send conference info as an ICS through chat. 
-	/// A SipConferenceScheduler is created if the ``Account`` has not defined the URL
-	/// of the CCMP server, other it will create a CCMPConferenceServer 
+	/// A SIP-based implementation is created if the ``Account`` has not defined the
+	/// URL of a CCMP server, other it will create a implementation relying on CCMP
+	/// protocol. 
 	/// - Parameter account: The ``Account`` to use in the ``ConferenceScheduler``.    
 	/// - Returns: A pointer on the freshly created ``ConferenceScheduler``.    
 	public func createConferenceScheduler(account:Account?) throws -> ConferenceScheduler
@@ -27257,7 +27507,7 @@ public class Core : LinphoneObject
 	/// - Returns: a new LinphoneInfoMessage.   
 	/// The info message can later be filled with information using
 	/// ``InfoMessage/addHeader(name:value:)`` or ``InfoMessage/setContent(content:)``,
-	/// and finally sent with linphone_core_send_info_message(). 
+	/// and finally sent with ``Call/sendInfoMessage(info:)``. 
 	public func createInfoMessage() throws -> InfoMessage
 	{
 		let cPointer = linphone_core_create_info_message(cPtr)
@@ -27328,10 +27578,10 @@ public class Core : LinphoneObject
 	
 	
 	
-	/// Creates a LDAP search using given parameters and store them in the
-	/// configuration file. 
+	/// Creates a LDAP search using given parameters, adds it to the core list and
+	/// stores them in the configuration file. 
 	/// - Parameter params: ``LdapParams`` object    
-	/// - Returns: ``Ldap`` with default values set       
+	/// - Returns: ``Ldap`` object       
 	/// - deprecated: 18/11/2024 use ``createLdapRemoteContactDirectory(params:)``
 	/// instead. 
 	@available(*, deprecated)
@@ -27402,14 +27652,28 @@ public class Core : LinphoneObject
 	
 	
 	
+	/// Create a Window ID for the video preview window. 
+	/// Available for MSQOGL and MSOGL. see ``setNativeVideoWindowId(windowId:)`` for
+	/// details about window_id
+	/// MSQOgl can be used for the creation. ``createNativePreviewWindowId(context:)``
+	/// returns a #QQuickFramebufferObject::Renderer. This object must be returned by
+	/// your QQuickFramebufferObject::createRenderer() overload for Qt.
+	/// linphone_core_set_native_preview_window_id_2() must be called with this object
+	/// after the creation. Note : Qt blocks GUI thread when calling createRenderer(),
+	/// so it is safe to call linphone functions there if needed.
+	/// A context can be used to prevent Linphone from allocating the container
+	/// (#MSOglContextInfo for MSOGL). nil if not used.
+	/// - Parameter context: preallocated Window ID (Used only for MSOGL)    
+	/// - Returns: The created Window ID.    
+	public func createNativePreviewWindowId(context:UnsafeMutableRawPointer?) throws -> UnsafeMutableRawPointer
+	{
+		return linphone_core_create_native_preview_window_id_2(cPtr, context)
+	}
+	
+	
+	
 	/// Create a native window handle for the video preview window. 
-	/// see ``setNativeVideoWindowId(windowId:)`` for details about window_id
-	/// MSQOgl can be used for the creation. ``createNativePreviewWindowId()`` returns
-	/// a #QQuickFramebufferObject::Renderer. This object must be returned by your
-	/// QQuickFramebufferObject::createRenderer() overload for Qt.
-	/// ``setNativePreviewWindowId(windowId:)`` must be called with this object after
-	/// the creation. Note : Qt blocks GUI thread when calling createRenderer(), so it
-	/// is safe to call linphone functions there if needed.
+	/// see ``createNativePreviewWindowId(context:)`` for details
 	/// - Returns: The native window handle of the video preview window.    
 	public func createNativePreviewWindowId() throws -> UnsafeMutableRawPointer
 	{
@@ -27418,14 +27682,29 @@ public class Core : LinphoneObject
 	
 	
 	
-	/// Create a native window handle for the video window. 
-	/// see ``setNativeVideoWindowId(windowId:)`` for details about window_id
-	/// When MSQOgl can be used for the creation: ``createNativeVideoWindowId()``
-	/// returns a #QQuickFramebufferObject::Renderer. This object must be returned by
-	/// your QQuickFramebufferObject::createRenderer() overload for Qt.
+	/// Create a Window ID from the current call. 
+	/// Available for MSQOGL and MSOGL. see ``setNativeVideoWindowId(windowId:)`` for
+	/// details about window_id
+	/// When MSQOgl can be used for the creation:
+	/// ``createNativeVideoWindowId(context:)`` returns a
+	/// #QQuickFramebufferObject::Renderer. This object must be returned by your
+	/// QQuickFramebufferObject::createRenderer() overload for Qt.
 	/// ``setNativeVideoWindowId(windowId:)`` must be called with this object after the
 	/// creation. Note : Qt blocks GUI thread when calling createRenderer(), so it is
 	/// safe to call linphone functions there if needed.
+	/// A context can be used to prevent Linphone from allocating the container
+	/// (#MSOglContextInfo for MSOGL). nil if not used.
+	/// - Parameter context: preallocated Window ID (Used only for MSOGL)    
+	/// - Returns: The created Window ID    
+	public func createNativeVideoWindowId(context:UnsafeMutableRawPointer?) throws -> UnsafeMutableRawPointer
+	{
+		return linphone_core_create_native_video_window_id_2(cPtr, context)
+	}
+	
+	
+	
+	/// Create a native window handle for the video window from the current call. 
+	/// see ``createNativeVideoWindowId(context:)`` for details
 	/// - Returns: The native window handle of the video window.    
 	public func createNativeVideoWindowId() throws -> UnsafeMutableRawPointer
 	{
@@ -27603,7 +27882,9 @@ public class Core : LinphoneObject
 	
 	/// Same as ``getPrimaryContact()`` but the result is a ``Address`` object instead
 	/// of const char *. 
-	/// - Returns: a ``Address`` object.    
+	/// - Returns: a ``Address`` object.   
+	/// - deprecated: prefer using ``getPrimaryContactAddress()`` 
+	@available(*, deprecated)
 	public func createPrimaryContactParsed() throws -> Address
 	{
 		let cPointer = linphone_core_create_primary_contact_parsed(cPtr)
@@ -28701,7 +28982,7 @@ public class Core : LinphoneObject
 	
 	
 	
-	/// End of group contacts. 
+	/// End of group group_contacts. 
 	/// Tells if LDAP is available 
 	/// - Returns: true if LDAP is available, false otherwise 
 	public func ldapAvailable() -> Bool
@@ -29026,7 +29307,7 @@ public class Core : LinphoneObject
 	
 	
 	/// Remove a LDAP from the configuration. 
-	/// - Parameter ldap: The LDAP to remove.    
+	/// - Parameter ldap: The ``Ldap`` object to remove.    
 	/// - deprecated: 18/11/2024 use
 	/// ``removeRemoteContactDirectory(remoteContactDirectory:)`` instead. 
 	@available(*, deprecated)
@@ -29388,6 +29669,8 @@ public class Core : LinphoneObject
 	/// ``GlobalState`` is either On. State will changed to Shutdown and then Off. This
 	/// function may block to perform SIP server unregistration. Using ``stopAsync()``
 	/// is preferred.
+	/// - Warning: This function must never be called from within an event notification
+	/// triggered by Liblinphone. 
 	public func stop() 
 	{
 		linphone_core_stop(cPtr)
@@ -29401,6 +29684,8 @@ public class Core : LinphoneObject
 	/// to end asynchronous tasks (terminate call, etc.). When all tasks are finished,
 	/// State will change to Off. Must be called only if ``GlobalState`` is On. When
 	/// ``GlobalState`` is Off ``Core`` can be started again using ``start()``.
+	/// - Warning: This function must never be called from within an event notification
+	/// triggered by Liblinphone. 
 	public func stopAsync() 
 	{
 		linphone_core_stop_async(cPtr)
@@ -32003,6 +32288,23 @@ public class Factory : LinphoneObject
 	
 	
 	
+	/// Creates a ``MessageWaitingIndication`` object from a ``Content``. 
+	/// - Parameter content: ``Content`` object.    
+	/// - Returns: The parsed message waiting indication if the content contains one,
+	/// nil otherwise.    
+	public func createMessageWaitingIndicationFromContent(content:Content) throws -> MessageWaitingIndication
+	{
+		let cPointer = linphone_factory_create_message_waiting_indication_from_content(cPtr, content.cPtr)
+		if (cPointer == nil) {
+			throw LinphoneError.exception(result: "create null MessageWaitingIndication value")
+		}
+		let result = MessageWaitingIndication.getSwiftObject(cObject: cPointer!)
+		belle_sip_object_unref(UnsafeMutableRawPointer(cPointer))
+		return result
+	}
+	
+	
+	
 	/// Create a ``ParticipantDeviceIdentity`` object. 
 	/// - Parameter address: ``Address`` object.    
 	/// - Parameter name: the name given to the device.    
@@ -32136,8 +32438,7 @@ public class Factory : LinphoneObject
 	/// - Parameter config: A ``Config`` object holding the configuration for the
 	/// ``Core`` to be instantiated.    
 	/// - Parameter systemContext: A pointer to a system object required by the core to
-	/// operate. Currently it is required to pass an android Context on android, pass
-	/// nil on other platforms.    
+	/// operate.
 	/// - Parameter appGroupId: Name of iOS App Group that lead to the file system that
 	/// is shared between an app and its app extensions.    
 	/// - Parameter mainCore: Indicate if we want to create a "Main Core" or an
@@ -34687,13 +34988,13 @@ public class LdapParams : LinphoneObject
 		}
 	}
 		
-	/// Check these attributes to build Name Friend, separated by a comma and the first
-	/// is the highest priority. 
-	/// Default value : "sn".
+	/// List of LDAP attributes to check for the contact name, separated by a comma and
+	/// the first being the highest priority. 
+	/// Default value : "sn". 
 	/// - Parameter nameAttribute: The comma separated attributes for the search.    
 	
-	/// Get the attributes to build Name Friend, separated by a comma and the first is
-	/// the highest priority. 
+	/// Get the list of LDAP attributes to check for the contact name, separated by a
+	/// comma and the first being the highest priority. 
 	/// - Returns: The comma separated attributes for the search.    
 	public var nameAttribute: String?
 	{
@@ -35565,6 +35866,46 @@ public class MessageWaitingIndication : LinphoneObject
 		{
 			linphone_message_waiting_indication_set_account_address(cPtr, newValue?.cPtr)
 		}
+	}
+		
+	
+	/// Get the total number of new messages (for all the summaries). 
+	/// - Returns: The total number of new messages. 
+	public var nbNew: UInt32
+	{
+	
+						return linphone_message_waiting_indication_get_nb_new(cPtr)
+
+	}
+		
+	
+	/// Get the total number of new urgent messages (for all the summaries). 
+	/// - Returns: The total number of new urgent messages. 
+	public var nbNewUrgent: UInt32
+	{
+	
+						return linphone_message_waiting_indication_get_nb_new_urgent(cPtr)
+
+	}
+		
+	
+	/// Get the total number of old messages (for all the summaries). 
+	/// - Returns: The total number of old messages. 
+	public var nbOld: UInt32
+	{
+	
+						return linphone_message_waiting_indication_get_nb_old(cPtr)
+
+	}
+		
+	
+	/// Get the total number of old urgent messages (for all the summaries). 
+	/// - Returns: The total number of old urgent messages. 
+	public var nbOldUrgent: UInt32
+	{
+	
+						return linphone_message_waiting_indication_get_nb_old_urgent(cPtr)
+
 	}
 		
 	
@@ -36649,7 +36990,23 @@ public class ParticipantDevice : LinphoneObject
 	
 	
 	/// Creates a window ID and return it. 
-	/// - Returns: the window ID of the device    
+	/// - See also: ``Core/setNativeVideoWindowId(windowId:)`` for a general discussion
+	/// about window IDs.
+	/// A context can be used to prevent Linphone from allocating the container
+	/// (#MSOglContextInfo for MSOGL). nil if not used.
+	/// - Parameter context: preallocated Window ID (Used only for MSOGL)    
+	/// - Returns: the native video window id (type may vary depending on platform).    
+	public func createNativeVideoWindowId(context:UnsafeMutableRawPointer?) throws -> UnsafeMutableRawPointer
+	{
+		return linphone_participant_device_create_native_video_window_id_2(cPtr, context)
+	}
+	
+	
+	
+	/// Creates a window ID and return it. 
+	/// - See also: ``Core/setNativeVideoWindowId(windowId:)`` for a general discussion
+	/// about window IDs.
+	/// - Returns: the native video window id (type may vary depending on platform).    
 	public func createNativeVideoWindowId() throws -> UnsafeMutableRawPointer
 	{
 		return linphone_participant_device_create_native_video_window_id(cPtr)
@@ -37442,6 +37799,18 @@ public class Player : LinphoneObject
 	public func close() 
 	{
 		linphone_player_close(cPtr)
+	}
+	
+	
+	
+	/// Create a window id to be used to display video if any. 
+	/// A context can be used to prevent Linphone from allocating the container
+	/// (#MSOglContextInfo for MSOGL). nil if not used.
+	/// - Parameter context: preallocated Window ID (Used only for MSOGL)    
+	/// - Returns: window_id The window id pointer to use.    
+	public func createWindowId(context:UnsafeMutableRawPointer?) throws -> UnsafeMutableRawPointer
+	{
+		return linphone_player_create_window_id_2(cPtr, context)
 	}
 	
 	
@@ -40779,7 +41148,7 @@ public class RemoteContactDirectory : LinphoneObject
 	}
 	
 	
-	/// Gets the CardDAV params if ``getType()`` returns CardDAV. 
+	/// Gets the CardDAV remote contact directory if ``getType()`` returns CardDAV. 
 	/// - Returns: the ``CardDavParams`` or nil if not of CardDAV type.    
 	public var cardDavParams: CardDavParams?
 	{
@@ -40794,7 +41163,7 @@ public class RemoteContactDirectory : LinphoneObject
 	}
 		
 	
-	/// Gets the LDAP params if ``getType()`` returns LDAP. 
+	/// Gets the LDAP remote_contact_directory if ``getType()`` returns LDAP. 
 	/// - Returns: the ``LdapParams`` or nil if not of LDAP type.    
 	public var ldapParams: LdapParams?
 	{

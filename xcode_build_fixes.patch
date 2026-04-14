@@ -11,17 +11,3 @@ index 2baa6756b..e97a3a2a3 100644
  	check_python_module(six)
  	if(ENABLE_DOC)
  		#check_python_module(swift_domain)
-diff --git a/cmake-builder/toolchains/ios/toolchain-ios.cmake b/cmake-builder/toolchains/ios/toolchain-ios.cmake
-index e4451b8..eb9b419 100644
---- a/cmake-builder/toolchains/ios/toolchain-ios.cmake
-+++ b/cmake-builder/toolchains/ios/toolchain-ios.cmake
-@@ -95,6 +95,9 @@ if(CMAKE_GENERATOR STREQUAL "Xcode")
- 	set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
- 	set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
- 	set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "bitcode")
-+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
-+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -std=c++14")
-+	set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
- endif()
- 
- # Define the compiler
