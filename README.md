@@ -51,7 +51,9 @@ cmake .. -G Ninja --preset=ios-sdk -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_GP
 && echo 'Success!'
 ```
 
-### Android cmake build steps, the artifacts then need to be manually uploaded to Nexus
+### (iOS Only) Commit iOS changes in the SPM repo and update Package.swift references as needed
+
+### Android cmake build steps
 
 Note: it is recommended to use NDK version 27 or later (ver. 25.2.x has a weird problem with OPUS audio quality).
 v27 is needed for Android 16kb mode support, see: https://bugs.linphone.org/view.php?id=13926
@@ -61,7 +63,25 @@ cmake .. -G Ninja --preset=android-sdk -DLINPHONESDK_PLATFORM=Android -DLINPHONE
 && cmake --build . --parallel 4
 ```
 
-### Finally commit changes in the SPM repo and update Package.swift references as needed
+### (Android Only) Upload Android release and debug .aar to Maven
+
+```
+python $PATH_TO_SPM_DIR/upload_aar_to_nexus.py \
+  --user USER --password PASS \
+  --repository linphone-tn \
+  --group-id org.linphone \
+  --artifact-id linphone-sdk-android \
+  --version $LINPHONE_VERSION-CUSTOM-VERISON-AND-TAG \
+  --file maven_repository/org/linphone/linphone-sdk-android/5*/linphone-sdk-android*.aar
+
+python $PATH_TO_SPM_DIR/upload_aar_to_nexus.py \
+  --user USER --password PASS \
+  --repository linphone-tn \
+  --group-id org.linphone \
+  --artifact-id linphone-sdk-android-debug \
+  --version $LINPHONE_VERSION-CUSTOM-VERISON-AND-TAG \
+  --file maven_repository/org/linphone/linphone-sdk-android-debug/5*/linphone-sdk-android*.aar
+```
 
 # Linphone prebuilt archives
 
