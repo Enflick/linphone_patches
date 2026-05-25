@@ -41,12 +41,18 @@ diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphoneco
 index 2d5c2a09b..e0070ca72 100644
 --- a/liblinphone/coreapi/linphonecore.c
 +++ b/liblinphone/coreapi/linphonecore.c
-@@ -6340,6 +6340,18 @@ const char *linphone_core_get_stun_server(const LinphoneCore *lc) {
+@@ -6340,6 +6340,24 @@ const char *linphone_core_get_stun_server(const LinphoneCore *lc) {
  	else return linphone_config_get_string(lc->config, "net", "stun_server", NULL);
  }
- 
+
 +// TN patch
++#ifdef __APPLE__
 +extern unsigned char linphone_tn_check_audio_unit_is_up_synchronous;
++#else
++// Storage lives in mediastreamer2/src/audiofilters/msiounit.mm (iOS only).
++// Provide a stub on non-Apple platforms so the getter/setter API stays linkable.
++unsigned char linphone_tn_check_audio_unit_is_up_synchronous = 1;
++#endif
 +
 +bool_t linphone_core_get_check_audio_unit_is_up_synchronous_enabled(const LinphoneCore */*core*/) {
 +	return linphone_tn_check_audio_unit_is_up_synchronous;
