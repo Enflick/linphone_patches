@@ -1,0 +1,135 @@
+diff --git a/liblinphone/src/nat/ice-service.cpp b/liblinphone/src/nat/ice-service.cpp
+index f21a682bd..7ea236852 100644
+--- a/liblinphone/src/nat/ice-service.cpp
++++ b/liblinphone/src/nat/ice-service.cpp
+@@ -41,6 +41,7 @@ IceService::IceService(StreamsGroup &sg) : mStreamsGroup(sg) {
+ 	mAllowLateIce = !!linphone_config_get_int(config, "net", "allow_late_ice", 0);
+ 	mEnableIntegrityCheck = !!linphone_config_get_int(config, "net", "ice_session_enable_message_integrity_check", 1);
+ 	mDontDefaultToStunCandidates = linphone_config_get_int(config, "net", "dont_default_to_stun_candidates", 0);
++	mKeepCredentialsOnRestart = !!linphone_config_get_int(config, "net", "ice_keep_credentials_on_restart", 0);
+ }
+ 
+ IceService::~IceService() {
+@@ -96,6 +97,7 @@ void IceService::checkSession(IceRole role, bool preferIpv6DefaultCandidates) {
+ 	ice_session_set_default_candidates_ip_version(mIceSession, (bool_t)preferIpv6DefaultCandidates);
+ 	// For backward compatibility purposes, shall be enabled by default in the future.
+ 	ice_session_enable_message_integrity_check(mIceSession, mEnableIntegrityCheck);
++	ice_session_set_keep_credentials_on_restart(mIceSession, (bool_t)mKeepCredentialsOnRestart);
+ 	ice_session_set_role(mIceSession, role);
+ }
+ 
+diff --git a/liblinphone/src/nat/ice-service.h b/liblinphone/src/nat/ice-service.h
+index a97d4fd50..c2a61aee7 100644
+--- a/liblinphone/src/nat/ice-service.h
++++ b/liblinphone/src/nat/ice-service.h
+@@ -165,6 +165,7 @@ private:
+ 	bool mAllowLateIce = false;
+ 	bool mDontDefaultToStunCandidates = false;
+ 	bool mEnableIntegrityCheck = true;
++	bool mKeepCredentialsOnRestart = false;
+ 	bool mIceWasDisabled = false; // Remember that at some point ICE was disabled by an incoming offer or answer.
+ 	bool mInsideGatherIceCandidates;
+ };
+diff --git a/mediastreamer2/include/mediastreamer2/ice.h b/mediastreamer2/include/mediastreamer2/ice.h
+index 106a002d..f346b605 100644
+--- a/mediastreamer2/include/mediastreamer2/ice.h
++++ b/mediastreamer2/include/mediastreamer2/ice.h
+@@ -117,6 +117,9 @@ typedef struct _IceSession {
+ 	bool_t short_turn_refresh;       /**< Short TURN refresh for tests */
+ 	bool_t default_candidates_prefer_ipv6; /** < Whether ipv6 candidates should be prefered compared to their ipv4
+ 	                                          equivalent as "default candidate" */
++	bool_t keep_credentials_on_restart;    /**< When TRUE, ice_session_restart() will not regenerate local ufrag/pwd
++	                                          and will preserve remote credentials. Used to interoperate with peers
++	                                          (e.g. FreeSWITCH) that do not refresh ICE credentials on restart. */
+ } IceSession;
+ 
+ typedef struct _IceStunServerRequestTransaction {
+@@ -920,6 +923,19 @@ MS2_PUBLIC void ice_session_check_mismatch(IceSession *session);
+  */
+ MS2_PUBLIC void ice_session_enable_message_integrity_check(IceSession *session, bool_t enable);
+ 
++/**
++ * When enabled, ice_session_restart() and ice_session_reset() do not regenerate the local ufrag/pwd, and
++ * remote credentials (both at session and check-list level) are preserved across the restart.
++ * This is intended for interoperability with peers (e.g. FreeSWITCH) that do not refresh ICE
++ * credentials when triggering an ICE restart, so that both sides keep using the same credentials and
++ * STUN binding requests continue to authenticate correctly.
++ * Default value is disabled (i.e. credentials are regenerated on restart, per RFC 5245).
++ *
++ * @param session A pointer to a session
++ * @param enable TRUE to keep credentials across restarts, FALSE to regenerate (default)
++ */
++MS2_PUBLIC void ice_session_set_keep_credentials_on_restart(IceSession *session, bool_t enable);
++
+ /**
+  * Core ICE check list processing.
+  *
+diff --git a/mediastreamer2/src/voip/ice.c b/mediastreamer2/src/voip/ice.c
+index 8252d0e0..c800d2af 100644
+--- a/mediastreamer2/src/voip/ice.c
++++ b/mediastreamer2/src/voip/ice.c
+@@ -245,6 +245,7 @@ static void ice_session_init(IceSession *session) {
+ 	session->gathering_end_ts.tv_sec = session->gathering_end_ts.tv_nsec = -1;
+ 	session->connectivity_checks_start_ts.tv_sec = session->connectivity_checks_start_ts.tv_nsec = -1;
+ 	session->check_message_integrity = TRUE;
++	session->keep_credentials_on_restart = FALSE;
+ 	session->default_candidates_prefer_ipv6 = TRUE;
+ 	session->default_types[0] = ICT_RelayedCandidate;
+ 	session->default_types[1] = ICT_ServerReflexiveCandidate;
+@@ -291,6 +292,10 @@ void ice_session_enable_message_integrity_check(IceSession *session, bool_t enab
+ 	session->check_message_integrity = enable;
+ }
+ 
++void ice_session_set_keep_credentials_on_restart(IceSession *session, bool_t enable) {
++	session->keep_credentials_on_restart = enable;
++}
++
+ /******************************************************************************
+  * CHECK LIST INITIALISATION AND DEINITIALISATION                             *
+  *****************************************************************************/
+@@ -4248,9 +4253,11 @@ static void ice_conclude_processing(IceCheckList *cl, RtpSession *rtp_session, b
+  *****************************************************************************/
+ 
+ static void ice_check_list_restart(IceCheckList *cl) {
+-	if (cl->remote_ufrag) ms_free(cl->remote_ufrag);
+-	if (cl->remote_pwd) ms_free(cl->remote_pwd);
+-	cl->remote_ufrag = cl->remote_pwd = NULL;
++	if (!cl->session || !cl->session->keep_credentials_on_restart) {
++		if (cl->remote_ufrag) ms_free(cl->remote_ufrag);
++		if (cl->remote_pwd) ms_free(cl->remote_pwd);
++		cl->remote_ufrag = cl->remote_pwd = NULL;
++	}
+ 	rtp_session_use_local_addr(cl->rtp_session, "", ""); // Reset the sources of rtp_session
+ 	bctbx_list_for_each(cl->stun_server_requests, (void (*)(void *))ice_stun_server_request_free);
+ 	bctbx_list_for_each(cl->transaction_list, (void (*)(void *))ice_free_transaction);
+@@ -4286,18 +4293,21 @@ static void ice_check_list_restart(IceCheckList *cl) {
+ void ice_session_restart(IceSession *session, IceRole role) {
+ 	int i;
+ 
+-	ms_warning("ICE session restart");
+-	if (session->local_ufrag) ms_free(session->local_ufrag);
+-	if (session->local_pwd) ms_free(session->local_pwd);
+-	if (session->remote_ufrag) ms_free(session->remote_ufrag);
+-	if (session->remote_pwd) ms_free(session->remote_pwd);
++	ms_warning("ICE session restart (keep_credentials=%s)",
++	           session->keep_credentials_on_restart ? "true" : "false");
+ 
+ 	session->state = IS_Stopped;
+ 	session->tie_breaker = generate_tie_breaker();
+-	session->local_ufrag = generate_ufrag();
+-	session->local_pwd = generate_pwd();
+-	session->remote_ufrag = NULL;
+-	session->remote_pwd = NULL;
++	if (!session->keep_credentials_on_restart) {
++		if (session->local_ufrag) ms_free(session->local_ufrag);
++		if (session->local_pwd) ms_free(session->local_pwd);
++		if (session->remote_ufrag) ms_free(session->remote_ufrag);
++		if (session->remote_pwd) ms_free(session->remote_pwd);
++		session->local_ufrag = generate_ufrag();
++		session->local_pwd = generate_pwd();
++		session->remote_ufrag = NULL;
++		session->remote_pwd = NULL;
++	}
+ 	memset(&session->event_time, 0, sizeof(session->event_time));
+ 	session->send_event = FALSE;
+ 
