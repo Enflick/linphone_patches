@@ -21954,6 +21954,40 @@ public class Core : LinphoneObject
 
 	}
 		
+	
+	/// Get a pointer on the internal conference object. 
+	/// - Returns: A pointer on `Conference` or nil if no conference are going on.    
+	public var conference: Conference?
+	{
+	
+						let cPointer = linphone_core_get_conference(cPtr)
+			if (cPointer == nil) {
+				return nil
+			}
+			let result = Conference.getSwiftObject(cObject:cPointer!)
+			return result
+
+	}
+		
+	/// Tells whether we should enable a synchronous check_audio_unit_is_up on the run
+	/// loop. 
+	/// - Parameter enable: Boolean value telling whether the feature is enabled. 
+	
+	/// Tells whether we should enable a synchronous check_audio_unit_is_up on the run
+	/// loop. 
+	public var checkAudioUnitIsUpSynchronousEnabled: Bool
+	{
+	
+		get
+		{ 
+						return linphone_core_get_check_audio_unit_is_up_synchronous_enabled(cPtr) != 0
+		}
+		set
+		{
+			linphone_core_set_check_audio_unit_is_up_synchronous_enabled(cPtr, newValue==true ? 1:0)
+		}
+	}
+		
 	/// Set the conference availability before start. 
 	/// It is the number of seconds clients can join the conference before its actual
 	/// start time. 
