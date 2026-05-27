@@ -117,6 +117,9 @@ typedef struct _IceSession {
 	bool_t short_turn_refresh;       /**< Short TURN refresh for tests */
 	bool_t default_candidates_prefer_ipv6; /** < Whether ipv6 candidates should be prefered compared to their ipv4
 	                                          equivalent as "default candidate" */
+	bool_t keep_credentials_on_restart;    /**< When TRUE, ice_session_restart() will not regenerate local ufrag/pwd
+	                                          and will preserve remote credentials. Used to interoperate with peers
+	                                          (e.g. FreeSWITCH) that do not refresh ICE credentials on restart. */
 } IceSession;
 
 typedef struct _IceStunServerRequestTransaction {
@@ -919,6 +922,19 @@ MS2_PUBLIC void ice_session_check_mismatch(IceSession *session);
  *
  */
 MS2_PUBLIC void ice_session_enable_message_integrity_check(IceSession *session, bool_t enable);
+
+/**
+ * When enabled, ice_session_restart() and ice_session_reset() do not regenerate the local ufrag/pwd, and
+ * remote credentials (both at session and check-list level) are preserved across the restart.
+ * This is intended for interoperability with peers (e.g. FreeSWITCH) that do not refresh ICE
+ * credentials when triggering an ICE restart, so that both sides keep using the same credentials and
+ * STUN binding requests continue to authenticate correctly.
+ * Default value is disabled (i.e. credentials are regenerated on restart, per RFC 5245).
+ *
+ * @param session A pointer to a session
+ * @param enable TRUE to keep credentials across restarts, FALSE to regenerate (default)
+ */
+MS2_PUBLIC void ice_session_set_keep_credentials_on_restart(IceSession *session, bool_t enable);
 
 /**
  * Core ICE check list processing.
