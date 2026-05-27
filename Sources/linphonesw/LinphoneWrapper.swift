@@ -20839,6 +20839,21 @@ public class Core : LinphoneObject
 	}
 #endif
 
+	// TN patch
+	/// Get a pointer on the internal conference object.
+	/// - Returns: A pointer on `Conference` or nil if no conference are going on.
+	@available(*, deprecated, message: "Use searchConference() instead")
+	public var conference: Conference?
+	{
+		let cPointer = linphone_core_get_conference(cPtr)
+		if (cPointer == nil) {
+			return nil
+		}
+		let result = Conference.getSwiftObject(cObject:cPointer!)
+		return result
+	}
+	// TN patch
+
 	
 	///Used to notify if log collection upload have been successfully delivered or
 	///not. 
