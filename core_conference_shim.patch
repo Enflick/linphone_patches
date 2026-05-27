@@ -1,0 +1,26 @@
+diff --git a/liblinphone/wrappers/swift/wrapper_impl.mustache b/liblinphone/wrappers/swift/wrapper_impl.mustache
+index 0000000..1111111 100644
+--- a/liblinphone/wrappers/swift/wrapper_impl.mustache
++++ b/liblinphone/wrappers/swift/wrapper_impl.mustache
+@@ -351,6 +351,21 @@
+ 		}
+ 	}
+ #endif
++
++	// TN patch
++	/// Get a pointer on the internal conference object.
++	/// - Returns: A pointer on `Conference` or nil if no conference are going on.
++	@available(*, deprecated, message: "Use searchConference() instead")
++	public var conference: Conference?
++	{
++		let cPointer = linphone_core_get_conference(cPtr)
++		if (cPointer == nil) {
++			return nil
++		}
++		let result = Conference.getSwiftObject(cObject:cPointer!)
++		return result
++	}
++	// TN patch
+ 	{{/isLinphoneCore}}
+ 	{{#classEnums}}
+
