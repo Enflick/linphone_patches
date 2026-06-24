@@ -12385,6 +12385,14 @@ public class Call : LinphoneObject
 	
 	
 	
+	/// Causes a running call to reconnect, the same way as a network reconnect. 
+	public func reconnect() 
+	{
+		linphone_call_reconnect(cPtr)
+	}
+	
+	
+	
 	/// Redirect the specified call to the given redirect URI. 
 	/// - Parameter redirectUri: The URI to redirect the call to    
 	/// - Returns: 0 if successful, -1 on error. 
