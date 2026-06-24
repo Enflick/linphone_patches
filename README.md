@@ -12,7 +12,7 @@ git submodule update --init --recursive
 ### Checkout the version you want
 
 ```
-git checkout 5.4.85
+git checkout 5.4.17
 ```
 
 ## Follow Linphone SDK README's build dependencies section as needed, then build and package using the following steps.
@@ -29,6 +29,7 @@ export LINPHONE_VERSION=$(git describe --tags --exact-match)
 ```
 git co . && git submodule foreach 'git reset ; git checkout . ; git clean -fd'
 git submodule update --init --recursive
+pushd liblinphone ; git revert --no-edit 96de42ced6146111fafd3de7788fbb8020b0506e ; popd
 for p in ${PATH_TO_SPM_DIR}/*.patch; do echo $p; patch --strip=1 --forward --input $p; done
 ```
 
@@ -40,56 +41,27 @@ mkdir -p build/ && cd build/
 
 ### iOS cmake build steps, with an additional copy step at the end, this is a one-liner that can be re-run to re-build and copy
 
-Note: Linphone 5.2.x appears to need Xcode 15.4 for -mno-thumb, use `xcode-select --switch` or `xcodes` if needed to switch to 15.4
-
 ```
-cmake .. -G Xcode --preset=ios-sdk -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO -DENABLE_DOC=NO -DENABLE_SWIFT_WRAPPER=NO \
+cmake .. -G Ninja --preset=ios-sdk -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO \
 && cmake --build . --parallel 4 \
 && rm -rf linphone-sdk-ios-${LINPHONE_VERSION} \
 && unzip -d linphone-sdk-ios-${LINPHONE_VERSION} linphone-sdk-*.zip \
 && rm -rf ${PATH_TO_SPM_DIR}/XCFrameworks/* \
 && cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/XCFrameworks/ ${PATH_TO_SPM_DIR}/XCFrameworks/ \
+&& cp -vrf linphone-sdk-ios-${LINPHONE_VERSION}/linphone-sdk*/apple-darwin/share/linphonesw/* ${PATH_TO_SPM_DIR}/Sources/linphonesw/ \
 && echo 'Success!'
 ```
 
-### (iOS Only) Commit iOS changes in the SPM repo and update Package.swift references as needed
+### Android cmake build steps, the artifacts then need to be manually uploaded to Nexus
 
-## Upload dSYMS from the build folder
-
-```
-export DATADOG_API_KEY=<your-key-here>
-npx @datadog/datadog-ci dsyms upload ./ios-arm64/lib/Debug/
-```
-
-### Android cmake build steps
-
-Note: it is recommended to use NDK version 27 or later (ver. 25.2.x has a weird problem with OPUS audio quality).
-v27 is needed for Android 16kb mode support, see: https://bugs.linphone.org/view.php?id=13926
+Note: it is recommended to use NDK version 23.1.x (ver. 25.2.x has a weird problem with OPUS audio quality).
 
 ```
 cmake .. -G Ninja --preset=android-sdk -DLINPHONESDK_PLATFORM=Android -DLINPHONESDK_ANDROID_ARCHS=arm64,armv7,x86,x86_64 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_GPL_THIRD_PARTIES=NO -DENABLE_NON_FREE_CODECS=NO -DENABLE_VIDEO=NO -DENABLE_ADVANCED_IM=NO -DENABLE_DB_STORAGE=NO -DENABLE_VCARD=NO -DENABLE_MKV=NO -DENABLE_LDAP=NO -DENABLE_JPEG=NO -DENABLE_QRCODE=NO -DENABLE_FLEXIAPI=NO -DENABLE_LIME_X3DH=NO -DENABLE_GSM=NO -DENABLE_ILBC=NO -DENABLE_ISAC=NO \
 && cmake --build . --parallel 4
 ```
 
-### (Android Only) Upload Android release and debug .aar to Maven
-
-```
-python $PATH_TO_SPM_DIR/upload_aar_to_nexus.py \
-  --user USER --password PASS \
-  --repository linphone-tn \
-  --group-id org.linphone \
-  --artifact-id linphone-sdk-android \
-  --version $LINPHONE_VERSION-CUSTOM-VERISON-AND-TAG \
-  --file maven_repository/org/linphone/linphone-sdk-android/5*/linphone-sdk-android*.aar
-
-python $PATH_TO_SPM_DIR/upload_aar_to_nexus.py \
-  --user USER --password PASS \
-  --repository linphone-tn \
-  --group-id org.linphone \
-  --artifact-id linphone-sdk-android-debug \
-  --version $LINPHONE_VERSION-CUSTOM-VERISON-AND-TAG \
-  --file maven_repository/org/linphone/linphone-sdk-android-debug/5*/linphone-sdk-android*.aar
-```
+### Finally commit changes in the SPM repo and update Package.swift references as needed
 
 # Linphone prebuilt archives
 
@@ -107,11 +79,12 @@ unzip -d linphone-sdk-ios-${LINPHONE_VERSION} linphone-sdk-ios-${LINPHONE_VERSIO
 ```
 
 ### Finally commit changes in the SPM repo and update Package.swift references as needed
-### Important note! The XCFramework folder contains BINARY static library files and changes, per branch
-### They should only updated to have the LATEST iOS binaries as the LAST commit, which was not done before.
-### Otherwise the entire history of the binary changes will be uploaded, which can hit the Git 100MB limit.
 
 # Linphone SPM source code notes
 
 ### LinphoneWrapper is the standard API wrapper copied from the SDK, no modifications done to it
 [LinphoneWrapper.swift](Sources/linphonesw/LinphoneWrapper.swift)
+
+### These contain Linphone's CallKit integration from [their app](https://gitlab.linphone.org/BC/public/linphone-iphone), and are modified for our calling stack
+[CallManager.swift](Sources/linphonesw/CallManager.swift)
+[ProviderDelegate.swift](Sources/linphonesw/ProviderDelegate.swift)

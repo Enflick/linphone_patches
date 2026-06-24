@@ -41,11 +41,10 @@ diff --git a/liblinphone/coreapi/linphonecore.c b/liblinphone/coreapi/linphoneco
 index 2d5c2a09b..e0070ca72 100644
 --- a/liblinphone/coreapi/linphonecore.c
 +++ b/liblinphone/coreapi/linphonecore.c
-@@ -6340,6 +6340,20 @@ const char *linphone_core_get_stun_server(const LinphoneCore *lc) {
+@@ -6340,6 +6340,18 @@ const char *linphone_core_get_stun_server(const LinphoneCore *lc) {
  	else return linphone_config_get_string(lc->config, "net", "stun_server", NULL);
  }
  
-+#ifdef __APPLE__
 +// TN patch
 +extern unsigned char linphone_tn_check_audio_unit_is_up_synchronous;
 +
@@ -57,7 +56,6 @@ index 2d5c2a09b..e0070ca72 100644
 +	linphone_tn_check_audio_unit_is_up_synchronous = enable;
 +}
 +// TN patch
-+#endif
 +
  bool_t linphone_core_upnp_available() {
  	return FALSE;
@@ -66,11 +64,10 @@ diff --git a/liblinphone/include/linphone/core.h b/liblinphone/include/linphone/
 index e9426adc4..6dca3f765 100644
 --- a/liblinphone/include/linphone/core.h
 +++ b/liblinphone/include/linphone/core.h
-@@ -3181,6 +3181,27 @@ LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_core_set_stun_server(LinphoneC
+@@ -3181,6 +3181,25 @@ LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_core_set_stun_server(LinphoneC
   */
  LINPHONE_PUBLIC LINPHONE_DEPRECATED const char *linphone_core_get_stun_server(const LinphoneCore *core);
  
-+#ifdef __APPLE__
 +// TN patch
 +
 +/**
@@ -89,7 +86,6 @@ index e9426adc4..6dca3f765 100644
 +void linphone_core_set_check_audio_unit_is_up_synchronous_enabled(LinphoneCore *core, bool_t enable);
 +
 +// TN patch
-+#endif
 +
  /**
   * Return the availability of uPnP.
