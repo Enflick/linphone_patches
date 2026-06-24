@@ -244,15 +244,15 @@ index 27f437ae6..688b190ee 100644
  }
  
  void MediaSessionPrivate::repairByNewInvite(bool withReplaces) {
-@@ -5159,6 +5194,8 @@ LinphoneStatus MediaSession::update(const MediaSessionParams *msp,
- 			return res;
+@@ -4796,6 +4834,8 @@ LinphoneStatus MediaSession::resume() {
+ 			return 0;
  		};
  
-+		lInfo() << "MediaSession::update() -> ice=" << (int)d->natPolicy->iceEnabled() << ", turn=" << (int)d->natPolicy->turnEnabled() << ", tcp_turn=" << (int)d->natPolicy->turnTcpEnabled();
++		lInfo() << "MediaSessionPrivate::update() -> ice=" << (int)d->natPolicy->iceEnabled() << ", turn=" << (int)d->natPolicy->turnEnabled() << ", tcp_turn=" << (int)d->natPolicy->turnTcpEnabled();
 +
- 		if (!d->op->getSal()->mediaDisabled()) {
- 			const auto preparingStreams = d->getStreamsGroup().prepare();
- 			// reINVITE sent after full state must be sent after ICE negotiations are completed if ICE is enabled
+ 		const auto preparingStreams = d->getStreamsGroup().prepare();
+ 		if (d->natPolicy && d->natPolicy->iceEnabled() && preparingStreams) {
+ 			lInfo() << "Defer CallSession " << this << " (local address " << getLocalAddress()->toString()
 diff --git a/liblinphone/src/nat/ice-service.cpp b/liblinphone/src/nat/ice-service.cpp
 index f21a682bd..0145c0e5b 100644
 --- a/liblinphone/src/nat/ice-service.cpp

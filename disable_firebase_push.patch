@@ -1,8 +1,8 @@
 diff --git a/liblinphone/wrappers/java/classes/org/linphone/core/tools/firebase/FirebasePushHelper.java b/liblinphone/wrappers/java/classes/org/linphone/core/tools/firebase/FirebasePushHelper.java
-index a50292e9c..f5e6196f0 100644
+index 98c51d421..ff8677d42 100644
 --- a/liblinphone/wrappers/java/classes/org/linphone/core/tools/firebase/FirebasePushHelper.java
 +++ b/liblinphone/wrappers/java/classes/org/linphone/core/tools/firebase/FirebasePushHelper.java
-@@ -44,43 +44,12 @@ public class FirebasePushHelper implements PushNotificationUtils.PushHelperInter
+@@ -44,41 +44,12 @@ public class FirebasePushHelper implements PushNotificationUtils.PushHelperInter
  
      @Override
      public void init(Context context) {
@@ -25,9 +25,7 @@ index a50292e9c..f5e6196f0 100644
 -                                        Runnable runnable = new Runnable() {
 -                                            @Override
 -                                            public void run() {
--                                                if (AndroidPlatformHelper.isReady()) {
--                                                    AndroidPlatformHelper.instance().setPushToken(token);
--                                                }
+-                                                AndroidPlatformHelper.instance().setPushToken(token);
 -                                            }
 -                                        };
 -                                        AndroidPlatformHelper.instance().dispatchOnCoreThread(runnable);
