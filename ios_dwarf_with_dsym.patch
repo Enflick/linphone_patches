@@ -1,0 +1,12 @@
+diff --git a/cmake/toolchains/toolchain-ios-common.cmake b/cmake/toolchains/toolchain-ios-common.cmake
+index 7c9300a8a1..6cba1c7030 100644
+--- a/cmake/toolchains/toolchain-ios-common.cmake
++++ b/cmake/toolchains/toolchain-ios-common.cmake
+@@ -96,6 +96,7 @@ if(CMAKE_GENERATOR STREQUAL "Xcode")
+ 	set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+ 	set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
+ #	set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "bitcode")
++	set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
+ endif()
+ 
+ # Define the compiler
