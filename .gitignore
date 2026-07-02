@@ -1,2 +1,5 @@
 .DS_Store
 .swiftpm/
+
+# iOS dSYM staging — local only, canonical storage is Datadog
+dSYMs-staging/
