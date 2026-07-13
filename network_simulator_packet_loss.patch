@@ -1,0 +1,57 @@
+diff --git a/liblinphone/include/linphone/core.h b/liblinphone/include/linphone/core.h
+--- a/liblinphone/include/linphone/core.h
++++ b/liblinphone/include/linphone/core.h
+@@ -6095,6 +6179,29 @@ LINPHONE_PUBLIC LinphoneStatus linphone_core_set_network_simulator_params(Linpho
+  **/
+ LINPHONE_PUBLIC const OrtpNetworkSimulatorParams *linphone_core_get_network_simulator_params(const LinphoneCore *core);
+ 
++// TN patch
++
++/**
++ * @brief Enable or disable a simple network simulator that drops a percentage of RTP packets.
++ *
++ * Convenience wrapper around the oRTP network simulator (whose params struct is not wrapped),
++ * intended for testing packet-loss concealment such as Opus deep PLC / OSCE. Only RTP is
++ * affected (not RTCP). Applies immediately to running streams.
++ *
++ * @param core the #LinphoneCore @notnil
++ * @param enabled TRUE to enable the simulator, FALSE to disable it.
++ * @param loss_rate percentage of RTP packets to drop, in the 0-100 range.
++ * @param inbound TRUE to drop received packets (to exercise the local decoder's PLC), FALSE to
++ *        drop sent packets.
++ * @ingroup group_media_parameters
++ */
++LINPHONE_PUBLIC void linphone_core_enable_network_simulator_packet_loss(LinphoneCore *core,
++                                                                        bool_t enabled,
++                                                                        float loss_rate,
++                                                                        bool_t inbound);
++
++// TN patch
++
+ /**
+  * Set the video preset to be used for video calls.
+  * @param core #LinphoneCore object @notnil
+diff --git a/liblinphone/coreapi/misc.c b/liblinphone/coreapi/misc.c
+--- a/liblinphone/coreapi/misc.c
++++ b/liblinphone/coreapi/misc.c
+@@ -1059,6 +1059,20 @@ const OrtpNetworkSimulatorParams *linphone_core_get_network_simulator_params(con
+ 	return &lc->net_conf.netsim_params;
+ }
+ 
++// TN patch
++void linphone_core_enable_network_simulator_packet_loss(LinphoneCore *lc,
++                                                        bool_t enabled,
++                                                        float loss_rate,
++                                                        bool_t inbound) {
++	OrtpNetworkSimulatorParams params = {0};
++	params.enabled = enabled ? TRUE : FALSE;
++	params.loss_rate = loss_rate;
++	params.rtp_only = TRUE; /* only drop RTP, keep RTCP so stats/feedback survive */
++	params.mode = inbound ? OrtpNetworkSimulatorInbound : OrtpNetworkSimulatorOutbound;
++	linphone_core_set_network_simulator_params(lc, &params);
++}
++// TN patch
++
+ static const char *_tunnel_mode_str[3] = {"disable", "enable", "auto"};
+ 
+ LinphoneTunnelMode linphone_tunnel_mode_from_string(const char *string) {

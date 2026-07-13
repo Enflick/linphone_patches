@@ -1,0 +1,36 @@
+diff --git a/external/opus/CMakeLists.txt b/external/opus/CMakeLists.txt
+--- a/external/opus/CMakeLists.txt
++++ b/external/opus/CMakeLists.txt
+@@ -650,6 +650,9 @@ if(NOT OPUS_DISABLE_INTRINSICS)
+         target_compile_definitions(opus PRIVATE OPUS_HAVE_RTCD)
+         add_sources_group(opus celt ${celt_sources_arm_rtcd})
+         add_sources_group(opus silk ${silk_sources_arm_rtcd})
++        if (OPUS_DNN)
++          add_sources_group(opus lpcnet ${dnn_sources_arm_rtcd})
++        endif()
+
+         if(CMAKE_SYSTEM_PROCESSOR MATCHES "(armv7-a|armv7|armv7s)" AND OPUS_FIXED_POINT)
+           # The assembly files are only for armv7, not arm64.
+diff --git a/external/opus/cmake/OpusSources.cmake b/external/opus/cmake/OpusSources.cmake
+--- a/external/opus/cmake/OpusSources.cmake
++++ b/external/opus/cmake/OpusSources.cmake
+@@ -47,6 +47,7 @@ get_opus_sources(DEEP_PLC_SOURCES lpcnet_sources.mk deep_plc_sources)
+ get_opus_sources(DRED_SOURCES lpcnet_sources.mk dred_sources)
+ get_opus_sources(OSCE_SOURCES lpcnet_sources.mk osce_sources)
+ get_opus_sources(DNN_SOURCES_X86_RTCD lpcnet_sources.mk dnn_sources_x86_rtcd)
++get_opus_sources(DNN_SOURCES_ARM_RTCD lpcnet_sources.mk dnn_sources_arm_rtcd)
+ get_opus_sources(DNN_SOURCES_SSE2 lpcnet_sources.mk dnn_sources_sse2)
+ get_opus_sources(DNN_SOURCES_SSE4_1 lpcnet_sources.mk dnn_sources_sse4_1)
+ get_opus_sources(DNN_SOURCES_AVX2 lpcnet_sources.mk dnn_sources_avx2)
+diff --git a/external/opus/dnn/arm/arm_dnn_map.c b/external/opus/dnn/arm/arm_dnn_map.c
+--- a/external/opus/dnn/arm/arm_dnn_map.c
++++ b/external/opus/dnn/arm/arm_dnn_map.c
+@@ -34,7 +34,7 @@
+ 
+ #if defined(OPUS_HAVE_RTCD)
+ 
+-#if (defined(OPUS_ARM_MAY_HAVE_DOTPROD) && !defined(OPUS_ARM_PRESUME_DOTPROD))
++#if (defined(OPUS_ARM_MAY_HAVE_DOTPROD) || defined(OPUS_ARM_MAY_HAVE_NEON)) && !defined(OPUS_ARM_PRESUME_DOTPROD) && !(defined(OPUS_ARM_PRESUME_NEON_INTR) && !defined(OPUS_ARM_MAY_HAVE_DOTPROD))
+ 
+ void (*const DNN_COMPUTE_LINEAR_IMPL[OPUS_ARCHMASK + 1])(
+          const LinearLayer *linear,
