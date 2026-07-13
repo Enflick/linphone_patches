@@ -76,7 +76,7 @@ index e9426adc4..6dca3f765 100644
 +/**
 + * Tells whether we should enable a synchronous check_audio_unit_is_up on the run loop.
 + * @param core #LinphoneCore object @notnil
-+ * @ingroup media_parameters
++ * @ingroup group_media_parameters
 + */
 +bool_t linphone_core_get_check_audio_unit_is_up_synchronous_enabled(const LinphoneCore *core);
 +
@@ -84,7 +84,7 @@ index e9426adc4..6dca3f765 100644
 + * Tells whether we should enable a synchronous check_audio_unit_is_up on the run loop.
 + * @param core #LinphoneCore object @notnil
 + * @param enable Boolean value telling whether the feature is enabled.
-+ * @ingroup media_parameters
++ * @ingroup group_media_parameters
 + */
 +void linphone_core_set_check_audio_unit_is_up_synchronous_enabled(LinphoneCore *core, bool_t enable);
 +
