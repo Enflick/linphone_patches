@@ -10,87 +10,24 @@ index f66e64dd..63c8b32c 100644
  	mstee.h
  	msticker.h
  	mstonedetector.h
-diff --git a/mediastreamer2/include/mediastreamer2/mediastream.h b/mediastreamer2/include/mediastreamer2/mediastream.h
-index 43699bef..444179b7 100644
---- a/mediastreamer2/include/mediastreamer2/mediastream.h
-+++ b/mediastreamer2/include/mediastreamer2/mediastream.h
-@@ -211,10 +211,8 @@ MS2_PUBLIC void media_stream_set_stun_allowed(MediaStream *stream, bool_t value)
- /*
-  * deprecated, use media_stream_set_srtp_recv_key and media_stream_set_srtp_send_key.
-  **/
--MS2_PUBLIC bool_t media_stream_enable_srtp(MediaStream *stream,
--                                           MSCryptoSuite suite,
--                                           const char *snd_key,
--                                           const char *rcv_key);
-+MS2_PUBLIC bool_t
-+media_stream_enable_srtp(MediaStream *stream, MSCryptoSuite suite, const char *snd_key, const char *rcv_key);
- 
- /**
-  * @param[in] stream MediaStream object
-@@ -232,9 +230,8 @@ MS2_PUBLIC bool_t media_stream_secured(const MediaStream *stream);
-  * 			both direction (send and receive) have the same source when dir is both
-  * 			MSSrtpKeySourceUnavailable otherwise
-  */
--MS2_PUBLIC MSSrtpKeySource media_stream_get_srtp_key_source(const MediaStream *stream,
--                                                            MediaStreamDir dir,
--                                                            bool_t is_inner);
-+MS2_PUBLIC MSSrtpKeySource
-+media_stream_get_srtp_key_source(const MediaStream *stream, MediaStreamDir dir, bool_t is_inner);
- 
- /**
-  * Get the crypto suite used to secure this stream
-@@ -245,9 +242,8 @@ MS2_PUBLIC MSSrtpKeySource media_stream_get_srtp_key_source(const MediaStream *s
-  * 			both direction (send and receive) have the same suite when dir is both
-  * 			MS_CRYPTO_SUITE_INVALID otherwise
-  */
--MS2_PUBLIC MSCryptoSuite media_stream_get_srtp_crypto_suite(const MediaStream *stream,
--                                                            MediaStreamDir dir,
--                                                            bool_t is_inner);
-+MS2_PUBLIC MSCryptoSuite
-+media_stream_get_srtp_crypto_suite(const MediaStream *stream, MediaStreamDir dir, bool_t is_inner);
- 
- /**
-  * Get the source(SDES, ZRTP, DTLS-SRTP) of srtp key used to secure this stream
-@@ -549,6 +545,7 @@ struct _AudioStream {
- 	MSFilter *baudot_generator;
- 	MSFilter *baudot_detector;
- 	MSFilter *plc;
-+	MSFilter *decoded_audio_tap; /* TextNow patch: see msdecodedaudiotap.h */
- 	MSFilter *ec;                /*echo canceler*/
- 	MSFilter *volsend, *volrecv; /*MSVolumes*/
- 	MSFilter *vad;
-@@ -1056,10 +1053,8 @@ MS2_PUBLIC void audio_stream_start_zrtp(AudioStream *stream);
- bool_t audio_stream_zrtp_enabled(const AudioStream *stream);
- 
- /* enable SRTP on the audio stream */
--static MS2_INLINE bool_t audio_stream_enable_srtp(AudioStream *stream,
--                                                  MSCryptoSuite suite,
--                                                  const char *snd_key,
--                                                  const char *rcv_key) {
-+static MS2_INLINE bool_t
-+audio_stream_enable_srtp(AudioStream *stream, MSCryptoSuite suite, const char *snd_key, const char *rcv_key) {
- 	return media_stream_enable_srtp(&stream->ms, suite, snd_key, rcv_key);
- }
- 
-@@ -1670,10 +1665,8 @@ MS2_PUBLIC void video_stream_enable_zrtp(VideoStream *vstream, AudioStream *astr
- MS2_PUBLIC void video_stream_start_zrtp(VideoStream *stream);
- 
- /* enable SRTP on the video stream */
--static MS2_INLINE bool_t video_stream_enable_strp(VideoStream *stream,
--                                                  MSCryptoSuite suite,
--                                                  const char *snd_key,
--                                                  const char *rcv_key) {
-+static MS2_INLINE bool_t
-+video_stream_enable_strp(VideoStream *stream, MSCryptoSuite suite, const char *snd_key, const char *rcv_key) {
- 	return media_stream_enable_srtp(&stream->ms, suite, snd_key, rcv_key);
- }
- 
+diff --git a/mediastreamer2/include/mediastreamer2/Makefile.am b/mediastreamer2/include/mediastreamer2/Makefile.am
+index a97b565a..8b2a9cc1 100644
+--- a/mediastreamer2/include/mediastreamer2/Makefile.am
++++ b/mediastreamer2/include/mediastreamer2/Makefile.am
+@@ -18,6 +18,7 @@ mediastreamer2_include_HEADERS=allfilters.h \
+ 				mscodecutils.h \
+ 				mscommon.h \
+ 				msconference.h \
++				msdecodedaudiotap.h \
+ 				msequalizer.h \
+ 				mseventqueue.h \
+ 				msextdisplay.h \
 diff --git a/mediastreamer2/include/mediastreamer2/msdecodedaudiotap.h b/mediastreamer2/include/mediastreamer2/msdecodedaudiotap.h
 new file mode 100644
-index 00000000..01e84908
+index 00000000..4e364dee
 --- /dev/null
 +++ b/mediastreamer2/include/mediastreamer2/msdecodedaudiotap.h
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,89 @@
 +/*
 + * Copyright (c) 2010-2022 Belledonne Communications SARL.
 + *
@@ -115,7 +52,7 @@ index 00000000..01e84908
 + * TextNow patch: decoded downlink audio tap.
 + *
 + * When a process-wide callback is registered via
-+ * ms_set_global_decoded_audio_tap(), every AudioStream created afterwards
++ * ms_set_global_decoded_audio_tap(), every AudioStream started afterwards
 + * inserts a lightweight pass-through filter into its receiving graph, right
 + * after the decoder (and after the generic PLC when the codec has none of
 + * its own). The callback is invoked from the MSTicker thread with each
@@ -134,12 +71,12 @@ index 00000000..01e84908
 + *   identity it sees and ignore the rest; identities may be reused after a
 + *   stream is destroyed.
 + * - Registration is not synchronized: register once, before any stream
-+ *   exists (e.g. before core start). Re-registering while streams are
++ *   starts (e.g. before core start). Re-registering while streams are
 + *   running is not supported.
-+ * - Register NULL to disable the tap for streams created afterwards.
++ * - Register NULL to disable the tap for streams started afterwards.
 + *   Clearing does NOT detach streams that are already running — they keep
 + *   their copy of (cb, user_data) — so user_data must remain valid until
-+ *   every stream created while it was registered has been destroyed.
++ *   every stream started while it was registered has been destroyed.
 + */
 +
 +#ifndef msdecodedaudiotap_h
@@ -159,7 +96,7 @@ index 00000000..01e84908
 +
 +/**
 + * Register (or clear, with cb=NULL) the process-wide decoded-audio tap.
-+ * Takes effect for streams created after the call; running streams are
++ * Takes effect for streams started after the call; running streams are
 + * not affected.
 + */
 +MS2_PUBLIC void ms_set_global_decoded_audio_tap(MSDecodedAudioTapCallback cb, void *user_data);
@@ -174,8 +111,6 @@ index 00000000..01e84908
 +                                                        const void *stream_id,
 +                                                        int sample_rate,
 +                                                        int nchannels);
-+
-+extern MSFilterDesc ms_decoded_audio_tap_desc;
 +
 +#ifdef __cplusplus
 +}
@@ -194,12 +129,24 @@ index 0568efe3..e9605671 100644
  	otherfilters/tee.c
  	otherfilters/void.c
  )
+diff --git a/mediastreamer2/src/Makefile.am b/mediastreamer2/src/Makefile.am
+index 5ffe7227..53e98268 100755
+--- a/mediastreamer2/src/Makefile.am
++++ b/mediastreamer2/src/Makefile.am
+@@ -76,6 +76,7 @@ libmediastreamer_base_la_SOURCES=	base/mscommon.c \
+ 					base/eventqueue.c \
+ 					base/mssndcard.c \
+ 					base/msfactory.c \
++					otherfilters/decodedaudiotap.c \
+ 					otherfilters/tee.c \
+ 					otherfilters/join.c \
+ 					base/msvideopresets.c \
 diff --git a/mediastreamer2/src/otherfilters/decodedaudiotap.c b/mediastreamer2/src/otherfilters/decodedaudiotap.c
 new file mode 100644
-index 00000000..7b100d1c
+index 00000000..271ca22a
 --- /dev/null
 +++ b/mediastreamer2/src/otherfilters/decodedaudiotap.c
-@@ -0,0 +1,156 @@
+@@ -0,0 +1,154 @@
 +/*
 + * Copyright (c) 2010-2022 Belledonne Communications SARL.
 + *
@@ -233,8 +180,8 @@ index 00000000..7b100d1c
 +} DecodedAudioTapData;
 +
 +/* Process-wide registration. Written by the application before streams are
-+ * created (typically once at startup, next to Core configuration); read at
-+ * stream construction time. Each stream's filter keeps its own copy, so a
++ * start (typically once at startup, next to Core configuration); read when
++ * a stream starts. Each stream's filter keeps its own copy, so a
 + * late re-registration never races a running ticker. */
 +static MSDecodedAudioTapCallback s_tap_cb = NULL;
 +static void *s_tap_user_data = NULL;
@@ -306,7 +253,7 @@ index 00000000..7b100d1c
 +
 +#ifdef _MSC_VER
 +
-+MSFilterDesc ms_decoded_audio_tap_desc = {
++static MSFilterDesc ms_decoded_audio_tap_desc = {
 +    MS_FILTER_PLUGIN_ID,
 +    "MSDecodedAudioTap",
 +    N_("Pass-through tap handing decoded downlink PCM to an application callback."),
@@ -323,7 +270,7 @@ index 00000000..7b100d1c
 +
 +#else
 +
-+MSFilterDesc ms_decoded_audio_tap_desc = {
++static MSFilterDesc ms_decoded_audio_tap_desc = {
 +    .id = MS_FILTER_PLUGIN_ID,
 +    .name = "MSDecodedAudioTap",
 +    .text = N_("Pass-through tap handing decoded downlink PCM to an application callback."),
@@ -336,8 +283,6 @@ index 00000000..7b100d1c
 +    .methods = tap_methods};
 +
 +#endif
-+
-+MS_FILTER_DESC_EXPORT(ms_decoded_audio_tap_desc)
 +
 +MSFilter *ms_decoded_audio_tap_create_filter(MSFactory *factory,
 +                                             MSDecodedAudioTapCallback cb,
@@ -357,7 +302,7 @@ index 00000000..7b100d1c
 +	return f;
 +}
 diff --git a/mediastreamer2/src/voip/audiostream.c b/mediastreamer2/src/voip/audiostream.c
-index cfc8720c..5998d140 100644
+index cfc8720c..fcca2832 100644
 --- a/mediastreamer2/src/voip/audiostream.c
 +++ b/mediastreamer2/src/voip/audiostream.c
 @@ -31,6 +31,7 @@
@@ -368,15 +313,7 @@ index cfc8720c..5998d140 100644
  #include "mediastreamer2/msequalizer.h"
  #include "mediastreamer2/mseventqueue.h"
  #include "mediastreamer2/msfileplayer.h"
-@@ -358,6 +359,7 @@ static void audio_stream_free(AudioStream *stream) {
- 	if (stream->dtmfgen != NULL) ms_filter_destroy(stream->dtmfgen);
- 	if (stream->flowcontrol != NULL) ms_filter_destroy(stream->flowcontrol);
- 	if (stream->plc != NULL) ms_filter_destroy(stream->plc);
-+	if (stream->decoded_audio_tap != NULL) ms_filter_destroy(stream->decoded_audio_tap);
- 	if (stream->baudot_detector != NULL) ms_filter_destroy(stream->baudot_detector);
- 	if (stream->ec != NULL) ms_filter_destroy(stream->ec);
- 	if (stream->volrecv != NULL) ms_filter_destroy(stream->volrecv);
-@@ -456,6 +458,23 @@ static void audio_stream_payload_type_changed(RtpSession *session,
+@@ -456,6 +457,23 @@ static void audio_stream_payload_type_changed(RtpSession *session,
  			ms_filter_destroy(stream->ms.decoder);
  			stream->ms.decoder = dec;
  			configure_decoder(stream, pt, stream->sample_rate, stream->nchannels);
@@ -385,22 +322,22 @@ index cfc8720c..5998d140 100644
 +			 * codec that cannot honor the stream rate, e.g. PCMU's fixed
 +			 * 8 kHz). Plain int updates racing the ticker thread are benign:
 +			 * at worst one PCM block is labeled with the previous rate. */
-+			if (stream->decoded_audio_tap) {
++			if (stream->dummy) {
 +				int decoder_rate = 0;
 +				int decoder_channels = 0;
 +				if (ms_filter_call_method(stream->ms.decoder, MS_FILTER_GET_SAMPLE_RATE, &decoder_rate) == 0 &&
 +				    decoder_rate > 0) {
-+					ms_filter_call_method(stream->decoded_audio_tap, MS_FILTER_SET_SAMPLE_RATE, &decoder_rate);
++					ms_filter_call_method(stream->dummy, MS_FILTER_SET_SAMPLE_RATE, &decoder_rate);
 +				}
 +				if (ms_filter_call_method(stream->ms.decoder, MS_FILTER_GET_NCHANNELS, &decoder_channels) == 0 &&
 +				    decoder_channels > 0) {
-+					ms_filter_call_method(stream->decoded_audio_tap, MS_FILTER_SET_NCHANNELS, &decoder_channels);
++					ms_filter_call_method(stream->dummy, MS_FILTER_SET_NCHANNELS, &decoder_channels);
 +				}
 +			}
  			if (stream->write_resampler) {
  				audio_stream_configure_resampler(stream, stream->write_resampler, stream->ms.decoder,
  				                                 stream->soundwrite);
-@@ -1333,7 +1352,8 @@ int audio_stream_start_from_io(AudioStream *stream,
+@@ -1333,7 +1351,8 @@ int audio_stream_start_from_io(AudioStream *stream,
  
  	rtp_session_signal_connect(rtps, "telephone-event", (RtpCallback)on_dtmf_received, stream);
  	if (stream->ms.transfer_mode == FALSE) {
@@ -410,42 +347,158 @@ index cfc8720c..5998d140 100644
  	}
  
  	if (stream->ms.state == MSStreamPreparing) {
-@@ -1761,6 +1781,22 @@ int audio_stream_start_from_io(AudioStream *stream,
+@@ -1761,6 +1780,24 @@ int audio_stream_start_from_io(AudioStream *stream,
  		stream->plc = NULL;
  	}
  
 +	/* TextNow patch: decoded downlink audio tap (see msdecodedaudiotap.h).
-+	 * Created only when the application registered a process-wide callback,
-+	 * so unpatched behavior is byte-identical. Placed after the decoder and
++	 * Created only when the application registered a process-wide callback.
++	 * Reuses the existing dummy slot, which is reserved for the preload graph
++	 * and is NULL after unprepare, so the public AudioStream ABI is unchanged.
++	 * Placed after the decoder and
 +	 * generic PLC so the tapped PCM is the concealed signal the user hears,
 +	 * before receive volume / equalizer / resampler. */
 +	{
 +		MSDecodedAudioTapCallback tap_cb = NULL;
 +		void *tap_user_data = NULL;
 +		if (!skip_encoder_and_decoder && ms_get_global_decoded_audio_tap(&tap_cb, &tap_user_data)) {
-+			stream->decoded_audio_tap = ms_decoded_audio_tap_create_filter(stream->ms.factory, tap_cb, tap_user_data,
-+			                                                               stream, sample_rate, nchannels);
++			stream->dummy = ms_decoded_audio_tap_create_filter(stream->ms.factory, tap_cb, tap_user_data, stream,
++			                                                  sample_rate, nchannels);
 +		} else {
-+			stream->decoded_audio_tap = NULL;
++			stream->dummy = NULL;
 +		}
 +	}
 +
  	if ((stream->features & AUDIO_STREAM_FEATURE_FLOW_CONTROL) != 0) {
  		stream->flowcontrol = ms_factory_create_filter(stream->ms.factory, MS_AUDIO_FLOW_CONTROL_ID);
  		if (stream->flowcontrol) {
-@@ -1831,6 +1867,7 @@ int audio_stream_start_from_io(AudioStream *stream,
+@@ -1831,6 +1868,7 @@ int audio_stream_start_from_io(AudioStream *stream,
  	}
  	if (stream->baudot_detector) ms_connection_helper_link(&h, stream->baudot_detector, 0, 0);
  	if (stream->plc) ms_connection_helper_link(&h, stream->plc, 0, 0);
-+	if (stream->decoded_audio_tap) ms_connection_helper_link(&h, stream->decoded_audio_tap, 0, 0);
++	if (stream->dummy) ms_connection_helper_link(&h, stream->dummy, 0, 0);
  	if (stream->flowcontrol) ms_connection_helper_link(&h, stream->flowcontrol, 0, 0);
  	if (stream->dtmfgen) ms_connection_helper_link(&h, stream->dtmfgen, 0, 0);
  	if (stream->volrecv) ms_connection_helper_link(&h, stream->volrecv, 0, 0);
-@@ -2460,6 +2497,7 @@ void audio_stream_stop(AudioStream *stream) {
+@@ -2460,6 +2498,7 @@ void audio_stream_stop(AudioStream *stream) {
  			}
  			if (stream->baudot_detector != NULL) ms_connection_helper_unlink(&h, stream->baudot_detector, 0, 0);
  			if (stream->plc != NULL) ms_connection_helper_unlink(&h, stream->plc, 0, 0);
-+			if (stream->decoded_audio_tap != NULL) ms_connection_helper_unlink(&h, stream->decoded_audio_tap, 0, 0);
++			if (stream->dummy != NULL) ms_connection_helper_unlink(&h, stream->dummy, 0, 0);
  			if (stream->flowcontrol != NULL) ms_connection_helper_unlink(&h, stream->flowcontrol, 0, 0);
  			if (stream->dtmfgen != NULL) ms_connection_helper_unlink(&h, stream->dtmfgen, 0, 0);
  			if (stream->volrecv != NULL) ms_connection_helper_unlink(&h, stream->volrecv, 0, 0);
+diff --git a/mediastreamer2/tester/mediastreamer2_audio_stream_tester.c b/mediastreamer2/tester/mediastreamer2_audio_stream_tester.c
+index 46f5bbcd..db6b661c 100644
+--- a/mediastreamer2/tester/mediastreamer2_audio_stream_tester.c
++++ b/mediastreamer2/tester/mediastreamer2_audio_stream_tester.c
+@@ -22,6 +22,7 @@
+ 
+ #include "mediastreamer2/dtmfgen.h"
+ #include "mediastreamer2/mediastream.h"
++#include "mediastreamer2/msdecodedaudiotap.h"
+ #include "mediastreamer2/msfileplayer.h"
+ #include "mediastreamer2/msfilerec.h"
+ #include "mediastreamer2/msrtp.h"
+@@ -90,6 +91,29 @@ static void reset_stats(stats_t *s) {
+ 	memset(s, 0, sizeof(stats_t));
+ }
+ 
++static void decoded_audio_tap_disabled_is_inert(void) {
++	AudioStream *stream;
++	RtpProfile *profile = rtp_profile_new("decoded audio tap disabled");
++	char *hello_file = bc_tester_res(HELLO_8K_1S_FILE);
++	MSDecodedAudioTapCallback cb = NULL;
++	void *user_data = NULL;
++	int start_result;
++
++	ms_set_global_decoded_audio_tap(NULL, NULL);
++	rtp_profile_set_payload(profile, 0, &payload_type_pcmu8000);
++	stream = audio_stream_new(_factory, MARIELLE_RTP_PORT, MARIELLE_RTCP_PORT, FALSE);
++	start_result = audio_stream_start_full(stream, profile, "127.0.0.1", MARGAUX_RTP_PORT, "127.0.0.1",
++	                                       MARGAUX_RTCP_PORT, 0, 50, hello_file, NULL, NULL, NULL, 0);
++
++	BC_ASSERT_EQUAL(start_result, 0, int, "%d");
++	BC_ASSERT_PTR_NULL(stream->dummy);
++	BC_ASSERT_FALSE(ms_get_global_decoded_audio_tap(&cb, &user_data));
++
++	audio_stream_stop(stream);
++	rtp_profile_destroy(profile);
++	bctbx_free(hello_file);
++}
++
+ static void notify_cb(void *user_data, BCTBX_UNUSED(MSFilter *f), unsigned int event, BCTBX_UNUSED(void *eventdata)) {
+ 	stats_t *stats = (stats_t *)user_data;
+ 	switch (event) {
+@@ -1695,6 +1719,7 @@ static void voice_activity_detection(void) {
+ }
+ 
+ static test_t tests[] = {
++    TEST_NO_TAG("Decoded audio tap disabled is inert", decoded_audio_tap_disabled_is_inert),
+     TEST_NO_TAG("Basic audio stream", basic_audio_stream),
+     TEST_NO_TAG("Multicast audio stream", multicast_audio_stream),
+     TEST_NO_TAG("Encrypted audio stream", encrypted_audio_stream),
+diff --git a/mediastreamer2/tester/mediastreamer2_framework_tester.c b/mediastreamer2/tester/mediastreamer2_framework_tester.c
+index 3cc204fb..1596de59 100644
+--- a/mediastreamer2/tester/mediastreamer2_framework_tester.c
++++ b/mediastreamer2/tester/mediastreamer2_framework_tester.c
+@@ -20,6 +20,7 @@
+ 
+ #include "mediastreamer2/dtmfgen.h"
+ #include "mediastreamer2/mediastream.h"
++#include "mediastreamer2/msdecodedaudiotap.h"
+ #include "mediastreamer2/msfileplayer.h"
+ #include "mediastreamer2/msfilerec.h"
+ #include "mediastreamer2/msrtp.h"
+@@ -67,6 +68,43 @@ static void filter_register_tester(void) {
+ 
+ 	ms_factory_destroy(factory);
+ }
++
++static void decoded_audio_tap_test_callback(BCTBX_UNUSED(void *user_data),
++                                            BCTBX_UNUSED(const void *stream_id),
++                                            BCTBX_UNUSED(const int16_t *pcm),
++                                            BCTBX_UNUSED(size_t nsamples),
++                                            BCTBX_UNUSED(int sample_rate),
++                                            BCTBX_UNUSED(int nchannels)) {
++}
++
++static void decoded_audio_tap_registration_tester(void) {
++	MSDecodedAudioTapCallback cb = NULL;
++	void *user_data = (void *)0x1;
++	int callback_context = 0;
++	MSFactory *factory;
++	MSFilter *filter;
++
++	BC_ASSERT_FALSE(ms_get_global_decoded_audio_tap(&cb, &user_data));
++	BC_ASSERT_PTR_NULL(cb);
++	BC_ASSERT_PTR_NULL(user_data);
++
++	factory = ms_tester_factory_new();
++	BC_ASSERT_PTR_NULL(ms_factory_lookup_filter_by_name(factory, "MSDecodedAudioTap"));
++	filter = ms_decoded_audio_tap_create_filter(factory, NULL, NULL, NULL, 8000, 1);
++	BC_ASSERT_PTR_NOT_NULL(filter);
++	if (filter != NULL) ms_filter_destroy(filter);
++	ms_factory_destroy(factory);
++
++	ms_set_global_decoded_audio_tap(decoded_audio_tap_test_callback, &callback_context);
++	BC_ASSERT_TRUE(ms_get_global_decoded_audio_tap(&cb, &user_data));
++	BC_ASSERT_TRUE(cb == decoded_audio_tap_test_callback);
++	BC_ASSERT_TRUE(user_data == &callback_context);
++
++	ms_set_global_decoded_audio_tap(NULL, NULL);
++	BC_ASSERT_FALSE(ms_get_global_decoded_audio_tap(&cb, &user_data));
++	BC_ASSERT_PTR_NULL(cb);
++	BC_ASSERT_PTR_NULL(user_data);
++}
+ #ifdef VIDEO_ENABLED
+ static uint8_t pix_value(PixType type, size_t idx) {
+ 	uint8_t idx_code = idx % 32;
+@@ -602,6 +640,7 @@ static void test_worker_threads_2(void) {
+ }
+ 
+ static test_t tests[] = {TEST_NO_TAG("Multiple ms_voip_init", filter_register_tester),
++                         TEST_NO_TAG("Decoded audio tap is inert by default", decoded_audio_tap_registration_tester),
+                          TEST_NO_TAG("Is multicast", test_is_multicast),
+                          TEST_NO_TAG("FilterDesc enabling/disabling", test_filterdesc_enable_disable),
+                          TEST_NO_TAG("Worker threads", test_worker_threads),
