@@ -15,6 +15,61 @@ git submodule update --init --recursive
 git checkout 5.4.85
 ```
 
+# Opus 1.5 deep PLC / OSCE build (CALL-357)
+
+Reproducible recipe for the 5.5.0-based build with Opus 1.5.2 deep PLC/OSCE and
+decoder-complexity control. Patches for this stack live on the
+`CALL-357-opus-15-testing` branch of this repo.
+
+### Base
+
+```
+git checkout 5.5.0
+git submodule update --init --recursive   # flaky; retry until all submodules sync
+```
+
+### Cherry-pick upstream Opus 1.5 support (from linphone-sdk master)
+
+In order:
+
+1. `b089673eb2dc7467622098168ea0aa3455b2a367` — "Allow setting the complexity of the
+   opus decoder by setting the `_complexity` parameter in the recv fmtp of the opus
+   payload."
+2. `28d4ed9d750decbb4edbb6f23875a306ba7f750c` — "Update opus to v1.5.2 & activate OSCE
+   (deep PLC and LACE/noLACE)." Also disables fixed point on mobile (OSCE needs float).
+3. `9bfce4d5ac2755e64be76abcb01e7354c73f13df` — "Update opus submodule to fix build for
+   Android armv7." This is upstream's adoption of our `opus_arm_dnn_rtcd_fix.patch`;
+   once cherry-picked, skip that patch.
+
+### Apply TN patches
+
+Apply from `CALL-357-opus-15-testing`:
+network_simulator_packet_loss, delay_ice_for_external_callback, disable_firebase_push,
+disable_local_network_permission, expose_call_reconnect, ice_reuse_creds,
+is_audio_session_active, remove_rings, revert_96de42ced (one hunk may need
+hand-porting), rtp_payload_checks, run_loop_crash_fix, start_audio_unit_on_main_thread,
+terminate_on_cancel, use_system_http_proxy, camera_and_data_sync_permission.
+
+Skip — already upstream in 5.5.0 or superseded: cherry_pick_nat_policy_crash_fix,
+cherry_pick_audio_focus_crash_fix, turn_end_hang_fix (superseded by upstream
+non-blocking TLS handshake), opus_arm_dnn_rtcd_fix (in opus 4b8156b2 via cherry-pick 3
+above), xcode_build_fixes (iOS toolchain file no longer exists).
+
+### Behavioral gating
+
+The stack is inert unless Opus is the negotiated codec AND the app opts in:
+
+- Decoder complexity is read only by the Opus decoder (`msopus.c` fmtp handler for
+  `_complexity`) and defaults to 0, so deep PLC/OSCE stays off unless the app sets
+  `_complexity` on the opus payload's recv fmtp. `_`-prefixed params are stripped from
+  outgoing SDP, so nothing leaks on the wire. Other codecs never see it.
+- `linphone_core_enable_network_simulator_packet_loss()` (test harness only) does
+  nothing unless explicitly called.
+- The one unconditional change: the Opus 1.5.2 upgrade itself (float instead of fixed
+  point on mobile) applies whenever opus encodes/decodes, regardless of complexity.
+
+Then build with the Android cmake steps below and upload the AAR to Nexus.
+
 ## Follow Linphone SDK README's build dependencies section as needed, then build and package using the following steps.
 
 ### Prepare path to our SPM git dir, and the correct version tag
