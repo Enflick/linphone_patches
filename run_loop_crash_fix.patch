@@ -91,17 +91,17 @@ index e2371432e..aacabcc6b 100644
 +/**
 + * Tells whether we should enable a hack to read the destroyed mutex state on the run loop.
 + * @param core #LinphoneCore object @notnil
-+ * @ingroup media_parameters
++ * @ingroup group_media_parameters
 + */
-+bool_t linphone_core_get_run_loop_read_mutex_state_hack_enabled(const LinphoneCore *core);
++LINPHONE_PUBLIC bool_t linphone_core_get_run_loop_read_mutex_state_hack_enabled(const LinphoneCore *core);
 +
 +/**
 + * Tells whether we should enable a hack to read the destroyed mutex state on the run loop.
 + * @param core #LinphoneCore object @notnil
 + * @param enable Boolean value telling whether the feature is enabled.
-+ * @ingroup media_parameters
++ * @ingroup group_media_parameters
 + */
-+void linphone_core_set_run_loop_read_mutex_state_hack_enabled(LinphoneCore *core, bool_t enable);
++LINPHONE_PUBLIC void linphone_core_set_run_loop_read_mutex_state_hack_enabled(LinphoneCore *core, bool_t enable);
 +
 +// TN patch
 +
