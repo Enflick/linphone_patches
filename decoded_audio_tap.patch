@@ -10,18 +10,6 @@ index f66e64dd..63c8b32c 100644
  	mstee.h
  	msticker.h
  	mstonedetector.h
-diff --git a/mediastreamer2/include/mediastreamer2/Makefile.am b/mediastreamer2/include/mediastreamer2/Makefile.am
-index a97b565a..8b2a9cc1 100644
---- a/mediastreamer2/include/mediastreamer2/Makefile.am
-+++ b/mediastreamer2/include/mediastreamer2/Makefile.am
-@@ -18,6 +18,7 @@ mediastreamer2_include_HEADERS=allfilters.h \
- 				mscodecutils.h \
- 				mscommon.h \
- 				msconference.h \
-+				msdecodedaudiotap.h \
- 				msequalizer.h \
- 				mseventqueue.h \
- 				msextdisplay.h \
 diff --git a/mediastreamer2/include/mediastreamer2/msdecodedaudiotap.h b/mediastreamer2/include/mediastreamer2/msdecodedaudiotap.h
 new file mode 100644
 index 00000000..4e364dee
@@ -129,18 +117,6 @@ index 0568efe3..e9605671 100644
  	otherfilters/tee.c
  	otherfilters/void.c
  )
-diff --git a/mediastreamer2/src/Makefile.am b/mediastreamer2/src/Makefile.am
-index 5ffe7227..53e98268 100755
---- a/mediastreamer2/src/Makefile.am
-+++ b/mediastreamer2/src/Makefile.am
-@@ -76,6 +76,7 @@ libmediastreamer_base_la_SOURCES=	base/mscommon.c \
- 					base/eventqueue.c \
- 					base/mssndcard.c \
- 					base/msfactory.c \
-+					otherfilters/decodedaudiotap.c \
- 					otherfilters/tee.c \
- 					otherfilters/join.c \
- 					base/msvideopresets.c \
 diff --git a/mediastreamer2/src/otherfilters/decodedaudiotap.c b/mediastreamer2/src/otherfilters/decodedaudiotap.c
 new file mode 100644
 index 00000000..271ca22a
@@ -337,16 +313,6 @@ index cfc8720c..fcca2832 100644
  			if (stream->write_resampler) {
  				audio_stream_configure_resampler(stream, stream->write_resampler, stream->ms.decoder,
  				                                 stream->soundwrite);
-@@ -1333,7 +1351,8 @@ int audio_stream_start_from_io(AudioStream *stream,
- 
- 	rtp_session_signal_connect(rtps, "telephone-event", (RtpCallback)on_dtmf_received, stream);
- 	if (stream->ms.transfer_mode == FALSE) {
--		rtp_session_signal_connect(rtps, "payload_type_changed", (RtpCallback)audio_stream_payload_type_changed, stream);
-+		rtp_session_signal_connect(rtps, "payload_type_changed", (RtpCallback)audio_stream_payload_type_changed,
-+		                           stream);
- 	}
- 
- 	if (stream->ms.state == MSStreamPreparing) {
 @@ -1761,6 +1780,24 @@ int audio_stream_start_from_io(AudioStream *stream,
  		stream->plc = NULL;
  	}
@@ -363,7 +329,7 @@ index cfc8720c..fcca2832 100644
 +		void *tap_user_data = NULL;
 +		if (!skip_encoder_and_decoder && ms_get_global_decoded_audio_tap(&tap_cb, &tap_user_data)) {
 +			stream->dummy = ms_decoded_audio_tap_create_filter(stream->ms.factory, tap_cb, tap_user_data, stream,
-+			                                                  sample_rate, nchannels);
++			                                                   sample_rate, nchannels);
 +		} else {
 +			stream->dummy = NULL;
 +		}
