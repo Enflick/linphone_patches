@@ -1,0 +1,5 @@
+---
+triple:          'x86_64-apple-darwin'
+binary-path:     'linphone-sdk-novideo/ios-x86_64-simulator/Frameworks/belle-sip.framework/belle-sip'
+relocations:     []
+...

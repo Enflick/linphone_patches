@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'linphone-sdk-novideo/ios-x86_64-simulator/Frameworks/mscodec2.framework/mscodec2'
+relocations:     []
+...

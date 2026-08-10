@@ -24,7 +24,7 @@
 #include "linphone/api/c-types.h"
 
 /**
- * @addtogroup authentication
+ * @addtogroup group_authentication
  * @{
  */
 
@@ -33,14 +33,14 @@ extern "C" {
 #endif
 
 /**
- * Get the token as a string.
+ * Gets the token as a string.
  * @param obj the #LinphoneBearerToken @notnil
  * @return the token. @notnil
  */
 LINPHONE_PUBLIC const char *linphone_bearer_token_get_token(const LinphoneBearerToken *obj);
 
 /**
- * Get the token exiration time, as a number of seconds since EPOCH.
+ * Gets the token exiration time, as a number of seconds since EPOCH.
  * @param obj the #LinphoneBearerToken @notnil
  * @return the expiration time
  */

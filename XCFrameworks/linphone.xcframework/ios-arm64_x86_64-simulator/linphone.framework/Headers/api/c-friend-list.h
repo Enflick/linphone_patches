@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup buddy_list
+ * @addtogroup group_contacts
  * @{
  */
 
@@ -147,6 +147,17 @@ LINPHONE_PUBLIC LinphoneFriendListStatus linphone_friend_list_add_local_friend(L
  **/
 LINPHONE_PUBLIC LinphoneFriendListStatus linphone_friend_list_remove_friend(LinphoneFriendList *friend_list,
                                                                             LinphoneFriend *linphone_friend);
+/**
+ * Synchronize a local friendlist with another list of friends.
+ * All friends in common will be updated using the data from the source friends.
+ * Missing friends from the source friends will be added. Extra friends from the local friendlist will be removed.
+ * @param friend_list #LinphoneFriendList object that will be changed. @notnil
+ * @param source_friends the list of #LinphoneFriend whose data will be copied. (not a #LinphoneFriendList !)
+ * \bctbx_list{LinphoneFriend} @notnil
+ * @return true if the friendlist has been modified, false if no change happened
+ **/
+LINPHONE_PUBLIC bool_t linphone_friend_list_synchronize_friends_with(LinphoneFriendList *friend_list,
+                                                                     const bctbx_list_t *source_friends);
 
 /**
  * Retrieves the list of #LinphoneFriend from this LinphoneFriendList.
@@ -240,14 +251,14 @@ LINPHONE_PUBLIC const char *linphone_friend_list_get_uri(const LinphoneFriendLis
 LINPHONE_PUBLIC void linphone_friend_list_set_uri(LinphoneFriendList *friend_list, const char *uri);
 
 /**
- * Get wheter the subscription of the friend list is bodyless or not.
+ * Get wether the subscription of the friend list is bodyless or not.
  * @param friend_list #LinphoneFriendList object. @notnil
- * @return Wheter the subscription of the friend list is bodyless or not.
+ * @return Wether the subscription of the friend list is bodyless or not.
  **/
 LINPHONE_PUBLIC bool_t linphone_friend_list_is_subscription_bodyless(const LinphoneFriendList *friend_list);
 
 /**
- * Set wheter the subscription of the friend list is bodyless or not.
+ * Set wether the subscription of the friend list is bodyless or not.
  * @param friend_list #LinphoneFriendList object. @notnil
  * @param bodyless boolean telling if the subscription of the friend list is bodyless or not.
  **/
@@ -467,18 +478,34 @@ LINPHONE_PUBLIC void linphone_friend_list_enable_subscriptions(LinphoneFriendLis
 LINPHONE_PUBLIC bool_t linphone_friend_list_subscriptions_enabled(LinphoneFriendList *friend_list);
 
 /**
- * Gets whether this friend list and it's friends will be stored in DB or not
+ * Gets whether this friend list and its friends will be stored in the database or not.
  * @param list the #LinphoneFriendList object @notnil
- * @return Whether the list and it's friends will be saved in database or not
+ * @return Whether the list and its friends will be saved in the database or not
  */
 LINPHONE_PUBLIC bool_t linphone_friend_list_database_storage_enabled(const LinphoneFriendList *list);
 
 /**
- * Sets whether this friend list and it's friends will be stored in DB or not
+ * Sets whether this friend list and its friends will be stored in the database or not.
  * @param list the #LinphoneFriendList object @notnil
  * @param enable TRUE to enable this friend list storage in DB, FALSE to disable it.
  */
 LINPHONE_PUBLIC void linphone_friend_list_enable_database_storage(LinphoneFriendList *list, bool_t enable);
+
+/**
+ * Gets whether this friend list is read only or not.
+ * If it is, you won't be able to add/remove friends in/from it, nor to edit existing friends in it.
+ * @param list the #LinphoneFriendList object @notnil
+ * @return TRUE if this friend list is in read-only mode and thus can't be modified, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_friend_list_get_is_read_only(const LinphoneFriendList *list);
+
+/**
+ * Sets whether this friend list is read only or not.
+ * If it is, you won't be able to add/remove friends in/from it, nor to edit existing friends in it.
+ * @param list the #LinphoneFriendList object @notnil
+ * @param read_only TRUE to make this friend list "read only", FALSE otherwise.
+ */
+LINPHONE_PUBLIC void linphone_friend_list_set_is_read_only(LinphoneFriendList *list, bool_t read_only);
 
 /**
  * @}

@@ -179,6 +179,9 @@ typedef enum _MSRecorderState MSRecorderState;
 /** restore a previous state suppling the echo canceller config as base64 encoded string */
 #define MS_ECHO_CANCELLER_SET_STATE_STRING MS_FILTER_METHOD(MSFilterEchoCancellerInterface, 6, const char)
 
+/** retrieve echo canceller current median delay applied in milliseconds*/
+#define MS_ECHO_CANCELLER_GET_DELAY MS_FILTER_METHOD(MSFilterEchoCancellerInterface, 7, int)
+
 /** Event definitions for video decoders */
 #define MS_VIDEO_DECODER_DECODING_ERRORS MS_FILTER_EVENT_NO_ARG(MSFilterVideoDecoderInterface, 0)
 #define MS_VIDEO_DECODER_FIRST_IMAGE_DECODED MS_FILTER_EVENT_NO_ARG(MSFilterVideoDecoderInterface, 1)
@@ -237,6 +240,8 @@ typedef enum _MSRecorderState MSRecorderState;
 #define MS_VIDEO_ENCODER_IS_HARDWARE_ACCELERATED MS_FILTER_METHOD(MSFilterVideoEncoderInterface, 10, bool_t)
 #define MS_VIDEO_ENCODER_GET_CONFIGURATION MS_FILTER_METHOD(MSFilterVideoEncoderInterface, 11, MSVideoConfiguration)
 #define MS_VIDEO_ENCODER_ENABLE_DIVIDE_PACKETS_EQUAL_SIZE MS_FILTER_METHOD(MSFilterVideoEncoderInterface, 12, bool_t)
+/* Optimize encoding for screen content (i.e when doing screen sharing) */
+#define MS_VIDEO_ENCODER_ENABLE_SCREEN_CONTENT_MODE MS_FILTER_METHOD(MSFilterVideoEncoderInterface, 13, bool_t)
 
 /** Interface definitions for audio capture */
 

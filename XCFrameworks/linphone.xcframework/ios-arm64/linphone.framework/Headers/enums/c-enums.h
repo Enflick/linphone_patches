@@ -27,7 +27,7 @@
 
 /**
  * @brief All kinds of alerts
- * @ingroup alert
+ * @ingroup group_alert
  */
 typedef enum _LinphoneAlertTypes {
 
@@ -60,10 +60,10 @@ typedef enum _LinphoneAlertTypes {
 	 */
 	LinphoneAlertQoSHighRemoteLossRate,
 	/** Packet Burst phenomenon
-	 *  @note Use the key "burst_occured_interval" in the section "alerts::network" to set or get the interval at which
+	 *  @note Use the key "burst_occurred_interval" in the section "alerts::network" to set or get the interval at which
 	 * the problem is checked in a #LinphoneConfig.
 	 */
-	LinphoneAlertQoSBurstOccured,
+	LinphoneAlertQoSBurstOccurred,
 	/** Loss rate is significant but retransmissions fail to arrive on time.
 	 * Information provided: nack-performance (float) the fraction of lost packets recovered thanks to nack-triggered
 	 * retransmissions.
@@ -104,7 +104,7 @@ typedef enum _LinphoneAlertTypes {
 
 /**
  * All signal types that a device can use.
- * @ingroup signalInformation
+ * @ingroup group_misc
  */
 typedef enum _LinphoneSignalType {
 	LinphoneSignalTypeWifi = 0,
@@ -113,7 +113,7 @@ typedef enum _LinphoneSignalType {
 } LinphoneSignalType;
 /**
  * All signal units that a device can use.
- * @ingroup signalInformation
+ * @ingroup group_misc
  */
 typedef enum _LinphoneSignalStrengthUnit {
 	LinphoneSignalStrengthUnitRssi = 0,
@@ -124,7 +124,7 @@ typedef enum _LinphoneSignalStrengthUnit {
  * Codec priority policies.
  * This enum represents different policies for managing offered codec lists during calls, as well as the offer-answer
  * logic. Currently, policies can be applied only for video codecs.
- * @ingroup media_parameters
+ * @ingroup group_media_parameters
  */
 typedef enum _LinphoneCodecPriorityPolicy {
 	LinphoneCodecPriorityPolicyBasic =
@@ -141,7 +141,7 @@ typedef enum _LinphoneCodecPriorityPolicy {
  * validation was made with the remote(s) end(s). A #LinphoneSecurityLevelEndToEndEncryptedAndVerified level means it's
  * end-to-end encrypted and SAS validation was made. An #LinphoneSecurityLevelUnsafe level means end-to-end-encrypted
  * but it's likely a man-in-the-middle exists between you and one device.
- * @ingroup misc
+ * @ingroup group_misc
  */
 typedef enum _LinphoneSecurityLevel {
 	LinphoneSecurityLevelUnsafe = 0,                       /**< Security failure */
@@ -154,7 +154,7 @@ typedef enum _LinphoneSecurityLevel {
 /**
  * List of all supported #LinphoneAccountManagerServicesRequest requests,
  * allowing to know which one triggered either a callback from the #LinphoneAccountManagerServicesRequestCbs.
- * @ingroup account_creator
+ * @ingroup group_deprecated
  */
 typedef enum _LinphoneAccountManagerServicesRequestType {
 	LinphoneAccountManagerServicesRequestTypeSendAccountCreationTokenByPush =
@@ -177,6 +177,8 @@ typedef enum _LinphoneAccountManagerServicesRequestType {
 	    7, /**< Uses the code received by email to confirm the link between an account and an email address */
 	LinphoneAccountManagerServicesRequestTypeGetDevicesList = 8, /**< Gets the list of devices for account */
 	LinphoneAccountManagerServicesRequestTypeDeleteDevice = 9,   /**< Removes an account device */
+	LinphoneAccountManagerServicesRequestTypeSendAccountRecoveryTokenByPush =
+	    10, /**< Asks the account manager to send us an account recovery token by push notification */
 
 	LinphoneAccountManagerServicesRequestTypeGetCreationTokenAsAdmin = 100,
 	LinphoneAccountManagerServicesRequestTypeGetAccountInfoAsAdmin = 101,
@@ -190,7 +192,7 @@ typedef enum _LinphoneAccountManagerServicesRequestType {
 
 /**
  * @brief Enum representing the file format of a recording.
- * @ingroup call_control
+ * @ingroup group_call_control
  **/
 typedef enum _LinphoneMediaFileFormat {
 	LinphoneMediaFileFormatUnknown,
@@ -199,5 +201,19 @@ typedef enum _LinphoneMediaFileFormat {
 	LinphoneMediaFileFormatSmff /** < Simple Multimedia File Format, a proprietary format that supports video, .smff
 	                                  file extension. */
 } LinphoneMediaFileFormat;
+
+/**
+ * Ephemeral chat message policies.
+ * This enum represents different policies for managing ephemeral chat message lifetimes.
+ * @ingroup group_chatroom
+ */
+typedef enum _LinphoneEphemeralChatMessagePolicy {
+	LinphoneEphemeralChatMessagePolicyDefault =
+	    0, /**< In this mode, an ephemeral chat message expires at the same time for all participants, when every
+	          participant has read the message and its lifetime expires. */
+	LinphoneEphemeralChatMessagePolicyIndividual =
+	    1 /**< In this mode, an ephemeral chat message expires independently for each participant, after the duration of
+	         the lifetime once this participant has read the message. */
+} LinphoneEphemeralChatMessagePolicy;
 
 #endif

@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup contacts
+ * @addtogroup group_contacts
  * @{
  */
 
@@ -56,33 +56,37 @@ LINPHONE_PUBLIC void linphone_card_dav_params_unref(LinphoneCardDavParams *param
 
 /**
  * Gets the list of vCard RFC fields to use to match user input text on.
- * For example you can use "FN", "N", "IMPP", "ORG", etc...
- * @param The #LinphoneCardDavParams object. @notnil
+ * For example, you can use "FN", "N", "IMPP", "ORG", etc...
+ * @param params The #LinphoneCardDavParams object. @notnil
  * @return The list of vCard fields to make the query on using user input. \bctbx_list{char *} @maybenil @tobefreed
  */
 LINPHONE_PUBLIC bctbx_list_t *linphone_card_dav_params_get_user_input_fields(const LinphoneCardDavParams *params);
 
 /**
  * Sets the list of vCard RFC fields to use to match user input text on.
- * For example you can use "FN", "N", "IMPP", "ORG", etc...
- * @param The #LinphoneCardDavParams object. @notnil
+ * For example, you can use "FN", "N", "IMPP", "ORG", etc...
+ * @param params The #LinphoneCardDavParams object. @notnil
  * @param list the list of vCard RFC fields to use to match user input text on. \bctbx_list{char *} @maybenil
  */
 LINPHONE_PUBLIC void linphone_card_dav_params_set_user_input_fields(LinphoneCardDavParams *params, bctbx_list_t *list);
 
 /**
  * Gets the list of vCard RFC fields to use to match the domain filter on.
- * For example you can use "IMPP".
- * @param The #LinphoneCardDavParams object. @notnil
+ * For example, you can use "IMPP".
+ * @param params The #LinphoneCardDavParams object. @notnil
  * @return The list of vCard fields to make the query on using domain filter. \bctbx_list{char *} @maybenil @tobefreed
+ * @warning DO NOT USE ANYMORE, it won't have any effect.
+ * @deprecated 06/10/2025 domain filter will be applied locally instead of using a CardDAV prop filter XML tag.
  */
 LINPHONE_PUBLIC bctbx_list_t *linphone_card_dav_params_get_domain_fields(const LinphoneCardDavParams *params);
 
 /**
  * Sets the list of vCard RFC fields to use to match the domain filter on.
- * For example you can use "IMPP".
- * @param The #LinphoneCardDavParams object. @notnil
+ * For example, you can use "IMPP".
+ * @param params The #LinphoneCardDavParams object. @notnil
  * @param list the list of vCard RFC fields to use to match the domain filter on. \bctbx_list{const char *}  @maybenil
+ * @warning DO NOT USE ANYMORE, it won't have any effect.
+ * @deprecated 06/10/2025 domain filter will be applied locally instead of using a CardDAV prop filter XML tag.
  */
 LINPHONE_PUBLIC void linphone_card_dav_params_set_domain_fields(LinphoneCardDavParams *params,
                                                                 const bctbx_list_t *list);
@@ -90,7 +94,7 @@ LINPHONE_PUBLIC void linphone_card_dav_params_set_domain_fields(LinphoneCardDavP
 /**
  * Gets the matching policy: TRUE if the remote vCard value must match the filter exactly, FALSE if it only needs to
  * contain the filter.
- * @param The #LinphoneCardDavParams object. @notnil
+ * @param params The #LinphoneCardDavParams object. @notnil
  * @return The matching policy: TRUE if the remote vCard value must match the filter exactly, FALSE if it only needs to
  * contain the filter.
  */
@@ -99,7 +103,7 @@ LINPHONE_PUBLIC bool_t linphone_card_dav_params_get_use_exact_match_policy(const
 /**
  * Sets the matching policy: TRUE if the remote vCard value must match the filter exactly, FALSE if it only needs to
  * contain the filter.
- * @param The #LinphoneCardDavParams object. @notnil
+ * @param params The #LinphoneCardDavParams object. @notnil
  * @param exact_match the policy to use: TRUE if the remote vCard value must match the filter exactly, FALSE if it only
  * needs to contain the filter.
  */

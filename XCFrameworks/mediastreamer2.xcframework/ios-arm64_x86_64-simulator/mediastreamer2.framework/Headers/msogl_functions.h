@@ -159,6 +159,7 @@ typedef void(GL_APIENTRY *resolveGlGetShaderPrecisionFormat)(GLenum shadertype,
 typedef void(GL_APIENTRY *resolveGlGetShaderSource)(GLuint shader, GLsizei bufsize, GLsizei *length, char *source);
 typedef void(GL_APIENTRY *resolveGlGetShaderiv)(GLuint shader, GLenum pname, GLint *params);
 typedef const GLubyte *(GL_APIENTRY *resolveGlGetString)(GLenum name);
+typedef const GLubyte *(GL_APIENTRY *resolveGlGetStringi)(GLenum name, GLuint index);
 typedef void(GL_APIENTRY *resolveGlGetTexParameterfv)(GLenum target, GLenum pname, GLfloat *params);
 typedef void(GL_APIENTRY *resolveGlGetTexParameteriv)(GLenum target, GLenum pname, GLint *params);
 typedef GLint(GL_APIENTRY *resolveGlGetUniformLocation)(GLuint program, const char *name);
@@ -370,7 +371,7 @@ struct OpenGlFunctions {
 	// resolveGlEnable glEnable;
 	resolveGlEnableVertexAttribArray glEnableVertexAttribArray;
 	resolveGlFinish glFinish;
-	// resolveGlFlush glFlush;
+	resolveGlFlush glFlush;
 	// resolveGlFramebufferRenderbuffer glFramebufferRenderbuffer;
 	// resolveGlFramebufferTexture2D glFramebufferTexture2D;
 	// resolveGlFrontFace glFrontFace;
@@ -397,6 +398,7 @@ struct OpenGlFunctions {
 	// resolveGlGetShaderSource glGetShaderSource;
 	resolveGlGetShaderiv glGetShaderiv;
 	resolveGlGetString glGetString;
+	resolveGlGetStringi glGetStringi;
 	// resolveGlGetTexParameterfv glGetTexParameterfv;
 	// resolveGlGetTexParameteriv glGetTexParameteriv;
 	resolveGlGetUniformLocation glGetUniformLocation;
@@ -503,6 +505,12 @@ struct OpenGlFunctions {
 	void *(*getProcAddress)(const char *name); // Set it to let MS2 initialize all functions
 	bool_t eglInitialized;
 	bool_t glInitialized;
+	bool_t loadQtLibs;
+#if defined(_WIN32)
+	HMODULE openglLibrary, openglFallbackLibrary, eglLibrary;
+#else
+	void *openglLibrary, *openglFallbackLibrary, *eglLibrary;
+#endif
 };
 
 typedef struct OpenGlFunctions OpenGlFunctions;

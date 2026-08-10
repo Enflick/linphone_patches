@@ -24,7 +24,7 @@
 #include "linphone/api/c-types.h"
 
 /**
- * @addtogroup audio
+ * @addtogroup group_audio_devices
  * @{
  */
 
@@ -67,6 +67,21 @@ linphone_audio_device_get_capabilities(const LinphoneAudioDevice *audio_device);
  * @returns the #LinphoneAudioDeviceType of the audio device (microphone, speaker, earpiece, bluetooth, etc...)
  */
 LINPHONE_PUBLIC LinphoneAudioDeviceType linphone_audio_device_get_type(const LinphoneAudioDevice *audio_device);
+
+/**
+ * Returns whether the audio device is used to play the ringtone or not.
+ * @param audio_device the #LinphoneAudioDevice. @notnil
+ * @return Whether the audio device is used to play the ringtone or not.
+ */
+LINPHONE_PUBLIC bool_t linphone_audio_device_get_use_for_ringing(const LinphoneAudioDevice *audio_device);
+
+/**
+ * Tells the audio device to be used to play the ringtone or not.
+ * @param audio_device the #LinphoneAudioDevice. @notnil
+ * @param use_for_ringing Whether the audio device must be used to play the ringtone or not.
+ */
+LINPHONE_PUBLIC void linphone_audio_device_set_use_for_ringing(LinphoneAudioDevice *audio_device,
+                                                               bool_t use_for_ringing);
 
 /**
  * Returns whether or not the audio device has the given capability

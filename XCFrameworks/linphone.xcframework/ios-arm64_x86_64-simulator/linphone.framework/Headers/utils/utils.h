@@ -75,7 +75,17 @@ constexpr T *getPtr(T &object) {
 	return &object;
 }
 
+/* case-insensitive equals */
 LINPHONE_PUBLIC bool iequals(const std::string &a, const std::string &b);
+
+/*
+ * Unquote a string if surrounded with a quoting characters such as "", '', or <>
+ * Otherwise returns it as-is.
+ * The function assumes the quoting character if present is the first one,
+ * and also assumes that if present, the last one is also the quoting character.
+ */
+LINPHONE_PUBLIC std::string unquote(const std::string &input, int quoteChar);
+LINPHONE_PUBLIC bool iequalsIgnoreBrakets(const std::string &a, const std::string &b);
 
 LINPHONE_PUBLIC std::string toString(int val);
 LINPHONE_PUBLIC std::string toString(long val);
@@ -204,12 +214,51 @@ std::list<T> bctbxListToList(bctbx_list_t *l) {
 	return cppList;
 }
 
+template <typename T,
+          typename U,
+          typename cmpFunctor = std::function<bool(const std::shared_ptr<T> &, const std::shared_ptr<U> &)>,
+          typename std::enable_if<std::is_same<typename std::remove_const<T>::type,
+                                               typename std::remove_const<U>::type>::value>::type * = nullptr>
+bool isSharedPtrObjectLess(const std::shared_ptr<T> &lhs, const std::shared_ptr<U> &rhs, cmpFunctor cmp = nullptr) {
+	if (!rhs) return false;
+	if (!lhs) return true;
+	bool ret = false;
+	if (cmp == nullptr) {
+		ret = (*lhs < *rhs);
+	} else {
+		ret = cmp(lhs, rhs);
+	}
+	return ret;
+}
+
+template <typename T,
+          typename U,
+          typename cmpFunctor = std::function<bool(const std::shared_ptr<T> &, const std::shared_ptr<U> &)>,
+          typename std::enable_if<std::is_same<typename std::remove_const<T>::type,
+                                               typename std::remove_const<U>::type>::value>::type * = nullptr>
+bool isSharedPtrObjectEqual(const std::shared_ptr<T> &lhs, const std::shared_ptr<U> &rhs, cmpFunctor cmp = nullptr) {
+	if (!lhs && !rhs) {
+		return true;
+	} else if (lhs && !rhs) {
+		return false;
+	} else if (!lhs && rhs) {
+		return false;
+	}
+	bool ret = false;
+	if (cmp == nullptr) {
+		ret = (*lhs == *rhs);
+	} else {
+		ret = cmp(lhs, rhs);
+	}
+	return ret;
+}
+
 LINPHONE_PUBLIC std::tm getTimeTAsTm(time_t t);
-LINPHONE_PUBLIC time_t getTmAsTimeT(const std::tm &t);
+LINPHONE_PUBLIC time_t getTmAsTimeT(std::tm t);
 LINPHONE_PUBLIC std::string timeToIso8601(time_t t);
 LINPHONE_PUBLIC time_t iso8601ToTime(const std::string &iso8601DateTime);
 LINPHONE_PUBLIC std::string getTimeAsString(const std::string &format, time_t t);
-LINPHONE_PUBLIC time_t getStringToTime(const std::string &format, const std::string &s);
+LINPHONE_PUBLIC time_t getTimeFromString(const std::string &format, const std::string &s);
 
 LINPHONE_PUBLIC std::string localeToUtf8(const std::string &str);
 LINPHONE_PUBLIC std::string utf8ToLocale(const std::string &str);
@@ -270,6 +319,7 @@ private:
  * version numbers: "lime,groupchat/1.1,ephemeral". If absent, the version number is arbitrary supposed to be 1.0.
  */
 LINPHONE_PUBLIC std::map<std::string, Version> parseCapabilityDescriptor(const std::string &descriptor);
+std::shared_ptr<Content> createSipFragContent(const std::string &address);
 std::string getSipFragAddress(const Content &content);
 std::string getResourceLists(const std::list<Address> &addresses);
 std::string getXconId(const std::shared_ptr<const Address> &address);

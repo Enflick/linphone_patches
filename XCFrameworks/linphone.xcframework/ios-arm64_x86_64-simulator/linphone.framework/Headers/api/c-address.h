@@ -30,7 +30,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup linphone_address
+ * @addtogroup group_linphone_address
  * @{
  */
 
@@ -133,25 +133,25 @@ LINPHONE_PUBLIC int linphone_address_get_port(const LinphoneAddress *address);
 LINPHONE_PUBLIC LinphoneStatus linphone_address_set_port(LinphoneAddress *address, int port);
 
 /**
- * Get the transport.
+ * Gets the transport.
  * @param address a #LinphoneAddress object. @notnil
- * @return a #LinphoneTransportType, default value if not set is UDP.
- **/
+ * @return A #LinphoneTransportType (default value if not set is UDP).
+ */
 LINPHONE_PUBLIC LinphoneTransportType linphone_address_get_transport(const LinphoneAddress *address);
 
 /**
- * Set a transport.
+ * Sets a transport.
  * @param address a #LinphoneAddress object. @notnil
- * @param transport a #LinphoneTransportType
- **/
+ * @param transport A #LinphoneTransportType
+ */
 LINPHONE_PUBLIC LinphoneStatus linphone_address_set_transport(LinphoneAddress *address,
                                                               LinphoneTransportType transport);
 
 /**
- * Returns whether the address refers to a secure location (sips) or not
+ * Returns whether the address refers to a secure location (sips) or not.
  * @param address a #LinphoneAddress object. @notnil
  * @return TRUE if address refers to a secure location, FALSE otherwise
- **/
+ */
 LINPHONE_PUBLIC bool_t linphone_address_get_secure(const LinphoneAddress *address);
 
 /**
@@ -266,7 +266,7 @@ LINPHONE_PUBLIC void
 linphone_address_set_header(LinphoneAddress *address, const char *header_name, const char *header_value);
 
 /**
- * Tell whether a parameter is present in the address
+ * Tells whether a parameter is present in the address
  * @param address a #LinphoneAddress object. @notnil
  * @param param_name The name of the parameter. @notnil
  * @return A boolean value telling whether the parameter is present in the address
@@ -274,7 +274,7 @@ linphone_address_set_header(LinphoneAddress *address, const char *header_name, c
 LINPHONE_PUBLIC bool_t linphone_address_has_param(const LinphoneAddress *address, const char *param_name);
 
 /**
- * Get the value of a parameter of the address
+ * Gets the value of a parameter of the address
  * @param address a #LinphoneAddress object. @notnil
  * @param param_name The name of the parameter. @notnil
  * @return The value of the parameter or NULL if it doesn't exists. @maybenil
@@ -282,7 +282,7 @@ LINPHONE_PUBLIC bool_t linphone_address_has_param(const LinphoneAddress *address
 LINPHONE_PUBLIC const char *linphone_address_get_param(const LinphoneAddress *address, const char *param_name);
 
 /**
- * Set the value of a parameter of the address
+ * Sets the value of a parameter of the address
  * @param address a #LinphoneAddress object. @notnil
  * @param param_name The name of the parameter. @notnil
  * @param param_value The new value of the parameter. @maybenil
@@ -290,6 +290,11 @@ LINPHONE_PUBLIC const char *linphone_address_get_param(const LinphoneAddress *ad
 LINPHONE_PUBLIC void
 linphone_address_set_param(LinphoneAddress *address, const char *param_name, const char *param_value);
 
+/**
+ * Sets parameters from a raw string.
+ * @param address a #LinphoneAddress object. @notnil
+ * @param params The parameters. @maybenil
+ */
 LINPHONE_PUBLIC void linphone_address_set_params(LinphoneAddress *address, const char *params);
 
 /**

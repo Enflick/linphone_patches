@@ -24,7 +24,7 @@
 #include "linphone/types.h"
 
 /**
- * @addtogroup media_parameters
+ * @addtogroup group_media_parameters
  * @{
  **/
 
@@ -92,12 +92,12 @@ LINPHONE_PUBLIC const char *linphone_payload_type_get_encoder_description(const 
 /**
  * Get the normal bitrate in bits/s.
  * @param payload_type the #LinphonePayloadType object @notnil
- * @return The normal bitrate in bits/s or -1 if an error has occured.
+ * @return The normal bitrate in bits/s, or -1 if an error has occurred.
  */
 LINPHONE_PUBLIC int linphone_payload_type_get_normal_bitrate(const LinphonePayloadType *payload_type);
 
 /**
- * Change the normal bitrate of a payload type..
+ * Change the normal bitrate of a payload type.
  * @param payload_type the #LinphonePayloadType object @notnil
  * @param bitrate The new bitrate in kbits/s.
  */

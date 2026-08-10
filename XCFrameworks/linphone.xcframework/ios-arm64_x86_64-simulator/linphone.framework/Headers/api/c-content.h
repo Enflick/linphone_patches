@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Belledonne Communications SARL.
+ * Copyright (c) 2010-2026 Belledonne Communications SARL.
  *
  * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
@@ -30,7 +30,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup misc
+ * @addtogroup group_misc
  * @{
  */
 
@@ -60,6 +60,13 @@ LINPHONE_PUBLIC void *linphone_content_get_user_data(const LinphoneContent *cont
  * @param user_data The user pointer to associate with the content. @maybenil
  **/
 LINPHONE_PUBLIC void linphone_content_set_user_data(LinphoneContent *content, void *user_data);
+
+/**
+ * Instantiate a new message content with values from source.
+ * @param content The #LinphoneContent object to be cloned. @notnil
+ * @return The newly created #LinphoneContent object. @notnil
+ */
+LINPHONE_PUBLIC LinphoneContent *linphone_content_clone(const LinphoneContent *content);
 
 /**
  * Get the mime type of the content data.
@@ -291,7 +298,21 @@ LINPHONE_PUBLIC void linphone_content_set_file_path(LinphoneContent *content, co
  * @param content #LinphoneContent object. @notnil
  * @return The duration of the file in milliseconds or -1 if information isn't available.
  */
-LINPHONE_PUBLIC int linphone_content_get_file_duration(LinphoneContent *content);
+LINPHONE_PUBLIC int linphone_content_get_file_duration(const LinphoneContent *content);
+
+/**
+ * Sets the file duration in seconds (useful for media files for example).
+ * @param content #LinphoneContent object. @notnil
+ * @param duration the duration of the file, in milliseconds.
+ */
+LINPHONE_PUBLIC void linphone_content_set_file_duration(LinphoneContent *content, int duration);
+
+/**
+ * Tells whether or not this content contains a call log in json.
+ * @param content #LinphoneContent object. @notnil
+ * @return TRUE if this content type is 'application/vnd.linphone.call-log+json', FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_content_is_call_log_json(const LinphoneContent *content);
 
 /**
  * Tells whether or not this content contains text.
@@ -301,14 +322,14 @@ LINPHONE_PUBLIC int linphone_content_get_file_duration(LinphoneContent *content)
 LINPHONE_PUBLIC bool_t linphone_content_is_text(const LinphoneContent *content);
 
 /**
- * Tells whether or not this content contains a voice recording by checking it's content type.
+ * Tells whether or not this content contains a voice recording by checking its content type.
  * @param content #LinphoneContent object. @notnil
  * @return TRUE if this content type is 'audio/wav;voice-recording=yes', FALSE otherwise.
  */
 LINPHONE_PUBLIC bool_t linphone_content_is_voice_recording(const LinphoneContent *content);
 
 /**
- * Tells whether or not this content contains an icalendar by checking it's content type.
+ * Tells whether or not this content contains an iCalendar by checking its content type.
  * @param content #LinphoneContent object. @notnil
  * @return TRUE if this content type is 'text/calendar;conference-event=yes', FALSE otherwise.
  */

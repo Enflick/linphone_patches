@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup ekt_api
+ * @addtogroup group_misc
  * @{
  **/
 

@@ -22,14 +22,13 @@
 #define LINPHONE_ACCOUNT_PARAMS_H
 
 #include "linphone/api/c-types.h"
-#include "linphone/sipsetup.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup account
+ * @addtogroup group_account
  * @{
  */
 
@@ -195,7 +194,7 @@ LINPHONE_PUBLIC void linphone_account_params_set_publish_expires(LinphoneAccount
 LINPHONE_PUBLIC int linphone_account_params_get_publish_expires(const LinphoneAccountParams *params);
 
 /**
- * Set whether liblinphone should replace "+" by international calling prefix in dialed numbers (passed to
+ * Set whether liblinphone should replace "+" by international calling prefix (ICP) in dialed numbers (passed to
  * #linphone_core_invite).
  * @param params The #LinphoneAccountParams object. @notnil
  * @param enable TRUE to replace + by the international prefix, FALSE otherwise.
@@ -205,7 +204,7 @@ LINPHONE_DEPRECATED LINPHONE_PUBLIC void
 linphone_account_params_set_dial_escape_plus_enabled(LinphoneAccountParams *params, bool_t enable);
 
 /**
- * Set whether liblinphone should replace "+" by international calling prefix in dialed numbers (passed to
+ * Set whether liblinphone should replace "+" by international calling prefix (ICP) in dialed numbers (passed to
  * #linphone_core_invite).
  * @param params The #LinphoneAccountParams object. @notnil
  * @param enable TRUE to replace + by the international prefix, FALSE otherwise.
@@ -213,9 +212,11 @@ linphone_account_params_set_dial_escape_plus_enabled(LinphoneAccountParams *para
 LINPHONE_PUBLIC void linphone_account_params_enable_dial_escape_plus(LinphoneAccountParams *params, bool_t enable);
 
 /**
- * Sets an international prefix to be automatically prepended when inviting a number with
- * linphone_core_invite();
+ * Sets an international prefix (country code) to be automatically prepended when inviting a number with
+ * linphone_core_invite() or when using linphone_account_normalize_phone_number().
  * This international prefix shall usually be the country code of the country where the user is living, without "+".
+ * @warning It is also referred as 'ccc' (Calling Country Code) and must not be confused with the ICP (International
+ *Call Prefix). The ICP is a fixed property of the country dial plan, and cannot be set in the #LinphoneAccountParams .
  * @param params The #LinphoneAccountParams object. @notnil
  * @param prefix The prefix to set (withouth the +). @maybenil
  **/
@@ -319,6 +320,11 @@ LINPHONE_PUBLIC const char *linphone_account_params_get_domain(const LinphoneAcc
 
 /**
  * Get the realm of the given account params.
+ * This is optional, but recommended as it allows digest authentication context to be re-used
+ * accross subsequent SIP requests, which reduces by almost half the number of SIP rmessages
+ * exchanged between a client and a server.
+ * The server is required to support the qop=auth digest authentication mode to benefit from this feature.
+ * @see rfc7616 https://datatracker.ietf.org/doc/html/rfc7616
  * @param params The #LinphoneAccountParams object. @notnil
  * @return The realm of the account params. @maybenil
  **/
@@ -326,6 +332,11 @@ LINPHONE_PUBLIC const char *linphone_account_params_get_realm(const LinphoneAcco
 
 /**
  * Set the realm of the given account params.
+ * This is optional, but recommended as it allows digest authentication context to be re-used
+ * accross subsequent SIP requests, which reduces by almost half the number of SIP rmessages
+ * exchanged between a client and a server.
+ * The server is required to support the qop=auth digest authentication mode to benefit from this feature.
+ * @see rfc7616 https://datatracker.ietf.org/doc/html/rfc7616
  * @param params The #LinphoneAccountParams object. @notnil
  * @param realm New realm value. @maybenil
  **/
@@ -453,18 +464,20 @@ LINPHONE_PUBLIC void linphone_account_params_set_contact_uri_parameters(Linphone
 LINPHONE_PUBLIC const char *linphone_account_params_get_contact_uri_parameters(const LinphoneAccountParams *params);
 
 /**
- * Return whether or not the + should be replaced by 00.
+ * Return whether or not the + should be replaced by the International Call Prefix.
  * @param params The #LinphoneAccountParams object. @notnil
- * @return Whether liblinphone should replace "+" by "00" in dialed numbers (passed to #linphone_core_invite()).
+ * @return Whether liblinphone should replace "+" by the International Call Prefix. in dialed numbers (passed to
+ *linphone_core_invite()).
  * @deprecated 16/12/2021 Use linphone_account_params_dial_escape_plus_enabled() instead.
  **/
 LINPHONE_DEPRECATED LINPHONE_PUBLIC bool_t
 linphone_account_params_get_dial_escape_plus_enabled(const LinphoneAccountParams *params);
 
 /**
- * Return whether or not the + should be replaced by 00.
+ * Return whether or not the + should be replaced by  the International Call Prefix.
  * @param params The #LinphoneAccountParams object. @notnil
- * @return Whether liblinphone should replace "+" by "00" in dialed numbers (passed to #linphone_core_invite()).
+ * @return Whether liblinphone should replace "+" by the International Call Prefix. in dialed numbers (passed to
+ *linphone_core_invite()).
  **/
 LINPHONE_PUBLIC bool_t linphone_account_params_dial_escape_plus_enabled(const LinphoneAccountParams *params);
 
@@ -506,20 +519,20 @@ LINPHONE_PUBLIC void linphone_account_params_set_privacy(LinphoneAccountParams *
 LINPHONE_PUBLIC LinphonePrivacyMask linphone_account_params_get_privacy(const LinphoneAccountParams *params);
 
 /**
- * Set the http file transfer server to be used for content type application/vnd.gsma.rcs-ft-http+xml
+ * Sets the HTTP file transfer server to be used for content type application/vnd.gsma.rcs-ft-http+xml.
  * @param params The #LinphoneAccountParams object. @notnil
- * @param server_url URL of the file server like https://file.linphone.org/upload.php @maybenil
- * @warning That function isn't implemented yet.
+ * @param server_url URL of the file server (like https://file.linphone.org/upload.php) @maybenil
+ * @warning This function isn't implemented yet.
  * @donotwrap
- * */
+ */
 LINPHONE_PUBLIC void linphone_account_params_set_file_transfer_server(LinphoneAccountParams *params,
                                                                       const char *server_url);
 
 /**
- * Get the http file transfer server to be used for content type application/vnd.gsma.rcs-ft-http+xml
+ * Gets the HTTP file transfer server to be used for content type application/vnd.gsma.rcs-ft-http+xml.
  * @param params The #LinphoneAccountParams object. @notnil
- * @return URL of the file server like https://file.linphone.org/upload.php @maybenil
- * @warning That function isn't implemented yet.
+ * @return URL of the file server (like https://file.linphone.org/upload.php) @maybenil
+ * @warning This function isn't implemented yet.
  * @donotwrap
  * */
 LINPHONE_PUBLIC const char *linphone_account_params_get_file_transfer_server(const LinphoneAccountParams *params);
@@ -922,7 +935,7 @@ LINPHONE_PUBLIC const char *linphone_account_params_get_lime_server_url(const Li
 /**
  * Set the base(s) x3dh algorithm.
  * accept an ordered comma separated list (without space) of lime base algorithms
- * accepted values are a combinaison of : c25519, c448 and c25519k512
+ * accepted values are a combination of: c25519, c448 and c25519mlk512
  * NULL is also valid, it will unset the value
  * @param params The #LinphoneAccountParams object. @notnil
  * @param algo The x3dh base algorithm. @maybenil

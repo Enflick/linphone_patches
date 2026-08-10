@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup conference
+ * @addtogroup group_conference
  * @{
  */
 
@@ -56,21 +56,20 @@ LINPHONE_PUBLIC LinphoneCore *
 linphone_conference_scheduler_get_core(const LinphoneConferenceScheduler *conference_scheduler);
 
 /**
- * Set the #LinphoneAccount to use for the conference scheduler
- *
+ * Sets the #LinphoneAccount to use for the conference scheduler.
+ * @warning The #LinphoneConferenceScheduler doesn't keep a reference to the account; therefore, the application must
+ * guarantee that the #LinphoneAccount has been added to the list held by the core prior to calling this function.
  * @param conference_scheduler The #LinphoneConferenceScheduler object. @notnil
- * @param account The #LinphoneAccount to use, or NULL if none has been selected. The LinphoneConferenceScheduler keeps
- *a reference to it and removes the previous one, if any. @maybenil
- **/
+ * @param account The #LinphoneAccount to use, or NULL if none has been selected. @maybenil
+ */
 LINPHONE_PUBLIC void linphone_conference_scheduler_set_account(LinphoneConferenceScheduler *conference_scheduler,
                                                                LinphoneAccount *account);
 
 /**
- * Get the #LinphoneAccount that is used for the conference scheduler
- *
+ * Gets the #LinphoneAccount that is used for the conference scheduler.
  * @param conference_scheduler The #LinphoneConferenceScheduler object. @notnil
  * @return The selected #LinphoneAccount for the call, or NULL if none has been selected. @maybenil
- **/
+ */
 LINPHONE_PUBLIC LinphoneAccount *
 linphone_conference_scheduler_get_account(const LinphoneConferenceScheduler *conference_scheduler);
 
@@ -148,9 +147,9 @@ LINPHONE_PUBLIC LinphoneConferenceSchedulerCbs *
 linphone_conference_scheduler_get_current_callbacks(const LinphoneConferenceScheduler *conference_scheduler);
 
 /**
- * Create a new conference scheduler callbacks object.
+ * Creates a new conference scheduler callbacks object.
  * @return The #LinphoneConferenceSchedulerCbs object. @notnil
- **/
+ */
 LinphoneConferenceSchedulerCbs *linphone_conference_scheduler_cbs_new(void);
 
 /**

@@ -154,6 +154,7 @@ typedef enum _MSFilterFlags MSFilterFlags;
 struct _MSFilterStats {
 	const char *name;      /*<filter name*/
 	MSUBoxPlot bp_elapsed; /* box plot for elapsed time in filter process in nanoseconds */
+	int nb_creations;
 };
 
 typedef struct _MSFilterStats MSFilterStats;
@@ -686,6 +687,10 @@ typedef struct _MSPinFormat {
  * Set the format of a filter on a given output
  */
 #define MS_FILTER_SET_OUTPUT_FMT MS_FILTER_BASE_METHOD(33, MSPinFormat)
+/**
+ * Set (in bytes) the IP/UDP/RTP/SRTP overhead applied to any output packet by network layers
+ */
+#define MS_FILTER_SET_PACKET_OVERHEAD_SIZE MS_FILTER_BASE_METHOD(34, int)
 
 /**
  * MSFilter generic events

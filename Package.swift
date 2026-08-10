@@ -7,7 +7,7 @@ let package = Package(
     name: "linphonesw",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v14)
+        .iOS(.v15)
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -28,7 +28,9 @@ let package = Package(
                 "msamr",
                 "mscodec2",
                 "msopenh264",
-                "mssilk",
+                "mbedcrypto",
+                "mbedtls",
+                "mbedx509",
                 "ortp",
             ]
         ),
@@ -69,8 +71,16 @@ let package = Package(
             path: "XCFrameworks/msopenh264.xcframework"
         ),
         .binaryTarget(
-            name: "mssilk",
-            path: "XCFrameworks/mssilk.xcframework"
+            name: "mbedcrypto",
+            path: "XCFrameworks/mbedcrypto.xcframework"
+        ),
+        .binaryTarget(
+            name: "mbedtls",
+            path: "XCFrameworks/mbedtls.xcframework"
+        ),
+        .binaryTarget(
+            name: "mbedx509",
+            path: "XCFrameworks/mbedx509.xcframework"
         ),
         .binaryTarget(
             name: "ortp",

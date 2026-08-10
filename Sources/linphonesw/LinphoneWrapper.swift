@@ -40793,7 +40793,7 @@ public class RemoteContactDirectory : LinphoneObject
 	public var cardDavParams: CardDavParams?
 	{
 	
-						let cPointer = linphone_remote_contact_directory_get_card_dav_params(cPtr)
+						let cPointer = linphone_remote_contact_directory_get_card_dav_remote_contact_directory(cPtr)
 			if (cPointer == nil) {
 				return nil
 			}
@@ -40808,7 +40808,7 @@ public class RemoteContactDirectory : LinphoneObject
 	public var ldapParams: LdapParams?
 	{
 	
-						let cPointer = linphone_remote_contact_directory_get_ldap_params(cPtr)
+						let cPointer = linphone_remote_contact_directory_get_ldap_remote_contact_directory(cPtr)
 			if (cPointer == nil) {
 				return nil
 			}

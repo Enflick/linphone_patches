@@ -25,7 +25,7 @@
 /**
  * #LinphoneCallState enum represents the different states a call can reach into.
  * The application is notified of a state change through the LinphoneCoreVTable::call_state_changed callback.
- * @ingroup call_control
+ * @ingroup group_call_control
  */
 typedef enum _LinphoneCallState {
 	LinphoneCallStateIdle = 0,                 /**< Initial state */
@@ -57,7 +57,7 @@ typedef enum _LinphoneCallState {
 
 /**
  * #LinphoneAudioDeviceType enum represents the different types of an audio device.
- * @ingroup audio
+ * @ingroup group_audio_devices
  */
 typedef enum _LinphoneAudioDeviceType {
 	LinphoneAudioDeviceTypeUnknown = 0,       /**< Unknown */
@@ -72,11 +72,12 @@ typedef enum _LinphoneAudioDeviceType {
 	LinphoneAudioDeviceTypeHeadset = 9,       /**< Headset */
 	LinphoneAudioDeviceTypeHeadphones = 10,   /**< Headphones */
 	LinphoneAudioDeviceTypeHearingAid = 11,   /**< Hearing Aid */
+	LinphoneAudioDeviceTypeHdmi = 12,         /**< HDMI */
 } LinphoneAudioDeviceType;
 
 /**
  * #LinphoneAudioDeviceCapabilities enum represents whether a device can record audio, play audio or both
- * @ingroup audio
+ * @ingroup group_audio_devices
  */
 typedef enum _LinphoneAudioDeviceCapabilities {
 	LinphoneAudioDeviceCapabilityRecord = 1 << 0, /**< Can record audio */

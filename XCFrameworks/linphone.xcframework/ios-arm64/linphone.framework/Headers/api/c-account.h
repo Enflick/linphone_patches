@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup account
+ * @addtogroup group_account
  * @{
  */
 
@@ -72,16 +72,16 @@ LINPHONE_PUBLIC LinphoneAccount *linphone_account_ref(LinphoneAccount *account);
 LINPHONE_PUBLIC void linphone_account_unref(LinphoneAccount *account);
 
 /**
- * Set the #LinphoneAccountParams used by this #LinphoneAccount.
+ * Sets the #LinphoneAccountParams used by this #LinphoneAccount.
  * @param account The #LinphoneAccount object. @notnil
  * @param params The #LinphoneAccountParams object. @notnil
  */
 LINPHONE_PUBLIC int linphone_account_set_params(LinphoneAccount *account, LinphoneAccountParams *params);
 
 /**
- * Get the #LinphoneAccountParams as read-only object.
+ * Gets the #LinphoneAccountParams as a read-only object.
  * To make changes, clone the returned object using linphone_account_params_clone() method,
- * make your changes on it and apply them using with linphone_account_set_params().
+ * make your changes on it, and apply them using linphone_account_set_params().
  * @param account The #LinphoneAccount object. @notnil
  * @return The #LinphoneAccountParams attached to this account. @notnil
  */
@@ -99,7 +99,7 @@ LINPHONE_PUBLIC void linphone_account_add_custom_param(LinphoneAccount *account,
  * Get the custom parameter with key to this #LinphoneAccount.
  * @param account The #LinphoneAccount object. @notnil
  * @param key key of the searched parameter. @notnil
- * @return The value of the parameter with key if found or an empty string otherwise. @notnil
+ * @return The value of the parameter with key if found, NULL otherwise. @maybenil
  */
 LINPHONE_PUBLIC const char *linphone_account_get_custom_param(const LinphoneAccount *account, const char *key);
 
@@ -118,10 +118,27 @@ LINPHONE_PUBLIC void linphone_account_set_user_data(LinphoneAccount *account, vo
 LINPHONE_PUBLIC void *linphone_account_get_user_data(LinphoneAccount *account);
 
 /**
+ * Add the value of a custom header and its value to be sent to the server in REGISTERs request.
+ * @param account The #LinphoneAccount object. @notnil
+ * @param header_name The header name. @notnil
+ * @param header_value The header value. @maybenil
+ */
+LINPHONE_PUBLIC void
+linphone_account_add_custom_header(LinphoneAccount *account, const char *header_name, const char *header_value);
+
+/**
+ * Remove a custom header and stop sending it to the server in REGISTERs request.
+ * @param account The #LinphoneAccount object. @notnil
+ * @param header_name The header name. @notnil
+ */
+LINPHONE_PUBLIC void linphone_account_remove_custom_header(LinphoneAccount *account, const char *header_name);
+
+/**
  * Set the value of a custom header sent to the server in REGISTERs request.
  * @param account The #LinphoneAccount object. @notnil
  * @param header_name The header name. @notnil
  * @param header_value The header value. @maybenil
+ * @deprecated 03/07/2026 Use linphone_account_add_custom_header() instead.
  */
 LINPHONE_PUBLIC void
 linphone_account_set_custom_header(LinphoneAccount *account, const char *header_name, const char *header_value);
@@ -160,10 +177,10 @@ LINPHONE_PUBLIC void linphone_account_set_dependency(LinphoneAccount *account, L
 LINPHONE_PUBLIC LinphoneAccount *linphone_account_get_dependency(LinphoneAccount *account);
 
 /**
- * Get the #LinphoneCore object to which is associated the #LinphoneAccount.
+ * Gets the #LinphoneCore object to which the #LinphoneAccount is associated.
  * @param account The #LinphoneAccount object. @notnil
- * @return The #LinphoneCore object to which is associated the #LinphoneAccount. @notnil
- **/
+ * @return The #LinphoneCore object to which the #LinphoneAccount is associated. @notnil
+ */
 LINPHONE_PUBLIC LinphoneCore *linphone_account_get_core(LinphoneAccount *account);
 
 /**
@@ -314,26 +331,63 @@ LINPHONE_PUBLIC void linphone_account_clear_call_logs(const LinphoneAccount *acc
  * This list must be freed after use.
  * @param account The #LinphoneAccount object. @notnil
  * @return The list of call logs \bctbx_list{LinphoneConferenceInfo}. @maybenil
- * @warning this method also start the synchronization with the CCMP server, should it be defined in the #AccountParams.
- *The application may want to wait for the callback conference_information_updated to get a up-to-date list of
- *conferences
+ * @warning This method also start the synchronization with the CCMP server, should it be defined in the
+ *#LinphoneAccountParams. The application may want to wait for the callback conference_information_updated to get an
+ *up-to-date list of conferences
  **/
 LINPHONE_PUBLIC bctbx_list_t *linphone_account_get_conference_information_list(const LinphoneAccount *account);
+/**
+ * Returns the latest Message Waiting Indication (MWI) received payload, if any.
+ * @param account The #LinphoneAccount object. @notnil
+ * @return The latest #LinphoneMessageWaitingIndication or NULL. @maybenil
+ **/
+LINPHONE_PUBLIC const LinphoneMessageWaitingIndication *
+linphone_account_get_latest_received_message_waiting_indication(const LinphoneAccount *account);
 
 /**
  * Returns the list of conference information stored locally for a given account.
  * This list must be freed after use.
  * @param account The #LinphoneAccount object. @notnil
- * @param capabilities the list of conference capabilities that the conference information must has set
+ * @param capabilities the list of conference capabilities that the conference information must have set
  *\bctbx_list{LinphoneStreamType}. @tobefreed @maybenil
  * @return The list of call logs \bctbx_list{LinphoneConferenceInfo}. @tobefreed @maybenil
- * @warning this method also start the synchronization with the CCMP server, should it be defined in the #AccountParams.
- *The application may want to wait for the callback conference_information_updated to get a up-to-date list of
- *conferences
+ * @warning This method also start the synchronization with the CCMP server, should it be defined in the
+ *#LinphoneAccountParams. The application may want to wait for the callback conference_information_updated to get a
+ *up-to-date list of conferences
  * @donotwrap
  **/
 LINPHONE_PUBLIC bctbx_list_t *linphone_account_get_conference_information_list_2(const LinphoneAccount *account,
                                                                                  bctbx_list_t *capabilities);
+
+/**
+ * Set the presence model linked to a given account and send a PUBLISH message to the presence server.
+ * @param account The #LinphoneAccount object. @notnil
+ * @param presence_model The presence model to assign. @maybenil
+ **/
+LINPHONE_PUBLIC void linphone_account_set_presence_model(LinphoneAccount *account,
+                                                         LinphonePresenceModel *presence_model);
+
+/**
+ * Get the presence model linked to a given account.
+ * @param account The #LinphoneAccount object. @notnil
+ * @return the presence model, if assigned, NULL otherwise. @maybenil
+ **/
+LINPHONE_PUBLIC const LinphonePresenceModel *linphone_account_get_presence_model(const LinphoneAccount *account);
+
+/**
+ * Gets consolidated presence for a #LinphoneAccount
+ * @param account The #LinphoneAccount object. @notnil
+ * @return A #LinphoneConsolidatedPresence presence
+ */
+LINPHONE_PUBLIC LinphoneConsolidatedPresence linphone_account_get_consolidated_presence(const LinphoneAccount *account);
+
+/**
+ * Sets consolidated presence for a #LinphoneAccount
+ * @param account The #LinphoneAccount object. @notnil
+ * @param presence #LinphoneConsolidatedPresence value
+ */
+LINPHONE_PUBLIC void linphone_account_set_consolidated_presence(LinphoneAccount *account,
+                                                                LinphoneConsolidatedPresence presence);
 
 /**
  * Detect if the given input is a phone number or not.

@@ -113,6 +113,7 @@ ORTP_PUBLIC void payload_type_append_send_fmtp(PayloadType *pt, const char *fmtp
 #define payload_type_get_avpf_params(pt) ((pt)->avpf)
 ORTP_PUBLIC void payload_type_set_avpf_params(PayloadType *pt, PayloadTypeAvpfParams params);
 ORTP_PUBLIC bool_t payload_type_is_vbr(const PayloadType *pt);
+ORTP_PUBLIC bool_t payload_type_is_valid(const PayloadType *pt);
 
 #define payload_type_get_bitrate(pt) ((pt)->normal_bitrate)
 #define payload_type_get_rate(pt) ((pt)->clock_rate)
@@ -155,10 +156,6 @@ ORTP_VAR_PUBLIC PayloadType payload_type_amrwb;
 ORTP_VAR_PUBLIC PayloadType payload_type_truespeech;
 ORTP_VAR_PUBLIC PayloadType payload_type_evrc0;
 ORTP_VAR_PUBLIC PayloadType payload_type_evrcb0;
-ORTP_VAR_PUBLIC PayloadType payload_type_silk_nb;
-ORTP_VAR_PUBLIC PayloadType payload_type_silk_mb;
-ORTP_VAR_PUBLIC PayloadType payload_type_silk_wb;
-ORTP_VAR_PUBLIC PayloadType payload_type_silk_swb;
 ORTP_VAR_PUBLIC PayloadType payload_type_aaceld_16k;
 ORTP_VAR_PUBLIC PayloadType payload_type_aaceld_22k;
 ORTP_VAR_PUBLIC PayloadType payload_type_aaceld_32k;

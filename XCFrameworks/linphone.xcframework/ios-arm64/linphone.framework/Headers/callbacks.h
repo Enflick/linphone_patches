@@ -25,7 +25,7 @@
 #include "linphone/types.h"
 
 /**
- * @addtogroup chatroom
+ * @addtogroup group_chatroom
  * @{
  */
 
@@ -34,7 +34,7 @@
  **/
 
 /**
- * @addtogroup initializing
+ * @addtogroup group_initializing
  * @{
  **/
 
@@ -126,7 +126,6 @@ typedef LinphoneCoreCbsCallEncryptionChangedCb LinphoneCoreCallEncryptionChanged
  * @param state the current #LinphoneRegistrationState
  * @param message a non NULL informational message about the state @notnil
  * @deprecated 06/04/2020 Use #LinphoneCoreCbsAccountRegistrationStateChangedCb instead
- * @ingroup Proxies
  */
 typedef void (*LinphoneCoreCbsRegistrationStateChangedCb)(LinphoneCore *core,
                                                           LinphoneProxyConfig *proxy_config,
@@ -267,8 +266,8 @@ typedef void (*LinphoneCoreCbsNewMessageReactionCb)(LinphoneCore *core,
  * @param core #LinphoneCore object @notnil
  * @param chat_room #LinphoneChatRoom involved in this conversation. Can be created by the framework in case the
  * From-URI is not present in any chat room. @notnil
- * @param message the #LinphoneChatMessage to which a reaction has been removed from @notnil
- * @param address the #LinphoneAddress of the person that removed it's reaction @notnil
+ * @param message the #LinphoneChatMessage from which a reaction has been removed @notnil
+ * @param address the #LinphoneAddress of the person that removed its reaction @notnil
  */
 typedef void (*LinphoneCoreCbsReactionRemovedCb)(LinphoneCore *core,
                                                  LinphoneChatRoom *chat_room,
@@ -588,7 +587,7 @@ typedef LinphoneCoreCbsFriendListRemovedCb LinphoneCoreFriendListRemovedCb;
  * @param core #LinphoneCore object @notnil
  * @param result The result of the version update check @notnil
  * @param version The version to update to @maybenil
- * @param url The url where to download the new version if the result is #LinphoneVersionUpdateCheckNewVersionAvailable
+ * @param url The url where to download the new version if the result is `LinphoneVersionUpdateCheckNewVersionAvailable`
  * @maybenil
  */
 typedef void (*LinphoneCoreCbsVersionUpdateCheckResultReceivedCb)(LinphoneCore *core,
@@ -707,11 +706,31 @@ typedef void (*LinphoneCoreCbsMessageWaitingIndicationChangedCb)(LinphoneCore *c
 typedef void (*LinphoneCoreCbsSnapshotTakenCb)(LinphoneCore *core, const char *file_path);
 
 /**
+ * Callback notifying a message has been edited.
+ * @param core LinphoneCore object. @notnil
+ * @param chatRoom the #LinphoneChatRoom that contains the edited message. @notnil
+ * @param message the #LinphoneChatMessage that was edited. @notnil
+ */
+typedef void (*LinphoneCoreCbsMessageContentEditedCb)(LinphoneCore *core,
+                                                      LinphoneChatRoom *chatRoom,
+                                                      LinphoneChatMessage *message);
+
+/**
+ * Callback notifying a message has been retracted.
+ * @param core LinphoneCore object. @notnil
+ * @param chatRoom the #LinphoneChatRoom that contains the retracted message. @notnil
+ * @param message the #LinphoneChatMessage that was retracted. @notnil
+ */
+typedef void (*LinphoneCoreCbsMessageRetractedCb)(LinphoneCore *core,
+                                                  LinphoneChatRoom *chatRoom,
+                                                  LinphoneChatMessage *message);
+
+/**
  * @}
  **/
 
 /**
- * @addtogroup event_api
+ * @addtogroup group_event_api
  * @{
  **/
 
@@ -837,7 +856,7 @@ typedef void (*LinphoneCoreCbsPreviewDisplayErrorOccurredCb)(LinphoneCore *core,
  **/
 
 /**
- * @addtogroup buddy_list
+ * @addtogroup group_contacts
  * @{
  */
 
@@ -903,7 +922,7 @@ typedef void (*LinphoneFriendCbsPresenceReceivedCb)(LinphoneFriend *linphone_fri
  **/
 
 /**
- * @addtogroup misc
+ * @addtogroup group_misc
  * @{
  */
 
@@ -1024,7 +1043,7 @@ typedef void (*LinphoneCoreCbsChatRoomExhumedCb)(LinphoneCore *core, LinphoneCha
  **/
 
 /**
- * @addtogroup call_control
+ * @addtogroup group_call_control
  * @{
  */
 

@@ -47,41 +47,64 @@
 extern "C" {
 #endif
 
+#define MS_RING_STREAM_MAX_SND_CARDS 3
+
 /**
  * @addtogroup ring_api
  * @{
  **/
 
 struct _RingStream {
-	MSSndCard *card;
+	MSSndCard *card[MS_RING_STREAM_MAX_SND_CARDS];
 	MSTicker *ticker;
 	MSFilter *source;
 	MSFilter *gendtmf;
 	MSFilter *write_resampler;
-	MSFilter *sndwrite;
+	MSFilter *sndwrite[MS_RING_STREAM_MAX_SND_CARDS];
 	MSFilter *decoder;
+	MSFilter *sndwrite_tee;
 	int srcpin;
 };
 
 typedef struct _RingStream RingStream;
 
-MS2_PUBLIC RingStream *ring_start(MSFactory *factory, const char *file, int interval, MSSndCard *sndcard);
-MS2_PUBLIC RingStream *ring_start_with_cb(
-    MSFactory *factory, const char *file, int interval, MSSndCard *sndcard, MSFilterNotifyFunc func, void *user_data);
+MS2_PUBLIC RingStream *ring_start(MSFactory *factory, const char *file, int interval, const bctbx_list_t *snd_cards);
+MS2_PUBLIC RingStream *ring_start_with_cb(MSFactory *factory,
+                                          const char *file,
+                                          int interval,
+                                          const bctbx_list_t *snd_cards,
+                                          MSFilterNotifyFunc func,
+                                          void *user_data);
 MS2_PUBLIC void ring_stop(RingStream *stream);
 
 /**
  * Asks the ring filter to route to the selected sound card (currently only used for AAudio and OpenSLES)
  * @param[in] stream The RingStream object
- * @param[in] sndcard_playback The wanted audio output soundcard
+ * @param[in] snd_card The wanted audio output soundcard
+ * @deprecated 29/08/2025 Use ring_stream_set_output_ms_snd_cards() instead
  */
-MS2_PUBLIC void ring_stream_set_output_ms_snd_card(RingStream *stream, MSSndCard *sndcard_playback);
+MS2_PUBLIC MS2_DEPRECATED void ring_stream_set_output_ms_snd_card(RingStream *stream, MSSndCard *snd_card);
 
 /**
- * Retrieve the current sound card from the audio playback filter (currently only used for AAudio and OpenSLES)
- * @param[in] stream The AudioStream object
+ * Retrieve the current sound card from the ring filter (currently only used for AAudio and OpenSLES)
+ * @param[in] stream The RingStream object
+ * @deprecated 29/08/2025 Use ring_stream_get_output_ms_snd_cards() instead.
  */
-MS2_PUBLIC MSSndCard *ring_stream_get_output_ms_snd_card(RingStream *stream);
+MS2_PUBLIC MS2_DEPRECATED MSSndCard *ring_stream_get_output_ms_snd_card(const RingStream *stream);
+
+/**
+ * Asks the ring filter to route to the selected sound cards (currently only used for AAudio and OpenSLES)
+ * @param stream The RingStream object
+ * @param snd_cards The list of wanted audio output soundcards
+ */
+MS2_PUBLIC void ring_stream_set_output_ms_snd_cards(RingStream *stream, const bctbx_list_t *snd_cards);
+
+/**
+ * Retrieve the current list of sound cards from the ring filter (currently only used for AAudio and OpenSLES).
+ * @param stream The RingStream object
+ * @return The current list of sound cards from the ring filter
+ */
+MS2_PUBLIC bctbx_list_t *ring_stream_get_output_ms_snd_cards(const RingStream *stream);
 
 /**
  * @}
@@ -566,6 +589,7 @@ struct _AudioStream {
 	MSFilter *recorder_mixer;
 	MSFilter *recorder;
 	MSFilter *outbound_mixer;
+	MSFilter *noise_suppressor;
 	struct {
 		MSFilter *resampler;
 		MSFilter *encoder;
@@ -597,6 +621,7 @@ struct _AudioStream {
 	bool_t force_software_ec;
 	bool_t use_gc;
 	bool_t use_agc;
+	bool_t use_ns;
 
 	bool_t mic_eq_active;
 	bool_t spk_eq_active;
@@ -778,12 +803,14 @@ MS2_PUBLIC AudioStream *audio_stream_new_with_sessions(MSFactory *factory, const
 #define AUDIO_STREAM_FEATURE_FLOW_CONTROL (1 << 10)
 #define AUDIO_STREAM_FEATURE_VAD (1 << 11)
 #define AUDIO_STREAM_FEATURE_BAUDOT (1 << 12)
+#define AUDIO_STREAM_FEATURE_NOISE_SUPPRESSION (1 << 13)
 
 #define AUDIO_STREAM_FEATURE_ALL                                                                                       \
 	(AUDIO_STREAM_FEATURE_PLC | AUDIO_STREAM_FEATURE_EC | AUDIO_STREAM_FEATURE_EQUALIZER |                             \
 	 AUDIO_STREAM_FEATURE_VOL_SND | AUDIO_STREAM_FEATURE_VOL_RCV | AUDIO_STREAM_FEATURE_DTMF |                         \
 	 AUDIO_STREAM_FEATURE_DTMF_ECHO | AUDIO_STREAM_FEATURE_MIXED_RECORDING | AUDIO_STREAM_FEATURE_LOCAL_PLAYING |      \
-	 AUDIO_STREAM_FEATURE_REMOTE_PLAYING | AUDIO_STREAM_FEATURE_FLOW_CONTROL | AUDIO_STREAM_FEATURE_BAUDOT)
+	 AUDIO_STREAM_FEATURE_REMOTE_PLAYING | AUDIO_STREAM_FEATURE_FLOW_CONTROL | AUDIO_STREAM_FEATURE_BAUDOT |           \
+	 AUDIO_STREAM_FEATURE_NOISE_SUPPRESSION)
 
 MS2_PUBLIC uint32_t audio_stream_get_features(AudioStream *st);
 MS2_PUBLIC void audio_stream_set_features(AudioStream *st, uint32_t features);
@@ -882,6 +909,15 @@ static MS2_INLINE void audio_stream_enable_adaptive_jittcomp(AudioStream *stream
  * @param disable True if you wish to entirely stop the audio recording when muting the microphone.
  */
 MS2_PUBLIC void audio_stream_disable_record_on_mute(AudioStream *stream, bool_t disable);
+
+/**
+ * Enable or disable noise suppression on audio streams. This feature is supported only if the noise suppressor filter
+ * has been built.
+ *
+ * @param stream The stream.
+ * @param enable Wether the noise suppression must be enabled.
+ */
+MS2_PUBLIC void audio_stream_enable_noise_suppression(AudioStream *stream, bool_t enable);
 
 /**
  * Mute or unmute the microphone
@@ -1272,24 +1308,40 @@ typedef struct _MediastreamVideoStat MediaStreamVideoStat;
 
 typedef enum _MSVideoContent { MSVideoContentDefault, MSVideoContentSpeaker, MSVideoContentThumbnail } MSVideoContent;
 
+// This number should not be higher than 9 since the VideoAggregator filter only has 10 inputs.
+// The main RtpSession always takes the first input.
+#define VIDEO_STREAM_MAX_BRANCHES 3
+
+/**
+ * Structure to store an input branch added to a videostream upon reception of a new stream
+ */
+typedef struct _VideoStreamRecvBranch {
+	MSFilter *recv;      /**< the receiver filter */
+	RtpSession *session; /**< the rtp session used in the recv filter -  needed to reset it when a session is recycled
+	                        for a new incoming stream and all branches are occupied */
+} VideoStreamRecvBranch;
+
 struct _VideoStream {
 	MediaStream ms;
-	MSFilter *jpegwriter;
-	MSFilter *local_jpegwriter;
-	MSFilter *output;
-	MSFilter *output2;
-	MSFilter *pixconv;
-	MSFilter *qrcode;
+	MSFilter *jpegwriter;       /* MS_JPEG_WRITER_ID linked to tee2 */
+	MSFilter *local_jpegwriter; /* MS_JPEG_WRITER_ID linked to tee */
+	MSFilter *output;           /* Main display filter like MSOGL or MSVoidSink */
+	MSFilter *output2;          /* Preview display filter like MSOGL or MSVoidSink */
+	MSFilter *qrcode;           /* MS_QRCODE_READER_ID */
 	MSFilter *recorder_output; /*can be an ItcSink to send video to the audiostream's multimedia recorder, or directly a
-	                              MkvRecorder */
-	MSFilter *sizeconv;
-	MSFilter *source;
-	MSFilter *tee;
-	MSFilter *tee2;
-	MSFilter *tee3;
-	MSFilter *void_source;
-	MSFilter *itcsink;
-	MSFilter *forward_sink;
+	                             MkvRecorder */
+
+	MSFilter *pixconv;      /* Do pixel reformat with MS_PIX_CONV_ID */
+	MSFilter *sizeconv;     /*Do size reformat with MS_SIZE_CONV_ID */
+	MSFilter *source;       /* Source filter like MSScreenSharing, MSItcSource or MSVoidSource */
+	MSFilter *tee;          /* linked with local_jpegwriter, itcsink and output2 */
+	MSFilter *tee2;         /* linked with jpegwriter and forward_sink */
+	MSFilter *tee3;         /* linked with recorder_output */
+	MSFilter *void_source;  /* linked with ms.rtpsend */
+	MSFilter *itcsink;      /* MS_ITC_SINK_ID linked to tee */
+	MSFilter *forward_sink; /* MS_ITC_SINK_ID linked to tee2 */
+	MSFilter *aggregator;   /* MS_VIDEO_AGGREGATOR_ID linked to all branches.recv */
+	VideoStreamRecvBranch branches[VIDEO_STREAM_MAX_BRANCHES];
 	MSVideoSize sent_vsize;
 	MSVideoSize preview_vsize;
 	MSVideoSize max_sent_vsize;
@@ -1305,8 +1357,8 @@ struct _VideoStream {
 	VideoStreamDisplayCallback displaycb;
 	void *display_pointer;
 	char *display_name;
-	void *window_id;
-	void *preview_window_id;
+	void *window_id;         /* Display Window ID for output */
+	void *preview_window_id; /* Display Window ID for output2 and source */
 	void *video_descriptor;
 	MediaStreamDir dir; /* Not used anymore, see direction in MediaStream */
 	MSRect decode_rect; // Used for the qrcode decoder
@@ -1349,8 +1401,9 @@ struct _VideoStream {
 	uint32_t new_csrc;
 	bool_t is_thumbnail; /* if TRUE, the stream is generated from ItcResource and is SizeConverted */
 	FecStream *fec_stream;
-	bool_t local_screen_sharing_enabled;
+	bool_t local_screen_sharing_enabled; /* Specific to current videostream */
 	bool_t active_speaker_mode;
+	bool_t csrc_change_received;
 };
 
 typedef struct _VideoStream VideoStream;
@@ -1607,10 +1660,10 @@ MS2_PUBLIC float video_stream_get_sent_framerate(const VideoStream *stream);
 MS2_PUBLIC float video_stream_get_received_framerate(const VideoStream *stream);
 
 MS2_PUBLIC void video_stream_enable_self_view(VideoStream *stream, bool_t val);
-MS2_PUBLIC void *video_stream_create_native_window_id(VideoStream *stream);
+MS2_PUBLIC void *video_stream_create_native_window_id(VideoStream *stream, void *context);
 MS2_PUBLIC void *video_stream_get_native_window_id(VideoStream *stream);
 MS2_PUBLIC void video_stream_set_native_window_id(VideoStream *stream, void *id);
-MS2_PUBLIC void *video_stream_create_native_preview_window_id(VideoStream *stream);
+MS2_PUBLIC void *video_stream_create_native_preview_window_id(VideoStream *stream, void *context);
 MS2_PUBLIC void video_stream_set_native_preview_window_id(VideoStream *stream, void *id);
 MS2_PUBLIC void *video_stream_get_native_preview_window_id(VideoStream *stream);
 MS2_PUBLIC void *video_stream_get_video_source_descriptor(VideoStream *stream);
@@ -1799,7 +1852,7 @@ MS2_PUBLIC VideoPreview *video_preview_new(MSFactory *factory);
 #define video_preview_set_display_callback(p, c, u) video_stream_set_display_callback(p, c, u)
 #define video_preview_set_size(p, s) video_stream_set_sent_video_size(p, s)
 #define video_preview_set_display_filter_name(p, dt) video_stream_set_display_filter_name(p, dt)
-#define video_preview_create_native_window_id(p) video_stream_create_native_preview_window_id(p)
+#define video_preview_create_native_window_id(p, ctx) video_stream_create_native_preview_window_id(p, ctx)
 #define video_preview_set_native_window_id(p, id) video_stream_set_native_preview_window_id(p, id)
 #define video_preview_get_native_window_id(p) video_stream_get_native_preview_window_id(p)
 #define video_preview_set_fps(p, fps) video_stream_set_fps((VideoStream *)p, fps)

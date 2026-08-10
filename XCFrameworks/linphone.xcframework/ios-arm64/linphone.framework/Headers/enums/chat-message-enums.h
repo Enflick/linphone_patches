@@ -25,7 +25,7 @@
 
 /**
  * #LinphoneChatMessageState is used to notify if messages have been successfully delivered or not.
- * @ingroup chatroom
+ * @ingroup group_chatroom
  */
 typedef enum _LinphoneChatMessageState {
 	LinphoneChatMessageStateIdle = 0,         /**< Initial state */
@@ -39,14 +39,16 @@ typedef enum _LinphoneChatMessageState {
 	    6,                                 /**< Message successfully delivered an acknowledged by the remote user */
 	LinphoneChatMessageStateDisplayed = 7, /**< Message successfully displayed to the remote user */
 	LinphoneChatMessageStateFileTransferInProgress =
-	    8, /**< File transfer is in progress. If message is incoming it's a download, otherwise it's an upload. */
-	LinphoneChatMessageStatePendingDelivery = 9,         /**< Message is pending delivery */
+	    8, /**< File transfer is in progress. If message is incoming its a download, otherwise its an upload. */
+	LinphoneChatMessageStatePendingDelivery = 9, /**< Message is pending delivery. It has been sent over the network but
+	                                                there have been an issue such as an error on the channel. */
 	LinphoneChatMessageStateFileTransferCancelling = 10, /**< The user cancelled the file transfer */
+	LinphoneChatMessageStateQueued = 11,                 /**< Message cannot be sent right now and it is queued */
 } LinphoneChatMessageState;
 
 /**
  * #LinphoneChatMessageDirection is used to indicate if a message is outgoing or incoming.
- * @ingroup chatroom
+ * @ingroup group_chatroom
  */
 typedef enum _LinphoneChatMessageDirection {
 	LinphoneChatMessageDirectionIncoming = 0, /**< Incoming message */

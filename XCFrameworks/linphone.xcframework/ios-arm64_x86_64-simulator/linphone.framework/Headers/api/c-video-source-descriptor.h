@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup call_control
+ * @addtogroup group_call_control
  * @{
  */
 
@@ -71,7 +71,7 @@ linphone_video_source_descriptor_get_type(const LinphoneVideoSourceDescriptor *d
 /**
  * Gets the call of a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
- * @return The #LinphoneCall of the video source descriptor if it's type is LinphoneVideoSourceCall, NULL otherwise.
+ * @return The #LinphoneCall of the video source descriptor if its type is LinphoneVideoSourceCall, NULL otherwise.
  * @maybenil
  */
 LINPHONE_PUBLIC LinphoneCall *
@@ -93,7 +93,7 @@ LINPHONE_PUBLIC void linphone_video_source_descriptor_set_call(LinphoneVideoSour
 /**
  * Gets the camera id of a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
- * @return The camera id of the video source descriptor if it's type is LinphoneVideoSourceCamera, NULL otherwise.
+ * @return The camera ID of the video source descriptor if its type is LinphoneVideoSourceCamera, NULL otherwise.
  * @maybenil
  */
 LINPHONE_PUBLIC const char *
@@ -110,7 +110,7 @@ LINPHONE_PUBLIC void linphone_video_source_descriptor_set_camera_id(LinphoneVide
 /**
  * Gets the image path of a #LinphoneVideoSourceDescriptor.
  * @param descriptor The #LinphoneVideoSourceDescriptor object. @notnil
- * @return The image path of the video source descriptor if it's type is LinphoneVideoSourceImage, NULL otherwise.
+ * @return The image path of the video source descriptor if its type is LinphoneVideoSourceImage, NULL otherwise.
  * @maybenil
  */
 LINPHONE_PUBLIC const char *linphone_video_source_descriptor_get_image(const LinphoneVideoSourceDescriptor *descriptor);
@@ -140,16 +140,16 @@ LINPHONE_PUBLIC void *
 linphone_video_source_descriptor_get_screen_sharing(const LinphoneVideoSourceDescriptor *descriptor);
 
 /**
- * Sets the source of a #LinphoneVideoSourceDescriptor as screen sharing. native_data depends of the type and the
+ * Sets the source of a #LinphoneVideoSourceDescriptor as screen sharing. native_data depends on the type and the
  * current platform:
  * 1. #LinphoneVideoSourceScreenSharingDisplay
- * - Linux : <uintptr_t> The index of the screen ordered by XineramaQueryScreens.
- * - Mac : <CGDirectDisplayID> The display identification that can be retrieved from SCShareableContent.
- * - Windows : <uintptr_t> The index of the screen ordered by IDXGIAdapter->EnumOutputs.
+ * - Linux : `uintptr_t` The index of the screen ordered by `XineramaQueryScreens`.
+ * - Mac : `CGDirectDisplayID` The display identification that can be retrieved from `SCShareableContent`.
+ * - Windows : `uintptr_t` The index of the screen ordered by `IDXGIAdapter->EnumOutputs`.
  * 2. #LinphoneVideoSourceScreenSharingWindow
- * - Linux : <Window> The Window object that can be retrieved from XQueryPointer.
- * - Mac : <CGWindowID> The window identification that can be retrieved from NSEvent.
- * - Windows : <HWND> The window handle that can be retrived from WindowFromPoint.
+ * - Linux : `Window` The Window object that can be retrieved from `XQueryPointer`.
+ * - Mac : `CGWindowID` The window identification that can be retrieved from `NSEvent`.
+ * - Windows : `HWND` The window handle that can be retrieved from `WindowFromPoint`.
  * 3. #LinphoneVideoSourceScreenSharingArea
  * - not yet supported.
  *

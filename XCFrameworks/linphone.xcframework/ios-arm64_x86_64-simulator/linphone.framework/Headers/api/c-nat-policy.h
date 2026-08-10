@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup network_parameters
+ * @addtogroup group_network_parameters
  * @{
  */
 
@@ -133,7 +133,7 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_upnp_enabled(const LinphoneNatPolicy 
 LINPHONE_PUBLIC void linphone_nat_policy_enable_upnp(LinphoneNatPolicy *policy, bool_t enable);
 
 /**
- * Get the STUN/TURN server to use with this NAT policy.
+ * Gets the STUN/TURN server to use with this NAT policy.
  * Used when STUN or TURN are enabled.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return The STUN server used by this NAT policy. @maybenil
@@ -141,7 +141,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_enable_upnp(LinphoneNatPolicy *policy, 
 LINPHONE_PUBLIC const char *linphone_nat_policy_get_stun_server(const LinphoneNatPolicy *policy);
 
 /**
- * Set the STUN/TURN server to use with this NAT policy.
+ * Sets the STUN/TURN server to use with this NAT policy.
  * Used when STUN or TURN are enabled.
  * @param policy #LinphoneNatPolicy object @notnil
  * @param stun_server The STUN server to use with this NAT policy. @maybenil
@@ -149,7 +149,7 @@ LINPHONE_PUBLIC const char *linphone_nat_policy_get_stun_server(const LinphoneNa
 LINPHONE_PUBLIC void linphone_nat_policy_set_stun_server(LinphoneNatPolicy *policy, const char *stun_server);
 
 /**
- * Get the mandatory v4 IP address to use with this NAT policy as server-reflexive candidate for ICE.
+ * Gets the mandatory v4 IP address to use with this NAT policy as server-reflexive candidate for ICE.
  * Used when STUN or TURN are enabled.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return the nat v4 address. @maybenil
@@ -157,7 +157,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_set_stun_server(LinphoneNatPolicy *poli
 LINPHONE_PUBLIC const char *linphone_nat_policy_get_nat_v4_address(const LinphoneNatPolicy *policy);
 
 /**
- * Set the mandatory v4 IP address to use with this NAT policy as server-reflexive candidate for ICE.
+ * Sets the mandatory v4 IP address to use with this NAT policy as server-reflexive candidate for ICE.
  * The IP address is used only if no stun server is set for server-reflexive candidate gathering.
  * Using this method is useful when Liblinphone is used in a server product, when the server
  * does not own the public IP address.
@@ -168,7 +168,7 @@ LINPHONE_PUBLIC const char *linphone_nat_policy_get_nat_v4_address(const Linphon
 LINPHONE_PUBLIC void linphone_nat_policy_set_nat_v4_address(LinphoneNatPolicy *policy, const char *v4_address);
 
 /**
- * Get the mandatory v6 IP address to use with this NAT policy as server-reflexive candidate for ICE.
+ * Gets the mandatory v6 IP address to use with this NAT policy as server-reflexive candidate for ICE.
  * Used when STUN or TURN are enabled.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return the nat v4 address. @maybenil
@@ -176,7 +176,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_set_nat_v4_address(LinphoneNatPolicy *p
 LINPHONE_PUBLIC const char *linphone_nat_policy_get_nat_v6_address(const LinphoneNatPolicy *policy);
 
 /**
- * Set the mandatory v6 IP address to use with this NAT policy as server-reflexive candidate for ICE.
+ * Sets the mandatory v6 IP address to use with this NAT policy as server-reflexive candidate for ICE.
  * The IP address is used only if no stun server is set for server-reflexive candidate gathering.
  * Using this method is useful when Liblinphone is used in a server product, when the server
  * does not own the public IP address.
@@ -187,7 +187,7 @@ LINPHONE_PUBLIC const char *linphone_nat_policy_get_nat_v6_address(const Linphon
 LINPHONE_PUBLIC void linphone_nat_policy_set_nat_v6_address(LinphoneNatPolicy *policy, const char *v4_address);
 
 /**
- * Get the username used to authenticate with the STUN/TURN server.
+ * Gets the username used to authenticate with the STUN/TURN server.
  * The authentication will search for a #LinphoneAuthInfo with this username.
  * If it is not set the username of the currently used #LinphoneProxyConfig is used to search for a LinphoneAuthInfo.
  * @param policy #LinphoneNatPolicy object @notnil
@@ -196,7 +196,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_set_nat_v6_address(LinphoneNatPolicy *p
 LINPHONE_PUBLIC const char *linphone_nat_policy_get_stun_server_username(const LinphoneNatPolicy *policy);
 
 /**
- * Set the username used to authenticate with the STUN/TURN server.
+ * Sets the username used to authenticate with the STUN/TURN server.
  * The authentication will search for a #LinphoneAuthInfo with this username.
  * If it is not set the username of the currently used #LinphoneProxyConfig is used to search for a LinphoneAuthInfo.
  * @param policy #LinphoneNatPolicy object @notnil
@@ -211,7 +211,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_set_stun_server_username(LinphoneNatPol
 LINPHONE_PUBLIC void linphone_nat_policy_resolve_stun_server(LinphoneNatPolicy *policy);
 
 /**
- * Get the addrinfo representation of the STUN server address.
+ * Gets the addrinfo representation of the STUN server address.
  * WARNING: This function may block for up to 1 second.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return addrinfo representation of the STUN server address.
@@ -222,6 +222,7 @@ LINPHONE_PUBLIC const struct addrinfo *linphone_nat_policy_get_stun_server_addri
 /**
  * Enable UDP TURN transport.
  * Used when TURN is enabled.
+ * @warning Enabling more than one transport (UDP, TCP, TLS) at a time is currently not supported.
  * @param policy #LinphoneNatPolicy object @notnil
  * @param enable Boolean value telling whether to enable UDP TURN transport.
  */
@@ -230,6 +231,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_enable_udp_turn_transport(LinphoneNatPo
 /**
  * Tells whether UDP TURN transport is enabled.
  * Used when TURN is enabled.
+ * @warning Enabling more than one transport (UDP, TCP, TLS) at a time is currently not supported.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return Boolean value telling whether UDP TURN transport is enabled.
  */
@@ -238,6 +240,7 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_udp_turn_transport_enabled(const Linp
 /**
  * Enable TCP TURN transport.
  * Used when TURN is enabled.
+ * @warning Enabling more than one transport (UDP, TCP, TLS) at a time is currently not supported.
  * @param policy #LinphoneNatPolicy object @notnil
  * @param enable Boolean value telling whether to enable TCP TURN transport.
  */
@@ -246,6 +249,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_enable_tcp_turn_transport(LinphoneNatPo
 /**
  * Tells whether TCP TURN transport is enabled.
  * Used when TURN is enabled.
+ * @warning Enabling more than one transport (UDP, TCP, TLS) at a time is currently not supported.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return Boolean value telling whether TCP TURN transport is enabled.
  */
@@ -254,6 +258,7 @@ LINPHONE_PUBLIC bool_t linphone_nat_policy_tcp_turn_transport_enabled(const Linp
 /**
  * Enable TLS TURN transport.
  * Used when TURN is enabled.
+ * @warning Enabling more than one transport (UDP, TCP, TLS) at a time is currently not supported.
  * @param policy #LinphoneNatPolicy object @notnil
  * @param enable Boolean value telling whether to enable TLS TURN transport.
  */
@@ -262,6 +267,7 @@ LINPHONE_PUBLIC void linphone_nat_policy_enable_tls_turn_transport(LinphoneNatPo
 /**
  * Tells whether TLS TURN transport is enabled.
  * Used when TURN is enabled.
+ * @warning Enabling more than one transport (UDP, TCP, TLS) at a time is currently not supported.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return Boolean value telling whether TLS TURN transport is enabled.
  */
@@ -293,14 +299,14 @@ void linphone_nat_policy_enable_delay_ice_for_external_callback(LinphoneNatPolic
 // TN patch
 
 /**
- * Get the TURN configuration endpoint.
+ * Gets the TURN configuration endpoint.
  * @param policy #LinphoneNatPolicy object @notnil
  * @return The TURN configuration endpoint used by this NAT policy. @maybenil
  */
 LINPHONE_PUBLIC const char *linphone_nat_policy_get_turn_configuration_endpoint(const LinphoneNatPolicy *policy);
 
 /**
- * Set the TURN configuration endpoint.
+ * Sets the TURN configuration endpoint.
  * @param policy #LinphoneNatPolicy object @notnil
  * @param endpoint The TURN configuration endpoint to use with this NAT policy. @maybenil
  */

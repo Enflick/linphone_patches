@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Belledonne Communications SARL.
+ * Copyright (c) 2010-2026 Belledonne Communications SARL.
  *
  * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
@@ -30,7 +30,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup chatroom
+ * @addtogroup group_chatroom
  * @{
  */
 
@@ -107,6 +107,15 @@ LINPHONE_PUBLIC LinphoneChatMessage *linphone_chat_room_create_reply_message(Lin
                                                                              LinphoneChatMessage *message);
 
 /**
+ * Creates a replaces message that will edit the original message.
+ * @param chat_room the #LinphoneChatRoom object. @notnil
+ * @param message #LinphoneChatMessage message to edit. @notnil
+ * @return a new #LinphoneChatMessage @notnil
+ */
+LINPHONE_PUBLIC LinphoneChatMessage *linphone_chat_room_create_replaces_message(LinphoneChatRoom *chat_room,
+                                                                                LinphoneChatMessage *message);
+
+/**
  * Creates a chat message with a voice recording attached to the given chat room.
  * @warning If the recorder isn't in Closed state, it will return an empty message!
  * @param chat_room the #LinphoneChatRoom object. @notnil
@@ -115,6 +124,15 @@ LINPHONE_PUBLIC LinphoneChatMessage *linphone_chat_room_create_reply_message(Lin
  */
 LINPHONE_PUBLIC LinphoneChatMessage *linphone_chat_room_create_voice_recording_message(LinphoneChatRoom *chat_room,
                                                                                        LinphoneRecorder *recorder);
+
+/**
+ * Creates a message attached to the given chat room with a call log json content filled with the given call log.
+ * @param chat_room the #LinphoneChatRoom object. @notnil
+ * @param call_log the call log. @notnil
+ * @return a new #LinphoneChatMessage @notnil
+ */
+LINPHONE_PUBLIC LinphoneChatMessage *linphone_chat_room_create_message_from_call_log(LinphoneChatRoom *chat_room,
+                                                                                     LinphoneCallLog *call_log);
 
 /**
  * Get the peer address associated to this chat room.
@@ -162,18 +180,58 @@ LINPHONE_PUBLIC void linphone_chat_room_receive_chat_message(LinphoneChatRoom *c
 LINPHONE_PUBLIC void linphone_chat_room_mark_as_read(LinphoneChatRoom *chat_room);
 
 /**
- * Enable or disable the ephemeral message feature in the chat room. Works only for flexisip-based chat room.
- * An ephemeral message will automatically disappear from the sender and recipient's chatrooms after a specified
- * timeout configurable with linphone_chat_room_set_ephemeral_lifetime().
- * The timer starts when the message has been displayed at the recipent, which means:
+ * Activate the ephemeral message feature in the chat room with a specified timeout.
+ * Works only for flexisip-based chat room.
+ * An ephemeral message will automatically disappear from the sender and recipient's chatrooms after a set period of
+ * time.
+ * The timer starts when the message has been displayed at the recipient, which means:
  * - at recipient side when linphone_chat_room_mark_as_read() is called.
  * - at sender side, when the message enters the state LinphoneChatMessageStateDisplayed (when receiving the displayed
  * IMDN).
  *
+ * At least one from lifetime or notReadLifetime must be strictly positive.
+ *
  * @param chat_room #LinphoneChatRoom object @notnil
- * @param enable TRUE if the ephemeral message feature is enabled, FALSE otherwise.
+ * @param lifetime The ephemeral lifetime strictly positive. To disable the feature, use
+ * linphone_chat_room_deactivate_ephemeral().
+ * @param notReadLifetime The ephemeral not read lifetime strictly positive.
+ * @return 0 if successful, -1 otherwise
  */
-LINPHONE_PUBLIC void linphone_chat_room_enable_ephemeral(LinphoneChatRoom *chat_room, bool_t enable);
+LINPHONE_PUBLIC LinphoneStatus linphone_chat_room_activate_ephemeral_3(LinphoneChatRoom *chat_room,
+                                                                       unsigned int lifetime,
+                                                                       unsigned int notReadLifetime);
+
+/*
+ * Implemented for convenience. See linphone_chat_room_activate_ephemeral_3().
+ * Activate ephemeral with the default lifetime set by linphone_core_set_default_ephemeral_lifetime()
+ * and linphone_core_set_default_ephemeral_not_read_lifetime().
+ *
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @return 0 if successful, -1 otherwise
+ */
+LINPHONE_PUBLIC LinphoneStatus linphone_chat_room_activate_ephemeral_2(LinphoneChatRoom *chat_room);
+
+/*
+ * See linphone_chat_room_activate_ephemeral_3() for more details.
+ * Activate the ephemeral message feature in the chat room with a specified timeout and with the default not read
+ *lifetime set by linphone_core_set_default_ephemeral_not_read_lifetime().
+ *
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @param lifetime The ephemeral lifetime strictly positive. To disable the feature, use
+ ** linphone_chat_room_deactivate_ephemeral().
+ * @return 0 if successful, -1 otherwise
+ */
+LINPHONE_PUBLIC LinphoneStatus linphone_chat_room_activate_ephemeral(LinphoneChatRoom *chat_room,
+                                                                     unsigned int lifetime);
+
+/**
+ * Disable the ephemeral message feature in the chat room.
+ * See linphone_chat_room_activate_ephemeral() for more details.
+ *
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @return 0 if successful, -1 otherwise
+ */
+LINPHONE_PUBLIC LinphoneStatus linphone_chat_room_deactivate_ephemeral(LinphoneChatRoom *chat_room);
 
 /**
  * Returns whether or not the ephemeral message feature is enabled in the chat room.
@@ -183,27 +241,37 @@ LINPHONE_PUBLIC void linphone_chat_room_enable_ephemeral(LinphoneChatRoom *chat_
 LINPHONE_PUBLIC bool_t linphone_chat_room_ephemeral_enabled(const LinphoneChatRoom *chat_room);
 
 /**
- * Sets lifetime (in seconds) for all new ephemeral messages in the chat room.
- * After the message is read, it will be deleted after "time" seconds.
- * @see linphone_chat_room_ephemeral_enabled()
- * @param chat_room #LinphoneChatRoom object @notnil
- * @param time The ephemeral lifetime, default is 0 (disabled)
- * @warning A value of "time" equal to 0 disables ephemeral messages
- */
-LINPHONE_PUBLIC void linphone_chat_room_set_ephemeral_lifetime(LinphoneChatRoom *chat_room, long time);
-
-/**
  * Gets lifetime (in seconds) for all new ephemeral messages in the chat room.
  * After the message is read, it will be deleted after "time" seconds.
- * @see linphone_chat_room_ephemeral_enabled()
+ * @see linphone_chat_room_activate_ephemeral()
  * @param chat_room #LinphoneChatRoom object @notnil
- * @return the ephemeral lifetime (in secoonds)
+ * @return the ephemeral lifetime (in seconds)
  */
 LINPHONE_PUBLIC long linphone_chat_room_get_ephemeral_lifetime(const LinphoneChatRoom *chat_room);
 
 /**
+ * Sets not-read lifetime (in seconds) for all new ephemeral messages in the chat room.
+ * If the message is not read, it will be deleted after "time" seconds.
+ * @see linphone_chat_room_activate_ephemeral()
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @param time The ephemeral not-read lifetime, default is 0 (disabled)
+ * @warning A value of "time" equal to 0 disables the ephemeral not-read countdowns
+ * @deprecated 20/02/2026 use linphone_chat_room_activate_ephemeral_3() instead.
+ */
+LINPHONE_PUBLIC void linphone_chat_room_set_ephemeral_not_read_lifetime(LinphoneChatRoom *chat_room, long time);
+
+/**
+ * Gets not-read lifetime (in seconds) for all new ephemeral messages in the chat room.
+ * If the message is not read, it will be deleted after "time" seconds.
+ * @see linphone_chat_room_activate_ephemeral()
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @return the ephemeral not-read lifetime (in seconds)
+ */
+LINPHONE_PUBLIC long linphone_chat_room_get_ephemeral_not_read_lifetime(const LinphoneChatRoom *chat_room);
+
+/**
  * Sets the ephemeral mode of the chat room
- * @see linphone_chat_room_ephemeral_enabled()
+ * @see linphone_chat_room_activate_ephemeral()
  * @param chat_room #LinphoneChatRoom object @notnil
  * @param mode The ephemeral mode #LinphoneChatRoomEphemeralMode
  * @warning This function only changes the mode of ephemeral messages #LinphoneChatRoomEphemeralMode. It is required to
@@ -214,7 +282,7 @@ LINPHONE_PUBLIC void linphone_chat_room_set_ephemeral_mode(LinphoneChatRoom *cha
 
 /**
  * Gets the ephemeral mode of the chat room.
- * @see linphone_chat_room_ephemeral_enabled()
+ * @see linphone_chat_room_activate_ephemeral()
  * @param chat_room #LinphoneChatRoom object @notnil
  * @return the ephemeral mode #LinphoneChatRoomEphemeralMode
  */
@@ -225,7 +293,7 @@ LINPHONE_PUBLIC LinphoneChatRoomEphemeralMode linphone_chat_room_get_ephemeral_m
  * It doesn't prevent to send ephemeral messages in the room but those who don't support it
  * won't delete messages after lifetime has expired.
  * The check is done by verifying the participant's advertised capabilities (+org.linphone.specs parameter).
- * @see linphone_chat_room_ephemeral_enabled()
+ * @see linphone_chat_room_activate_ephemeral()
  * @param chat_room #LinphoneChatRoom object @notnil
  * @return TRUE if all participants in the chat room support ephemeral messages, FALSE otherwise
  */
@@ -238,6 +306,16 @@ LINPHONE_PUBLIC bool_t linphone_chat_room_ephemeral_supported_by_all_participant
  */
 
 LINPHONE_PUBLIC void linphone_chat_room_delete_message(LinphoneChatRoom *chat_room, LinphoneChatMessage *message);
+
+/**
+ * Deletes the content of a previously sent message for both sender and receivers.
+ * Message will still appear in the conversation history but will be empty.
+ * You can still delete it from history using linphone_chat_room_delete_message().
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation. @notnil
+ * @param message The #LinphoneChatMessage object to delete. @notnil
+ */
+
+LINPHONE_PUBLIC void linphone_chat_room_retract_message(LinphoneChatRoom *chat_room, LinphoneChatMessage *message);
 
 /**
  * Delete all messages from the history
@@ -263,12 +341,33 @@ LINPHONE_PUBLIC int linphone_chat_room_get_history_size_2(LinphoneChatRoom *chat
 LINPHONE_PUBLIC bool_t linphone_chat_room_is_empty(LinphoneChatRoom *chat_room);
 
 /**
- * Gets all contents for which content-type starts with either video/, audio/ or image/.
+ * Gets all contents for which content-type starts with either video/, audio/ (except for voice messages) or image/.
  * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which matching contents should be
  * retrieved. @notnil
  * @return A list of contents considered as "media". \bctbx_list{LinphoneContent} @tobefreed
  */
 LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_media_contents(LinphoneChatRoom *chat_room);
+
+/**
+ * Gets the partial list of contents for which content-type starts with either video/, audio/ (except for voice
+ * messages) or image/.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which matching contents should be
+ * retrieved. @notnil
+ * @param begin The first content of the range to be retrieved. Most recent content has index 0.
+ * @param end The last content of the range to be retrieved. Oldest content has index of size (use
+ * #linphone_chat_room_get_media_contents_size() to retrieve size)
+ * @return A list of contents considered as "media". \bctbx_list{LinphoneContent} @tobefreed
+ */
+LINPHONE_PUBLIC bctbx_list_t *
+linphone_chat_room_get_media_contents_range(LinphoneChatRoom *chat_room, int begin, int end);
+
+/**
+ * Gets the number of media contents (see #linphone_chat_room_get_media_contents()).
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which media contents size should
+ * be retrieved. @notnil
+ * @return the number of media contents for that #LinphoneChatRoom.
+ */
+LINPHONE_PUBLIC int linphone_chat_room_get_media_contents_size(LinphoneChatRoom *chat_room);
 
 /**
  * Gets all contents for which content-type starts with either text/ or application/.
@@ -277,6 +376,26 @@ LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_media_contents(LinphoneChat
  * @return A list of contents considered as "document". \bctbx_list{LinphoneContent} @tobefreed
  */
 LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_document_contents(LinphoneChatRoom *chat_room);
+
+/**
+ * Gets the partial list of contents for which content-type starts with either text/ or application/.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which matching contents should be
+ * retrieved. @notnil
+ * @param begin The first content of the range to be retrieved. Most recent content has index 0.
+ * @param end The last content of the range to be retrieved. Oldest content has index of size (use
+ * #linphone_chat_room_get_document_contents_size() to retrieve size)
+ * @return A list of contents considered as "document". \bctbx_list{LinphoneContent} @tobefreed
+ */
+LINPHONE_PUBLIC bctbx_list_t *
+linphone_chat_room_get_document_contents_range(LinphoneChatRoom *chat_room, int begin, int end);
+
+/**
+ * Gets the number of document contents (see #linphone_chat_room_get_document_contents()).
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which document contents size
+ * should be retrieved. @notnil
+ * @return the number of document contents for that #LinphoneChatRoom.
+ */
+LINPHONE_PUBLIC int linphone_chat_room_get_document_contents_size(LinphoneChatRoom *chat_room);
 
 /**
  * Gets nb_message most recent events from chat_room chat room, sorted from oldest to most recent.
@@ -295,8 +414,9 @@ LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_history_2(LinphoneChatRoom 
  * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which messages should be
  * retrieved @notnil
  * @param begin The first event of the range to be retrieved. History most recent message has index 0.
- * @param end The last event of the range to be retrieved. History oldest message has index of history size - 1 (use
+ * @param end The last event of the range to be retrieved. History oldest message has index of history size (use
  * #linphone_chat_room_get_history_size_2() to retrieve history size)
+ * @param filters The #LinphoneChatRoomHistoryFilterMask mask to filter the results with #LinphoneChatRoomHistoryFilter
  * @return A list of \bctbx_list{LinphoneEventLog} @tobefreed
  */
 LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_history_range_2(LinphoneChatRoom *chat_room,
@@ -388,11 +508,25 @@ LINPHONE_PUBLIC LinphoneEventLog *linphone_chat_room_search_chat_message_by_text
                                                                                  LinphoneSearchDirection direction);
 
 /**
- * Notifies the destination of the chat message being composed that the user is typing a new message.
- * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which a new message is being
+ * Notifies the destination of the chat message being composed that the user is typing a message.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which a message is being
  * typed. @notnil
  */
-LINPHONE_PUBLIC void linphone_chat_room_compose(LinphoneChatRoom *chat_room);
+LINPHONE_PUBLIC void linphone_chat_room_compose_text_message(LinphoneChatRoom *chat_room);
+
+/**
+ * Notifies the destination of the chat message being composed that the user is recording a new voice message.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which a voice message is being
+ * recorded. @notnil
+ */
+LINPHONE_PUBLIC void linphone_chat_room_compose_voice_message(LinphoneChatRoom *chat_room);
+
+/**
+ * Notifies the destination of the chat message that the user is no longer composing.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which the composing was stopped.
+ * @notnil
+ */
+LINPHONE_PUBLIC void linphone_chat_room_stop_composing(LinphoneChatRoom *chat_room);
 
 /**
  * Tells whether the remote is currently composing a message.
@@ -400,6 +534,14 @@ LINPHONE_PUBLIC void linphone_chat_room_compose(LinphoneChatRoom *chat_room);
  * @return TRUE if the remote is currently composing a message, FALSE otherwise.
  */
 LINPHONE_PUBLIC bool_t linphone_chat_room_is_remote_composing(const LinphoneChatRoom *chat_room);
+
+/**
+ * Returns the content-type (if set) of what the remote is currently composing.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation. @notnil
+ * @return The content-type of what the remote is currently composing if set and if it is currently composing, NULL
+ * otherwise. @maybenil
+ */
+LINPHONE_PUBLIC const char *linphone_chat_room_get_remote_composing_content_type(const LinphoneChatRoom *chat_room);
 
 /**
  * Gets the number of unread messages in the chatroom.
@@ -477,7 +619,7 @@ LINPHONE_PUBLIC bool_t linphone_chat_room_has_been_left(const LinphoneChatRoom *
 
 /**
  * Returns whether or not a message can be sent using this chat room.
- * A chat room may be read only until it's created, or when it's a group you have left.
+ * A chat room may be read only until its created, or when its a group you have left.
  * @param chat_room #LinphoneChatRoom object @notnil
  * @return TRUE if a chat message can't be sent in it, FALSE otherwise.
  */
@@ -601,6 +743,22 @@ LINPHONE_PUBLIC LinphoneChatRoomSecurityLevel linphone_chat_room_get_security_le
 LINPHONE_PUBLIC void linphone_chat_room_leave(LinphoneChatRoom *chat_room);
 
 /**
+ * Nominates a new admin and then leaves a chat room.
+ * @param chat_room A #LinphoneChatRoom object @notnil
+ * @param new_admin The #LinphoneAddress of the new admin @notnil
+ * @note The local participant will not leave the chat room if the new admin cannot be nominated
+ */
+LINPHONE_PUBLIC void linphone_chat_room_nominate_admin_and_leave(LinphoneChatRoom *chat_room,
+                                                                 const LinphoneAddress *new_admin);
+
+/**
+ * Terminates a chat room and instruct the server to remove all participants
+ * @param chat_room A #LinphoneChatRoom object @notnil
+ * @return 0 if the termination is successful, -1 otherwise.
+ */
+LINPHONE_PUBLIC int linphone_chat_room_close(LinphoneChatRoom *chat_room);
+
+/**
  * Removes a participant of a chat room.
  * @param chat_room A #LinphoneChatRoom object @notnil
  * @param participant The participant to remove from the chat room @notnil
@@ -648,6 +806,14 @@ LINPHONE_PUBLIC void linphone_chat_room_set_subject_utf8(LinphoneChatRoom *chat_
 LINPHONE_PUBLIC const bctbx_list_t *linphone_chat_room_get_composing_addresses(LinphoneChatRoom *chat_room);
 
 /**
+ * Gets the list of participants that are currently composing
+ * @param chat_room A #LinphoneChatRoom object @notnil
+ * @return List of #LinphoneComposingParticipant that are in the is_composing state.
+ * \bctbx_list{LinphoneComposingParticipant}
+ */
+LINPHONE_PUBLIC const bctbx_list_t *linphone_chat_room_get_composing_participants(LinphoneChatRoom *chat_room);
+
+/**
  * Sets the conference address of a group chat room. This function needs to be called from the
  * #LinphoneChatRoomCbsConferenceAddressGenerationCb callback and only there.
  * This function is meaningful only for server implementation of chatroom, and shall not by used by client applications.
@@ -681,12 +847,24 @@ linphone_chat_room_notify_participant_device_registration(LinphoneChatRoom *chat
 
 /**
  * Returns current parameters associated with the chat room.
- * This is typically the parameters passed at chat room chat_roomeation to linphone_core_chat_roomeate_chat_room() or
- *some default parameters if no #LinphoneChatRoomParams was explicitely passed during chat room chat_roomeation.
+ * This is typically the parameters passed during the #LinphoneChatRoom creation process to
+ *linphone_core_create_chat_room_7() or some default parameters if no #LinphoneChatRoomParams was explicitely
+ *passed during #LinphoneChatRoom creation.
+ * @param chat_room the #LinphoneChatRoom object @notnil
+ * @return the current #LinphoneChatRoomParams parameters. @notnil
+ * @deprecated 17/07/2025. Use linphone_chat_room_get_params() instead.
+ **/
+LINPHONE_PUBLIC const LinphoneChatRoomParams *linphone_chat_room_get_current_params(const LinphoneChatRoom *chat_room);
+
+/**
+ * Returns current parameters associated with the chat room.
+ * This is typically the parameters passed during the #LinphoneChatRoom creation process to
+ *linphone_core_create_chat_room_7() or some default parameters if no #LinphoneChatRoomParams was explicitely
+ *passed during #LinphoneChatRoom creation.
  * @param chat_room the #LinphoneChatRoom object @notnil
  * @return the current #LinphoneChatRoomParams parameters. @notnil
  **/
-LINPHONE_PUBLIC const LinphoneChatRoomParams *linphone_chat_room_get_current_params(const LinphoneChatRoom *chat_room);
+LINPHONE_PUBLIC const LinphoneConferenceParams *linphone_chat_room_get_params(const LinphoneChatRoom *chat_room);
 
 /**
  * Gets if a chat room has been flagged as muted (not by default).
@@ -742,7 +920,7 @@ LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_history(LinphoneChatRoom *c
  * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which messages should be
  * retrieved @notnil
  * @param begin The first message of the range to be retrieved. History most recent message has index 0.
- * @param end The last message of the range to be retrieved. History oldest message has index of history size - 1 (use
+ * @param end The last message of the range to be retrieved. History oldest message has index of history size (use
  * #linphone_chat_room_get_history_size() to retrieve history size)
  * @return A list of chat messages. \bctbx_list{LinphoneChatMessage} @tobefreed
  * @deprecated 30/07/2024. Use linphone_chat_room_get_history_range_2() instead.
@@ -763,7 +941,7 @@ LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_history_message_events(Linp
  * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which events should be retrieved
  * @notnil
  * @param begin The first event of the range to be retrieved. History most recent event has index 0.
- * @param end The last event of the range to be retrieved. History oldest event has index of history size - 1
+ * @param end The last event of the range to be retrieved. History oldest event has index of history size
  * @return The list of chat message events. \bctbx_list{LinphoneEventLog} @tobefreed
  */
 LINPHONE_PUBLIC bctbx_list_t *
@@ -783,7 +961,7 @@ LINPHONE_PUBLIC bctbx_list_t *linphone_chat_room_get_history_events(LinphoneChat
  * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which events should be retrieved
  * @notnil
  * @param begin The first event of the range to be retrieved. History most recent event has index 0.
- * @param end The last event of the range to be retrieved. History oldest event has index of history size - 1
+ * @param end The last event of the range to be retrieved. History oldest event has index of history size
  * @return The list of the found events. \bctbx_list{LinphoneEventLog} @tobefreed
  */
 LINPHONE_PUBLIC bctbx_list_t *
@@ -800,6 +978,14 @@ LINPHONE_PUBLIC int linphone_chat_room_get_history_events_size(LinphoneChatRoom 
 /************ */
 /* DEPRECATED */
 /* ********** */
+
+/**
+ * Notifies the destination of the chat message being composed that the user is typing a new message.
+ * @param chat_room The #LinphoneChatRoom object corresponding to the conversation for which a new message is being
+ * typed. @notnil
+ * @deprecated 24/06/2025 use linphone_chat_room_compose_text_message() instead.
+ */
+LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_chat_room_compose(LinphoneChatRoom *chat_room);
 
 /**
  * Creates a message attached to the given chat room.
@@ -862,6 +1048,31 @@ LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_chat_room_send_chat_message(Li
  */
 LINPHONE_PUBLIC LINPHONE_DEPRECATED LinphoneChatMessage *linphone_chat_room_create_message(LinphoneChatRoom *chat_room,
                                                                                            const char *message);
+
+/**
+ * Enable or disable the ephemeral message feature in the chat room. Works only for flexisip-based chat room.
+ * @see linphone_chat_room_activate_ephemeral_3()
+ *
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @param enable TRUE if the ephemeral message feature is enabled, FALSE otherwise.
+ * @deprecated 20/02/2026. Use linphone_chat_room_activate_ephemeral_3() or linphone_chat_room_deactivate_ephemeral()
+ * instead.
+ */
+LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_chat_room_enable_ephemeral(LinphoneChatRoom *chat_room,
+                                                                             bool_t enable);
+
+/**
+ * Sets lifetime (in seconds) for all new ephemeral messages in the chat room.
+ * After the message is read, it will be deleted after "time" seconds.
+ * @see linphone_chat_room_activate_ephemeral_3()
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @param time The ephemeral lifetime, default is 0 (disabled)
+ * @warning A value of "time" equal to 0 disables ephemeral messages
+ * @deprecated 20/02/2026. Use linphone_chat_room_activate_ephemeral_3() or linphone_chat_room_deactivate_ephemeral()
+ * instead.
+ */
+LINPHONE_PUBLIC LINPHONE_DEPRECATED void linphone_chat_room_set_ephemeral_lifetime(LinphoneChatRoom *chat_room,
+                                                                                   long time);
 
 /**
  * @}

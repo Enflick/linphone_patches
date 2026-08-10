@@ -31,7 +31,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup chatroom
+ * @addtogroup group_chatroom
  * @{
  */
 
@@ -63,7 +63,7 @@ LINPHONE_PUBLIC void *linphone_chat_room_cbs_get_user_data(const LinphoneChatRoo
 LINPHONE_PUBLIC void linphone_chat_room_cbs_set_user_data(LinphoneChatRoomCbs *cbs, void *user_data);
 
 /**
- * Get the is-composing received callback.
+ * Gets the is-composing received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current is-composing received callback.
  */
@@ -71,7 +71,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsIsComposingReceivedCb
 linphone_chat_room_cbs_get_is_composing_received(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the is-composing received callback.
+ * Sets the is-composing received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The is-composing received callback to be used.
  */
@@ -79,7 +79,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_is_composing_received(LinphoneCh
                                                                       LinphoneChatRoomCbsIsComposingReceivedCb cb);
 
 /**
- * Get the message received callback.
+ * Gets the message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current message received callback.
  */
@@ -87,7 +87,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsMessageReceivedCb
 linphone_chat_room_cbs_get_message_received(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the message received callback.
+ * Sets the message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The message received callback to be used.
  */
@@ -95,7 +95,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_message_received(LinphoneChatRoo
                                                                  LinphoneChatRoomCbsMessageReceivedCb cb);
 
 /**
- * Get the chat messages received callback.
+ * Gets the chat messages received callback.
  * Only called when aggregation is enabled (aka [sip] chat_messages_aggregation == 1 or using
  * linphone_core_set_chat_messages_aggregation_enabled()), it replaces the single message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
@@ -105,7 +105,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsMessagesReceivedCb
 linphone_chat_room_cbs_get_messages_received(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the chat message received callback.
+ * Sets the chat message received callback.
  * Only called when aggregation is enabled (aka [sip] chat_messages_aggregation == 1 or using
  * linphone_core_set_chat_messages_aggregation_enabled()), it replaces the single message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
@@ -115,7 +115,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_messages_received(LinphoneChatRo
                                                                   LinphoneChatRoomCbsMessagesReceivedCb cb);
 
 /**
- * Get the new event log callback.
+ * Gets the new event log callback.
  * This callback will be called before every other #LinphoneEventLog related callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current event log created callback.
@@ -123,7 +123,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_messages_received(LinphoneChatRo
 LINPHONE_PUBLIC LinphoneChatRoomCbsNewEventCb linphone_chat_room_cbs_get_new_event(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the new event log callback.
+ * Sets the new event log callback.
  * This callback will be called before every other #LinphoneEventLog related callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The event log created callback to be used.
@@ -131,7 +131,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsNewEventCb linphone_chat_room_cbs_get_new_eve
 LINPHONE_PUBLIC void linphone_chat_room_cbs_set_new_event(LinphoneChatRoomCbs *cbs, LinphoneChatRoomCbsNewEventCb cb);
 
 /**
- * Get the new event logs callback.
+ * Gets the new event logs callback.
  * This callback will be called before every other #LinphoneEventLog related callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current event logs created callback.
@@ -139,7 +139,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_new_event(LinphoneChatRoomCbs *c
 LINPHONE_PUBLIC LinphoneChatRoomCbsNewEventsCb linphone_chat_room_cbs_get_new_events(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the new event logs callback.
+ * Sets the new event logs callback.
  * This callback will be called before every other #LinphoneEventLog related callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The event logs created callback to be used.
@@ -147,7 +147,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsNewEventsCb linphone_chat_room_cbs_get_new_ev
 LINPHONE_PUBLIC void linphone_chat_room_cbs_set_new_events(LinphoneChatRoomCbs *cbs, LinphoneChatRoomCbsNewEventsCb cb);
 
 /**
- * Get the chat message received callback.
+ * Gets the chat message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current chat message received callback.
  */
@@ -155,7 +155,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsChatMessageReceivedCb
 linphone_chat_room_cbs_get_chat_message_received(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the chat message received callback.
+ * Sets the chat message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The chat message received callback to be used.
  */
@@ -163,7 +163,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_chat_message_received(LinphoneCh
                                                                       LinphoneChatRoomCbsChatMessageReceivedCb cb);
 
 /**
- * Get the chat messages received callback.
+ * Gets the chat messages received callback.
  * Only called when aggregation is enabled (aka [sip] chat_messages_aggregation == 1 or using
  * linphone_core_set_chat_messages_aggregation_enabled()), it replaces the single chat message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
@@ -173,7 +173,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsChatMessagesReceivedCb
 linphone_chat_room_cbs_get_chat_messages_received(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the chat messages received callback.
+ * Sets the chat messages received callback.
  * Only called when aggregation is enabled (aka [sip] chat_messages_aggregation == 1 or using
  * linphone_core_set_chat_messages_aggregation_enabled()), it replaces the single chat message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
@@ -183,7 +183,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_chat_messages_received(LinphoneC
                                                                        LinphoneChatRoomCbsChatMessagesReceivedCb cb);
 
 /**
- * Get the chat message sending callback.
+ * Gets the chat message sending callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current chat message being sent callback.
  */
@@ -191,7 +191,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsChatMessageSendingCb
 linphone_chat_room_cbs_get_chat_message_sending(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the chat message sending callback.
+ * Sets the chat message sending callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The chat message being sent callback to be used.
  */
@@ -199,7 +199,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_chat_message_sending(LinphoneCha
                                                                      LinphoneChatRoomCbsChatMessageSendingCb cb);
 
 /**
- * Get the chat message sent callback.
+ * Gets the chat message sent callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current chat message sent callback.
  */
@@ -207,7 +207,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsChatMessageSentCb
 linphone_chat_room_cbs_get_chat_message_sent(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the chat message sent callback.
+ * Sets the chat message sent callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The chat message sent callback to be used.
  */
@@ -215,7 +215,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_chat_message_sent(LinphoneChatRo
                                                                   LinphoneChatRoomCbsChatMessageSentCb cb);
 
 /**
- * Get the participant added callback.
+ * Gets the participant added callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant added callback.
  */
@@ -223,7 +223,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantAddedCb
 linphone_chat_room_cbs_get_participant_added(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant added callback.
+ * Sets the participant added callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant added callback to be used.
  */
@@ -231,7 +231,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_participant_added(LinphoneChatRo
                                                                   LinphoneChatRoomCbsParticipantAddedCb cb);
 
 /**
- * Get the participant removed callback.
+ * Gets the participant removed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant removed callback.
  */
@@ -239,7 +239,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantRemovedCb
 linphone_chat_room_cbs_get_participant_removed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant removed callback.
+ * Sets the participant removed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant removed callback to be used.
  */
@@ -247,7 +247,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_participant_removed(LinphoneChat
                                                                     LinphoneChatRoomCbsParticipantRemovedCb cb);
 
 /**
- * Get the participant admin status changed callback.
+ * Gets the participant admin status changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant admin status changed callback.
  */
@@ -255,7 +255,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantAdminStatusChangedCb
 linphone_chat_room_cbs_get_participant_admin_status_changed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant admin status changed callback.
+ * Sets the participant admin status changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant admin status changed callback to be used.
  */
@@ -264,7 +264,23 @@ linphone_chat_room_cbs_set_participant_admin_status_changed(LinphoneChatRoomCbs 
                                                             LinphoneChatRoomCbsParticipantAdminStatusChangedCb cb);
 
 /**
- * Get the state changed callback.
+ * Gets the leave failed callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @return The current leave failed callback.
+ */
+LINPHONE_PUBLIC LinphoneChatRoomCbsOperationFailedCb
+linphone_chat_room_cbs_get_operation_failed(const LinphoneChatRoomCbs *cbs);
+
+/**
+ * Sets the leave failed callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @param cb The leave failed callback to be used.
+ */
+LINPHONE_PUBLIC void linphone_chat_room_cbs_set_operation_failed(LinphoneChatRoomCbs *cbs,
+                                                                 LinphoneChatRoomCbsOperationFailedCb cb);
+
+/**
+ * Gets the state changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current state changed callback.
  */
@@ -272,7 +288,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsStateChangedCb
 linphone_chat_room_cbs_get_state_changed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the state changed callback.
+ * Sets the state changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The state changed callback to be used.
  */
@@ -280,7 +296,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_state_changed(LinphoneChatRoomCb
                                                               LinphoneChatRoomCbsStateChangedCb cb);
 
 /**
- * Get the security event callback.
+ * Gets the security event callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The security event callback to be used.
  */
@@ -288,7 +304,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsSecurityEventCb
 linphone_chat_room_cbs_get_security_event(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the security event callback.
+ * Sets the security event callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The security event callback to be used.
  */
@@ -296,7 +312,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_security_event(LinphoneChatRoomC
                                                                LinphoneChatRoomCbsSecurityEventCb cb);
 
 /**
- * Get the subject changed callback.
+ * Gets the subject changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current subject changed callback.
  */
@@ -304,7 +320,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsSubjectChangedCb
 linphone_chat_room_cbs_get_subject_changed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the subject changed callback.
+ * Sets the subject changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The subject changed callback to be used.
  */
@@ -312,7 +328,23 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_subject_changed(LinphoneChatRoom
                                                                 LinphoneChatRoomCbsSubjectChangedCb cb);
 
 /**
- * Get the undecryptable message received callback.
+ * Gets the message early failure callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @return The current message early failure callback.
+ */
+LINPHONE_PUBLIC LinphoneChatRoomCbsMessageEarlyFailureCb
+linphone_chat_room_cbs_get_message_early_failure(const LinphoneChatRoomCbs *cbs);
+
+/**
+ * Sets the message early failure callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @param cb The message early failure callback to be used.
+ */
+LINPHONE_PUBLIC void linphone_chat_room_cbs_set_message_early_failure(LinphoneChatRoomCbs *cbs,
+                                                                      LinphoneChatRoomCbsMessageEarlyFailureCb cb);
+
+/**
+ * Gets the undecryptable message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current undecryptable message received callback.
  */
@@ -320,7 +352,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsUndecryptableMessageReceivedCb
 linphone_chat_room_cbs_get_undecryptable_message_received(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the undecryptable message received callback.
+ * Sets the undecryptable message received callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The undecryptable message received callback to be used.
  */
@@ -329,7 +361,7 @@ linphone_chat_room_cbs_set_undecryptable_message_received(LinphoneChatRoomCbs *c
                                                           LinphoneChatRoomCbsUndecryptableMessageReceivedCb cb);
 
 /**
- * Get the participant device added callback.
+ * Gets the participant device added callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant device added callback.
  */
@@ -337,7 +369,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantDeviceAddedCb
 linphone_chat_room_cbs_get_participant_device_added(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant device added callback.
+ * Sets the participant device added callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant device added callback to be used.
  */
@@ -346,7 +378,7 @@ linphone_chat_room_cbs_set_participant_device_added(LinphoneChatRoomCbs *cbs,
                                                     LinphoneChatRoomCbsParticipantDeviceAddedCb cb);
 
 /**
- * Get the participant device removed callback.
+ * Gets the participant device removed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant device removed callback.
  */
@@ -354,7 +386,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantDeviceRemovedCb
 linphone_chat_room_cbs_get_participant_device_removed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant device removed callback.
+ * Sets the participant device removed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant device removed callback to be used.
  */
@@ -363,7 +395,7 @@ linphone_chat_room_cbs_set_participant_device_removed(LinphoneChatRoomCbs *cbs,
                                                       LinphoneChatRoomCbsParticipantDeviceRemovedCb cb);
 
 /**
- * Get the participant device state callback.
+ * Gets the participant device state callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant device state callback.
  */
@@ -371,7 +403,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantDeviceStateChangedCb
 linphone_chat_room_cbs_get_participant_device_state_changed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant device state callback.
+ * Sets the participant device state callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant device state callback to be used.
  */
@@ -380,7 +412,7 @@ linphone_chat_room_cbs_set_participant_device_state_changed(LinphoneChatRoomCbs 
                                                             LinphoneChatRoomCbsParticipantDeviceStateChangedCb cb);
 
 /**
- * Get the participant device media availability changed callback.
+ * Gets the participant device media availability changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current participant device media availability changed callback.
  */
@@ -388,7 +420,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantDeviceMediaAvailabilityChangedCb
 linphone_chat_room_cbs_get_participant_device_media_availability_changed(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant device media availability changed callback.
+ * Sets the participant device media availability changed callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The participant device media availability changed callback to be used.
  */
@@ -396,7 +428,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_participant_device_media_availab
     LinphoneChatRoomCbs *cbs, LinphoneChatRoomCbsParticipantDeviceMediaAvailabilityChangedCb cb);
 
 /**
- * Get the conference joined callback.
+ * Gets the conference joined callback.
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @return The current conference joined callback.
  */
@@ -404,7 +436,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsConferenceJoinedCb
 linphone_chat_room_cbs_get_conference_joined(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the conference joined callback.
+ * Sets the conference joined callback.
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @param cb The conference joined callback to be used.
  */
@@ -412,7 +444,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_conference_joined(LinphoneChatRo
                                                                   LinphoneChatRoomCbsConferenceJoinedCb cb);
 
 /**
- * Get the conference left callback.
+ * Gets the conference left callback.
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @return The current conference left callback.
  */
@@ -420,7 +452,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsConferenceLeftCb
 linphone_chat_room_cbs_get_conference_left(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the conference left callback.
+ * Sets the conference left callback.
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @param cb The conference left callback to be used.
  */
@@ -428,7 +460,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_conference_left(LinphoneChatRoom
                                                                 LinphoneChatRoomCbsConferenceLeftCb cb);
 
 /**
- * Get the ephemeral event callback.
+ * Gets the ephemeral event callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The ephemeral event callback to be used.
  */
@@ -436,7 +468,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsEphemeralEventCb
 linphone_chat_room_cbs_get_ephemeral_event(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the ephemeral event callback.
+ * Sets the ephemeral event callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @param cb The ephemeral event callback to be used.
  */
@@ -444,7 +476,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_ephemeral_event(LinphoneChatRoom
                                                                 LinphoneChatRoomCbsEphemeralEventCb cb);
 
 /**
- * Get the current "ephemeral message timer started" callback. This callback is called when a message deletion timer
+ * Gets the current "ephemeral message timer started" callback. This callback is called when a message deletion timer
  * starts (the message has been viewed).
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @return The current ephemeral message "timer started" callback.
@@ -453,7 +485,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsEphemeralMessageTimerStartedCb
 linphone_chat_room_cbs_get_ephemeral_message_timer_started(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the ephemeral message timer started callback. This callback will be used when new message deletion timer starts
+ * Sets the ephemeral message timer started callback. This callback will be used when new message deletion timer starts
  * (the message has been viewed).
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @param cb The ephemeral message timer started callback to be used.
@@ -463,7 +495,7 @@ linphone_chat_room_cbs_set_ephemeral_message_timer_started(LinphoneChatRoomCbs *
                                                            LinphoneChatRoomCbsEphemeralMessageTimerStartedCb cb);
 
 /**
- * Get the ephemeral message deleted callback. This callback is used when a message deletion timer runs out (message is
+ * Gets the ephemeral message deleted callback. This callback is used when a message deletion timer runs out (message is
  * deleted).
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @return The current ephemeral message deleted callback.
@@ -472,7 +504,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsEphemeralMessageDeletedCb
 linphone_chat_room_cbs_get_ephemeral_message_deleted(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the ephemeral message deleted callback. This callback is used when new message deletion timer runs out (message
+ * Sets the ephemeral message deleted callback. This callback is used when new message deletion timer runs out (message
  * is deleted).
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @param cb The ephemeral message deleted callback to be used.
@@ -482,7 +514,7 @@ linphone_chat_room_cbs_set_ephemeral_message_deleted(LinphoneChatRoomCbs *cbs,
                                                      LinphoneChatRoomCbsEphemeralMessageDeletedCb cb);
 
 /**
- * Get the conference address generation callback.
+ * Gets the conference address generation callback.
  * @param cbs #LinphoneChatRoomCbs object @notnil
  * @return The current conference address generation callback
  */
@@ -490,7 +522,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsConferenceAddressGenerationCb
 linphone_chat_room_cbs_get_conference_address_generation(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the conference address generation callback.
+ * Sets the conference address generation callback.
  * @param cbs #LinphoneChatRoomCbs object @notnil
  * @param cb The conference address generation callback to be used
  */
@@ -499,7 +531,7 @@ linphone_chat_room_cbs_set_conference_address_generation(LinphoneChatRoomCbs *cb
                                                          LinphoneChatRoomCbsConferenceAddressGenerationCb cb);
 
 /**
- * Get the participant registration subscription callback.
+ * Gets the participant registration subscription callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @return The participant registration subscription callback
  */
@@ -507,7 +539,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantRegistrationSubscriptionRequestedC
 linphone_chat_room_cbs_get_participant_registration_subscription_requested(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant registration subscription callback.
+ * Sets the participant registration subscription callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @param cb The participant registration subscription callback to be used
  */
@@ -515,7 +547,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_participant_registration_subscri
     LinphoneChatRoomCbs *cbs, LinphoneChatRoomCbsParticipantRegistrationSubscriptionRequestedCb cb);
 
 /**
- * Get the participant registration unsubscription callback.
+ * Gets the participant registration unsubscription callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @return The participant registration unsubscription callback
  */
@@ -523,7 +555,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsParticipantRegistrationUnsubscriptionRequeste
 linphone_chat_room_cbs_get_participant_registration_unsubscription_requested(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the participant registration unsubscription callback.
+ * Sets the participant registration unsubscription callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @param cb The participant registration unsubscription callback to be used
  */
@@ -531,7 +563,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_participant_registration_unsubsc
     LinphoneChatRoomCbs *cbs, LinphoneChatRoomCbsParticipantRegistrationUnsubscriptionRequestedCb cb);
 
 /**
- * Get the message should be stored callback.
+ * Gets the message should be stored callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @return The message should be stored callback
  */
@@ -539,7 +571,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsShouldChatMessageBeStoredCb
 linphone_chat_room_cbs_get_chat_message_should_be_stored(LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the message should be stored callback.
+ * Sets the message should be stored callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @param cb The message should be stored callback to be used
  */
@@ -548,7 +580,7 @@ linphone_chat_room_cbs_set_chat_message_should_be_stored(LinphoneChatRoomCbs *cb
                                                          LinphoneChatRoomCbsShouldChatMessageBeStoredCb cb);
 
 /**
- * Get the message's participant state changed callback.
+ * Gets the message's participant state changed callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @return The message's participant state changed callback callback
  */
@@ -556,7 +588,7 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsChatMessageParticipantImdnStateChangedCb
 linphone_chat_room_cbs_get_chat_message_participant_imdn_state_changed(LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the message's participant state changed callback callback.
+ * Sets the message's participant state changed callback callback.
  * @param cbs LinphoneChatRoomCbs object @notnil
  * @param cb The message's participant state changed callback to be used
  */
@@ -580,7 +612,7 @@ LINPHONE_PUBLIC void linphone_chat_room_cbs_set_chat_room_read(LinphoneChatRoomC
                                                                LinphoneChatRoomCbsChatRoomReadCb cb);
 
 /**
- * Get the new reaction callback.
+ * Gets the new reaction callback.
  * @param cbs #LinphoneChatRoomCbs object. @notnil
  * @return The current new reaction callback.
  */
@@ -588,13 +620,59 @@ LINPHONE_PUBLIC LinphoneChatRoomCbsNewMessageReactionCb
 linphone_chat_room_cbs_get_new_message_reaction(const LinphoneChatRoomCbs *cbs);
 
 /**
- * Set the new reaction callback.
+ * Sets the new reaction callback.
  * @param cbs LinphoneChatRoomCbs object. @notnil
  * @param cb The new reaction callback to be used.
  */
 LINPHONE_PUBLIC void linphone_chat_room_cbs_set_new_message_reaction(LinphoneChatRoomCbs *cbs,
                                                                      LinphoneChatRoomCbsNewMessageReactionCb cb);
 
+/**
+ * Gets the message content edited callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @return The current message content edited callback.
+ */
+LINPHONE_PUBLIC LinphoneChatRoomCbsMessageContentEditedCb
+linphone_chat_room_cbs_get_message_content_edited(const LinphoneChatRoomCbs *cbs);
+
+/**
+ * Sets the message content edited callback.
+ * @param cbs LinphoneChatRoomCbs object. @notnil
+ * @param cb The new message content edited to be used.
+ */
+LINPHONE_PUBLIC void linphone_chat_room_cbs_set_message_content_edited(LinphoneChatRoomCbs *cbs,
+                                                                       LinphoneChatRoomCbsMessageContentEditedCb cb);
+
+/**
+ * Gets the message retracted callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @return The current message retracted callback.
+ */
+LINPHONE_PUBLIC LinphoneChatRoomCbsMessageRetractedCb
+linphone_chat_room_cbs_get_message_retracted(const LinphoneChatRoomCbs *cbs);
+
+/**
+ * Sets the message retracted callback.
+ * @param cbs LinphoneChatRoomCbs object. @notnil
+ * @param cb The new message retracted to be used.
+ */
+LINPHONE_PUBLIC void linphone_chat_room_cbs_set_message_retracted(LinphoneChatRoomCbs *cbs,
+                                                                  LinphoneChatRoomCbsMessageRetractedCb cb);
+/**
+ * Get the full state received callback.
+ * @param cbs #LinphoneChatRoomCbs object. @notnil
+ * @return The current full state received callback.
+ */
+LINPHONE_PUBLIC LinphoneChatRoomCbsFullStateReceivedCb
+linphone_chat_room_cbs_get_full_state_received(const LinphoneChatRoomCbs *cbs);
+
+/**
+ * Set the full state received callback.
+ * @param cbs LinphoneChatRoomCbs object. @notnil
+ * @param cb The new full state received to be used.
+ */
+LINPHONE_PUBLIC void linphone_chat_room_cbs_set_full_state_received(LinphoneChatRoomCbs *cbs,
+                                                                    LinphoneChatRoomCbsFullStateReceivedCb cb);
 /**
  * @}
  */

@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'linphone-sdk-novideo/ios-arm64/Frameworks/bctoolbox.framework/bctoolbox'
+relocations:     []
+...

@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'linphone-sdk-novideo/ios-arm64/Frameworks/mbedx509.framework/mbedx509'
+relocations:     []
+...

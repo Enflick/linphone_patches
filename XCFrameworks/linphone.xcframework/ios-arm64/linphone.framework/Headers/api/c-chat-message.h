@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Belledonne Communications SARL.
+ * Copyright (c) 2010-2026 Belledonne Communications SARL.
  *
  * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
@@ -38,7 +38,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup chatmessage
+ * @addtogroup group_chatroom
  * @{
  */
 
@@ -300,7 +300,7 @@ LINPHONE_PUBLIC const char *linphone_chat_message_get_custom_header(const Linpho
 LINPHONE_PUBLIC void linphone_chat_message_remove_custom_header(LinphoneChatMessage *message, const char *header_name);
 
 /**
- * Returns wether the message has been read or not.
+ * Returns whether the message has been read or not.
  * @param message #LinphoneChatMessage object. @notnil
  * @return TRUE if message has been marked as read, FALSE otherwise.
  */
@@ -322,7 +322,7 @@ LINPHONE_PUBLIC LinphoneReason linphone_chat_message_get_reason(const LinphoneCh
 LINPHONE_PUBLIC const LinphoneErrorInfo *linphone_chat_message_get_error_info(const LinphoneChatMessage *message);
 
 /**
- * Returns wether the chat message is a forward message or not.
+ * Returns whether the chat message is a forward message or not.
  * @param message #LinphoneChatMessage object. @notnil
  * @return TRUE if it is a forward message, FALSE otherwise
  */
@@ -336,7 +336,7 @@ LINPHONE_PUBLIC bool_t linphone_chat_message_is_forward(LinphoneChatMessage *mes
 LINPHONE_PUBLIC const char *linphone_chat_message_get_forward_info(const LinphoneChatMessage *message);
 
 /**
- * Returns wether the chat message is a reply message or not.
+ * Returns whether the chat message is a reply message or not.
  * @param message #LinphoneChatMessage object. @notnil
  * @return TRUE if it is a reply message, FALSE otherwise
  */
@@ -365,7 +365,7 @@ linphone_chat_message_get_reply_message_sender_address(LinphoneChatMessage *mess
 LINPHONE_PUBLIC LinphoneChatMessage *linphone_chat_message_get_reply_message(LinphoneChatMessage *message);
 
 /**
- * Returns wether the chat message is an ephemeral message or not.
+ * Returns whether the chat message is an ephemeral message or not.
  * An ephemeral message will automatically disappear from the recipient's screen after the message has been viewed.
  * @param message #LinphoneChatMessage object. @notnil
  * @return TRUE if it is an ephemeral message, FALSE otherwise
@@ -430,11 +430,20 @@ LINPHONE_PUBLIC void linphone_chat_message_remove_callbacks(LinphoneChatMessage 
 LINPHONE_PUBLIC LinphoneChatMessageCbs *linphone_chat_message_get_current_callbacks(const LinphoneChatMessage *message);
 
 /**
+ * Adds a call log content to the ChatMessage.
+ * @param message #LinphoneChatMessage object. @notnil
+ * @param call_log the #LinphoneCallLog object to add. @notnil
+ */
+LINPHONE_PUBLIC void linphone_chat_message_add_call_log_content(LinphoneChatMessage *msg,
+                                                                const LinphoneCallLog *call_log);
+
+/**
  * Adds a file content to the ChatMessage.
  * @param message #LinphoneChatMessage object. @notnil
  * @param content the #LinphoneContent object to add. @notnil
  */
-LINPHONE_PUBLIC void linphone_chat_message_add_file_content(LinphoneChatMessage *message, LinphoneContent *content);
+LINPHONE_PUBLIC void linphone_chat_message_add_file_content(LinphoneChatMessage *message,
+                                                            const LinphoneContent *content);
 
 /**
  * Creates a #LinphoneContent of type text/plain with the provided string, and attach it to the message.
@@ -506,11 +515,18 @@ LINPHONE_PUBLIC const LinphoneChatMessageReaction *
 linphone_chat_message_get_own_reaction(const LinphoneChatMessage *message);
 
 /**
- * Returns wether the chat message has a conference invitation content or not.
+ * Returns whether the chat message has a conference invitation content or not.
  * @param message #LinphoneChatMessage object. @notnil
  * @return TRUE if it has one, FALSE otherwise.
  */
 LINPHONE_PUBLIC bool_t linphone_chat_message_has_conference_invitation_content(const LinphoneChatMessage *message);
+
+/**
+ * Indicates whether the chat message contains a call log in JSON format.
+ * @param message #LinphoneChatMessage object. @notnil
+ * @return TRUE if it has one, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_chat_message_has_call_log_json_content(const LinphoneChatMessage *message);
 
 /**
  * Creates a emoji reaction for the given chat mesage.
@@ -522,12 +538,47 @@ LINPHONE_PUBLIC bool_t linphone_chat_message_has_conference_invitation_content(c
 LINPHONE_PUBLIC LinphoneChatMessageReaction *linphone_chat_message_create_reaction(LinphoneChatMessage *message,
                                                                                    const char *utf8_reaction);
 
+/**
+ * Returns whether this message has been retracted by its sender after it was sent.
+ * @param message The message you want to check if it was retracted or not @notnil
+ * @return TRUE if the message has been retracted after it was sent, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_chat_message_is_retracted(LinphoneChatMessage *message);
+
+/**
+ * Returns whether this message can be retracted (maximum allowed time to retract it has been reached or not).
+ * @param message The message you want to check if it can be retracted or not @notnil
+ * @return TRUE if the message can be retracted, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_chat_message_is_retractable(LinphoneChatMessage *message);
+
+/**
+ * Returns whether this message has been edited by its sender after it was sent.
+ * @param message The message you want to check if it was edited or not @notnil
+ * @return TRUE if the message has been edited after it was sent, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_chat_message_is_edited(LinphoneChatMessage *message);
+
+/**
+ * Returns whether this message can be edited (maximum allowed time to edit it was reached or not).
+ * @param message the message you want to check if it can be edited or not @notnil
+ * @return TRUE if the message can be edited, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_chat_message_is_editable(LinphoneChatMessage *message);
+
+/**
+ * Returns the event log associated to the chat message
+ * @param message the message you want to retrieve the event log for @notnil
+ * @return The event log, if exists, NULL otherwise @maybenil
+ */
+LINPHONE_PUBLIC const LinphoneEventLog *linphone_chat_message_get_event_log(LinphoneChatMessage *message);
+
 /************ */
 /* DEPRECATED */
 /* ********** */
 
 /**
- * Returns wether the chat message has a text content or not.
+ * Returns whether the chat message has a text content or not.
  * @param message #LinphoneChatMessage object. @notnil
  * @return TRUE if it has one, FALSE otherwise.
  * @deprecated 27/10/2020. Check if linphone_chat_message_get_contents() contains a #LinphoneContent for which it's
@@ -558,7 +609,7 @@ linphone_chat_message_get_file_transfer_filepath(const LinphoneChatMessage *mess
  * Start the download of the file from remote server
  *
  * @param message #LinphoneChatMessage object. @notnil
- * @param status_cb #LinphoneChatMessageStateChangeCb status callback invoked when file is downloaded or could not be
+ * @param status_cb #LinphoneChatMessageStateChangedCb status callback invoked when file is downloaded or could not be
  * downloaded
  * @param user_data user data
  * @deprecated 21/09/2017 Use linphone_chat_message_download_file() instead.
@@ -640,7 +691,6 @@ LINPHONE_PUBLIC LINPHONE_DEPRECATED bool_t linphone_chat_message_is_file_transfe
  * content type.
  */
 LINPHONE_PUBLIC LINPHONE_DEPRECATED bool_t linphone_chat_message_is_text(const LinphoneChatMessage *message);
-
 /**
  * @}
  */

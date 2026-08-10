@@ -21,7 +21,7 @@
 #ifndef _L_C_PARTICIPANT_DEVICE_H_
 #define _L_C_PARTICIPANT_DEVICE_H_
 
-#include "time.h"
+#include <time.h>
 
 #include "linphone/api/c-participant-device-cbs.h"
 #include "linphone/api/c-types.h"
@@ -34,7 +34,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup misc
+ * @addtogroup group_misc
  * @{
  */
 
@@ -107,6 +107,13 @@ LINPHONE_PUBLIC bool_t
 linphone_participant_device_is_in_conference(const LinphoneParticipantDevice *participant_device);
 
 /**
+ * Tells whether the participant device is Me.
+ * @param participant_device A #LinphoneParticipantDevice object @notnil
+ * @return TRUE if the participant is me, FALSE otherwise.
+ */
+LINPHONE_PUBLIC bool_t linphone_participant_device_is_me(const LinphoneParticipantDevice *participant_device);
+
+/**
  * Gets the timestamp the device joined a conference.
  * @param participant_device A #LinphoneParticipantDevice object @notnil
  * @return time of joining a conference expressed as a number of seconds
@@ -150,8 +157,8 @@ linphone_participant_device_get_disconnection_reason(const LinphoneParticipantDe
 
 /**
  * Gets the stream label of the device.
- * The capability information represents the capability for the #ParticipantDevice to handle a given stream type (audio,
- * video or text).
+ * The capability information represents the capability for the #LinphoneParticipantDevice to handle a given stream type
+ * (audio, video or text).
  * @param participant_device A #LinphoneParticipantDevice object @notnil
  * @param stream_type A #LinphoneStreamType
  * @return the label of stream of type stream_type of the device @maybenil
@@ -170,8 +177,8 @@ linphone_participant_device_get_thumbnail_stream_label(const LinphoneParticipant
 
 /**
  * Gets the stream capability of the device.
- * The capability information represents the capability for the #ParticipantDevice to handle a given stream type (audio,
- * video or text).
+ * The capability information represents the capability for the #LinphoneParticipantDevice to handle a given stream type
+ * (audio, video or text).
  * @param participant_device A #LinphoneParticipantDevice object @notnil
  * @param stream_type A #LinphoneStreamType
  * @return the capability of stream of type stream_type of the device #LinphoneMediaDirection
@@ -209,7 +216,7 @@ LINPHONE_PUBLIC bool_t
 linphone_participant_device_get_thumbnail_stream_availability(const LinphoneParticipantDevice *participant_device);
 
 /**
- * Get the audio stream SSRC of the device.
+ * Gets the audio stream SSRC of the device.
  * @param participant_device A #LinphoneParticipantDevice object @notnil
  * @param stream_type A #LinphoneStreamType
  * @return the stream's SSRC of the device
@@ -218,7 +225,7 @@ LINPHONE_PUBLIC uint32_t linphone_participant_device_get_ssrc(const LinphonePart
                                                               const LinphoneStreamType stream_type);
 
 /**
- * Get the thumbnail stream SSRC of the device.
+ * Gets the thumbnail stream SSRC of the device.
  * @param participant_device A #LinphoneParticipantDevice object @notnil
  * @return the thumbnail stream's SSRC of the device
  */
@@ -269,8 +276,25 @@ linphone_participant_device_get_native_video_window_id(const LinphoneParticipant
 
 /**
  * Creates a window ID and return it.
+ * @see linphone_core_set_native_video_window_id() for a general discussion about window IDs.
+ *
+ * A context can be used to prevent Linphone from allocating the container (`MSOglContextInfo` for MSOGL). NULL if not
+ * used.
+ *
  * @param participant_device A #LinphoneParticipantDevice object @notnil
- * @return the window ID of the device @maybenil
+ * @param context preallocated Window ID (Used only for MSOGL) @maybenil
+ * @return the native video window id (type may vary depending on platform). @maybenil
+ */
+LINPHONE_PUBLIC void *
+linphone_participant_device_create_native_video_window_id_2(LinphoneParticipantDevice *participant_device,
+                                                            void *context);
+
+/**
+ * Creates a window ID and return it.
+ * @see linphone_core_set_native_video_window_id() for a general discussion about window IDs.
+ *
+ * @param participant_device A #LinphoneParticipantDevice object @notnil
+ * @return the native video window id (type may vary depending on platform). @maybenil
  */
 LINPHONE_PUBLIC void *
 linphone_participant_device_create_native_video_window_id(LinphoneParticipantDevice *participant_device);

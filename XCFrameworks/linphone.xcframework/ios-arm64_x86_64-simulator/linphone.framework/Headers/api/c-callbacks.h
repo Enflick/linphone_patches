@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Belledonne Communications SARL.
+ * Copyright (c) 2010-2026 Belledonne Communications SARL.
  *
  * This file is part of Liblinphone
  * (see https://gitlab.linphone.org/BC/public/liblinphone).
@@ -33,7 +33,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
 /**
- * @addtogroup account
+ * @addtogroup group_account
  * @{
  **/
 
@@ -71,7 +71,7 @@ typedef void (*LinphoneAccountCbsConferenceInformationUpdatedCb)(LinphoneAccount
  **/
 
 /**
- * @addtogroup account_creator
+ * @addtogroup group_deprecated
  * @{
  **/
 
@@ -97,7 +97,7 @@ typedef void (*LinphoneAccountManagerServicesRequestCbsOnRequestErrorCb)(
     const LinphoneDictionary *parameter_errors);
 
 /**
- * Callback for notifying when the #LinphoneAccountManagerServicesRequestGetDevicesList request has results available.
+ * Callback for notifying when a request has results available.
  * @param request #LinphoneAccountManagerServicesRequest object. @notnil
  * @param devices_list the \bctbx_list{LinphoneAccountDevice} of fetched devices. @notnil
  */
@@ -109,7 +109,7 @@ typedef void (*LinphoneAccountManagerServicesRequestCbsOnDevicesListFetchedCb)(
  **/
 
 /**
- * @addtogroup alert
+ * @addtogroup group_alert
  * @{
  **/
 /**
@@ -128,7 +128,7 @@ typedef void (*LinphoneAlertCbsTerminatedCb)(LinphoneAlert *alert);
  */
 
 /**
- * @addtogroup call_control
+ * @addtogroup group_call_control
  * @{
  **/
 
@@ -294,11 +294,54 @@ typedef void (*LinphoneCallCbsRemoteRecordingCb)(LinphoneCall *call, bool_t reco
 typedef void (*LinphoneCallCbsBaudotDetectedCb)(LinphoneCall *call, LinphoneBaudotStandard standard);
 
 /**
+ * Callback to notify that the headset has requested to answer the incoming call.
+ *
+ * @param call LinphoneCall that the headset requests to answer @notnil
+ */
+typedef void (*LinphoneCallCbsHeadsetAnswerCallRequestedCb)(LinphoneCall *call);
+
+/**
+ * Callback to notify that the headset has requested to end the current call.
+ *
+ * @param call LinphoneCall that the headset requests to end @notnil
+ */
+typedef void (*LinphoneCallCbsHeadsetEndCallRequestedCb)(LinphoneCall *call);
+
+/**
+ * Callback to notify that the headset has requested to hold the current call.
+ *
+ * @param call LinphoneCall that the headset requests to hold @notnil
+ */
+typedef void (*LinphoneCallCbsHeadsetHoldCallRequestedCb)(LinphoneCall *call);
+
+/**
+ * Callback to notify that the headset microphone has been muted or unmuted.
+ *
+ * @param call LinphoneCall where the microphone has been muted @notnil
+ * @param mute Whether the headset microphone has been muted or unmuted.
+ */
+typedef void (*LinphoneCallCbsHeadsetMicrophoneMuteToggledCb)(LinphoneCall *call, bool_t mute);
+
+/**
+ * Callback to notify that the headset has requested to reject the incoming call.
+ *
+ * @param call LinphoneCall that the headset requests to reject @notnil
+ */
+typedef void (*LinphoneCallCbsHeadsetRejectCallRequestedCb)(LinphoneCall *call);
+
+/**
+ * Callback to notify that the headset has requested to resume the current call.
+ *
+ * @param call LinphoneCall that the headset requests to resume @notnil
+ */
+typedef void (*LinphoneCallCbsHeadsetResumeCallRequestedCb)(LinphoneCall *call);
+
+/**
  * @}
  **/
 
 /**
- * @addtogroup chatroom
+ * @addtogroup group_chatroom
  * @{
  */
 
@@ -320,9 +363,21 @@ typedef void (*LinphoneChatMessageCbsNewMessageReactionCb)(LinphoneChatMessage *
 /**
  * Callback used to notify a reaction has been removed from a given message
  * @param message #LinphoneChatMessage object @notnil
- * @param address the #LinphoneAddress of the person that removed it's reaction @notnil
+ * @param address The #LinphoneAddress of the person that removed its reaction @notnil
  */
 typedef void (*LinphoneChatMessageCbsReactionRemovedCb)(LinphoneChatMessage *message, const LinphoneAddress *address);
+
+/**
+ * Callback used to notify when a message has been edited by its sender after it was sent.
+ * @param message #LinphoneChatMessage object that has been edited @notnil
+ */
+typedef void (*LinphoneChatMessageCbsContentEditedCb)(LinphoneChatMessage *message);
+
+/**
+ * Callback used to notify when a message has been retracted by its sender after it was sent.
+ * @param message #LinphoneChatMessage object that has been retracted @notnil
+ */
+typedef void (*LinphoneChatMessageCbsRetractedCb)(LinphoneChatMessage *message);
 
 /**
  * Call back used to notify participant IMDN state
@@ -497,6 +552,12 @@ typedef void (*LinphoneChatRoomCbsParticipantAdminStatusChangedCb)(LinphoneChatR
                                                                    const LinphoneEventLog *event_log);
 
 /**
+ * Callback used to notify a chat room exit failed.
+ * @param chat_room #LinphoneChatRoom object @notnil
+ */
+typedef void (*LinphoneChatRoomCbsOperationFailedCb)(LinphoneChatRoom *chat_room);
+
+/**
  * Callback used to notify a chat room state has changed.
  * @param chat_room #LinphoneChatRoom object @notnil
  * @param newState The new #LinphoneChatRoomState of the chat room
@@ -516,6 +577,14 @@ typedef void (*LinphoneChatRoomCbsSecurityEventCb)(LinphoneChatRoom *chat_room, 
  * @param event_log #LinphoneEventLog The event to be notified @notnil
  */
 typedef void (*LinphoneChatRoomCbsSubjectChangedCb)(LinphoneChatRoom *chat_room, const LinphoneEventLog *event_log);
+
+/**
+ * Callback used to notify a chat room that a message has been not sent because of a chat room error
+ * @param chat_room #LinphoneChatRoom involved in this conversation @notnil
+ * @param event_log #LinphoneEventLog The event to be notified @notnil
+ */
+typedef void (*LinphoneChatRoomCbsMessageEarlyFailureCb)(LinphoneChatRoom *chat_room,
+                                                         const LinphoneEventLog *event_log);
 
 /**
  * Callback used to notify a chat room that a message has been received but we were unable to decrypt it
@@ -632,7 +701,7 @@ typedef void (*LinphoneChatRoomCbsShouldChatMessageBeStoredCb)(LinphoneChatRoom 
 /**
  * Callback used to notify a participant state has changed in a message of this chat room.
  * @param chat_room #LinphoneChatRoom object @notnil
- * @param message The #LinphoneChatMessage for which a participant has it's state changed @notnil
+ * @param message The #LinphoneChatMessage for which a participant has its state changed @notnil
  * @param state The #LinphoneParticipantImdnState @notnil
  */
 typedef void (*LinphoneChatRoomCbsChatMessageParticipantImdnStateChangedCb)(LinphoneChatRoom *chat_room,
@@ -656,11 +725,31 @@ typedef void (*LinphoneChatRoomCbsNewMessageReactionCb)(LinphoneChatRoom *chat_r
                                                         const LinphoneChatMessageReaction *reaction);
 
 /**
+ * Callback used to notify a message has been edited after being sent or received.
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @param message #LinphoneChatMessage object that has been edited @notnil
+ */
+typedef void (*LinphoneChatRoomCbsMessageContentEditedCb)(LinphoneChatRoom *chat_room, LinphoneChatMessage *message);
+
+/**
+ * Callback used to notify a message has been retracted after being sent or received.
+ * @param chat_room #LinphoneChatRoom object @notnil
+ * @param message #LinphoneChatMessage object that has been retracted @notnil
+ */
+typedef void (*LinphoneChatRoomCbsMessageRetractedCb)(LinphoneChatRoom *chat_room, LinphoneChatMessage *message);
+
+/**
+ * Callback used to notify that the full state of the chatroom has been received
+ * @param chat_room #LinphoneChatRoom object @notnil
+ */
+typedef void (*LinphoneChatRoomCbsFullStateReceivedCb)(LinphoneChatRoom *chat_room);
+
+/**
  * @}
  **/
 
 /**
- * @addtogroup event_api
+ * @addtogroup group_event_api
  * @{
  */
 
@@ -693,8 +782,8 @@ typedef void (*LinphoneEventCbsSubscribeStateChangedCb)(LinphoneEvent *event, Li
 
 /**
  * Callback used to notify the received to a PUBLISH
- * @param event The #LinphoneEvent object that receive the PUBLISH @notnil
- * @param content The #LinphoneContent object that containe the body of the event @maybenil
+ * @param event The #LinphoneEvent object that receives the PUBLISH @notnil
+ * @param content The #LinphoneContent object that contains the body of the event @maybenil
  **/
 typedef void (*LinphoneEventCbsPublishReceivedCb)(LinphoneEvent *event, LinphoneContent *content);
 
@@ -710,7 +799,7 @@ typedef void (*LinphoneEventCbsPublishStateChangedCb)(LinphoneEvent *event, Linp
  */
 
 /**
- * @addtogroup misc
+ * @addtogroup group_misc
  * @{
  */
 
@@ -732,9 +821,18 @@ typedef void (*LinphoneMagicSearchCbsLdapHaveMoreResultsCb)(LinphoneMagicSearch 
  * Callback used to notify when more results are available for a given #LinphoneMagicSearchSource flag.
  * @param magic_search #LinphoneMagicSearch object @notnil
  * @param source The source flag indicating for which type of result there is more results available.
+ * @deprecated 07/07/2025 use #LinphoneMagicSearchCbsResultsLimitReachedCb instead.
  */
 typedef void (*LinphoneMagicSearchCbsMoreResultsAvailableCb)(LinphoneMagicSearch *magic_search,
                                                              LinphoneMagicSearchSource source);
+
+/**
+ * Callback used to notify when the configured search limit has been reached and thus user should refine its search
+ * parameters.
+ * @param magic_search #LinphoneMagicSearch object @notnil
+ * @param sourcesFlag The source(s) flag indicating the request for which the limit has been reached.
+ */
+typedef void (*LinphoneMagicSearchCbsResultsLimitReachedCb)(LinphoneMagicSearch *magic_search, int sourcesFlag);
 
 /**
  * @}
@@ -744,7 +842,7 @@ typedef void (*LinphoneMagicSearchCbsMoreResultsAvailableCb)(LinphoneMagicSearch
 /* DEPRECATED */
 /* ********** */
 /**
- * @addtogroup chatroom
+ * @addtogroup group_chatroom
  * @{
  */
 
@@ -765,7 +863,7 @@ typedef void (*LinphoneChatMessageStateChangedCb)(LinphoneChatMessage *message,
  **/
 
 /**
- * @addtogroup conference
+ * @addtogroup group_conference
  * @{
  */
 
@@ -842,6 +940,12 @@ typedef void (*LinphoneConferenceCbsParticipantRoleChangedCb)(LinphoneConference
  */
 typedef void (*LinphoneConferenceCbsParticipantAdminStatusChangedCb)(LinphoneConference *conference,
                                                                      const LinphoneParticipant *participant);
+
+/**
+ * Callback used to notify a conference exit failed.
+ * @param[in] conference #LinphoneConference object @notnil
+ */
+typedef void (*LinphoneConferenceCbsOperationFailedCb)(LinphoneConference *conference);
 
 /**
  * Callback used to notify a conference state has changed.
